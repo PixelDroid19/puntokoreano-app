@@ -1,0 +1,35 @@
+.animate {
+    @apply transition-all duration-300;
+}
+
+.header {
+    @apply sticky top-0 px-0 bg-header z-50;
+
+    .container-header {
+        @apply px-2 h-full flex justify-between items-center max-w-[1320px] mx-auto md:px-10;
+
+        .figure-logo {
+            @apply flex items-center h-full gap-2 cursor-pointer text-white hover:text-secondary animate;
+
+            .logo {
+                @apply w-12;
+            }
+
+            .figcaption-logo {
+                @apply text-inherit whitespace-nowrap font-karate text-2xl text-secondary lg:text-white;
+            }
+        }
+
+        .header-menu {
+            @apply w-12 bg-header uppercase sm:w-80 md:w-[350px];
+        }
+
+        .user-btn {
+            @apply border-none bg-header cursor-pointer mx-4 text-white hover:text-secondary animate;
+        }
+
+    }
+}
+
+
+

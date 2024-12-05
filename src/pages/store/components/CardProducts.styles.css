@@ -1,0 +1,40 @@
+
+/* Importaciones de Swiper */
+@import 'swiper/css';
+@import 'swiper/css/pagination';
+@import 'swiper/css/navigation';
+
+/* Estilos personalizados para el Swiper */
+.product-swiper .swiper-button-next,
+.product-swiper .swiper-button-prev {
+    color: #E2060F;
+    width: 30px;
+    height: 30px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.product-swiper .swiper-button-next::after,
+.product-swiper .swiper-button-prev::after {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.product-swiper .swiper-button-next:hover,
+.product-swiper .swiper-button-prev:hover {
+    background-color: #f8f8f8;
+}
+
+.product-swiper .swiper-pagination-bullet {
+    background: #E2060F;
+}
+
+/* Estilos adicionales para la card */
+.product-card-image {
+    @apply w-full h-full object-contain p-4 transition-transform duration-300;
+}
+
+.product-card-image:hover {
+    @apply scale-105;
+}

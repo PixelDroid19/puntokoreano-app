@@ -1,0 +1,87 @@
+.container-banner {
+  @apply bg-gradient-to-r from-secondary_1 to-secondary_2 max-w-[1280px] mx-auto relative xl:-top-24 z-10 lg:rounded-b-lg xl:rounded-lg;
+
+  .banner-content {
+    @apply p-4 flex flex-col justify-center items-center lg:flex-row lg:px-10 lg:py-1 lg:justify-around;
+
+    img {
+      @apply w-20 xl:h-full lg:w-32 lg:mx-1;
+    }
+
+    .divider {
+      @apply bg-gray-400 min-w-20 w-20 border-2 lg:min-w-1 lg:w-1 lg:h-24;
+    }
+
+    h2 {
+      @apply uppercase text-2xl text-white font-lastica font-bold;
+    }
+
+    .container-brand {
+      @apply py-4 lg:py-2;
+
+      img {
+        @apply block mx-auto w-44 pb-3 lg:w-60;
+      }
+
+      figcaption {
+        @apply text-white font-glegoo text-center;
+      }
+    }
+  }
+}
+
+.container-services {
+  @apply bg-gradient-to-b from-[#272930] via-white to-[#DFDFDF] lg:max-h-[350px] selection:w-full lg:-mt-[12.8rem];
+
+  .container-service {
+    @apply max-w-[1280px] mx-auto w-full flex flex-col gap-8 py-8 lg:flex-row md:px-4 lg:pt-48 lg:px-8 xl:pt-36 xl:justify-around 2xl:pb-28;
+  }
+
+  .service {
+    @apply flex flex-col gap-2 transition-all duration-300 relative h-fit;
+
+    .img {
+      @apply w-20 mx-auto;
+    }
+
+    figcaption {
+      @apply text-2xl text-center italic font-exo;
+    }
+  }
+}
+
+.container-sections {
+  @apply max-w-[1280px] mx-auto mt-10 mb-10 md:mt-2 sm:mb-16 px-2 md:px-10;
+
+  .container-title {
+    @apply lg:flex lg:items-center lg:justify-between pt-2;
+
+    h2 {
+      @apply uppercase font-bold text-xl text-center lg:text-left md:text-3xl 2xl:text-4xl;
+    }
+
+    p {
+      @apply uppercase underline underline-offset-4 text-sm text-center pb-2 font-exo lg:text-left;
+    }
+  }
+
+  .container-main-section {
+    @apply mx-5 sm:mx-24 md:mx-6;
+  }
+}
+
+.container-footer {
+  @apply flex flex-col;
+
+  .container-info {
+    @apply text-white max-w-[1280px] mx-auto flex flex-col items-center justify-center p-2 py-4 md:px-10 lg:flex-row xl:justify-around xl:px-10;
+
+    h3 {
+      @apply font-glegoo w-fit lg:whitespace-nowrap text-base lg:text-xs xl:text-base;
+    }
+  }
+}
+
+.swiper-pagination {
+  height: fit-content;
+}
