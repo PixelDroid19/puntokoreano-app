@@ -5,7 +5,6 @@ import ENDPOINTS from "@/api";
 import {
   Review,
   ReviewStats,
-  ReviewData,
   ReviewVote,
   ReportData,
   ReviewFormData,
@@ -13,20 +12,21 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { reviewService } from "@/services/reviewService";
 
-interface ReviewsResponse {
+// API Response Types
+interface ApiResponse<T> {
   success: boolean;
-  data: {
-    reviews: Review[];
-    stats: ReviewStats;
-  };
+  data: T;
+  message?: string;
 }
 
-interface CanReviewResponse {
-  success: boolean;
-  data: {
-    canReview: boolean;
-    reason?: string;
-  };
+interface ReviewsData {
+  reviews: Review[];
+  stats: ReviewStats;
+}
+
+interface CanReviewData {
+  canReview: boolean;
+  reason?: string;
 }
 
 export const useProductReviews = (productId: string) => {
@@ -38,23 +38,24 @@ export const useProductReviews = (productId: string) => {
     data: reviewsData,
     isLoading,
     error,
-  } = useQuery<ReviewsResponse>({
+  } = useQuery<ApiResponse<ReviewsData>>({
     queryKey: ["productReviews", productId],
     queryFn: async () => {
       const [reviews, stats] = await Promise.all([
-        axios.get(
+        axios.get<ApiResponse<Review[]>>(
           ENDPOINTS.REVIEWS.GET_PRODUCT_REVIEWS.url.replace(
             ":productId",
             productId
           )
         ),
-        axios.get(
+        axios.get<ApiResponse<ReviewStats>>(
           ENDPOINTS.REVIEWS.GET_REVIEW_STATS.url.replace(
             ":productId",
             productId
           )
         ),
       ]);
+
       return {
         success: true,
         data: {
@@ -63,15 +64,15 @@ export const useProductReviews = (productId: string) => {
         },
       };
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 5,
   });
 
   // Verificar si el usuario puede escribir reseña
-  const { data: canReviewData } = useQuery<CanReviewResponse>({
+  const { data: canReviewData } = useQuery<ApiResponse<CanReviewData>>({
     queryKey: ["canReview", productId],
     queryFn: () =>
       axios
-        .get(
+        .get<ApiResponse<CanReviewData>>(
           ENDPOINTS.REVIEWS.CHECK_CAN_REVIEW.url.replace(
             ":productId",
             productId
@@ -82,63 +83,64 @@ export const useProductReviews = (productId: string) => {
         )
         .then((res) => res.data),
     enabled: !!productId && isAuthenticated,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 5,
   });
 
   // Crear reseña
-  const createReviewMutation = useMutation({
-    mutationFn: (reviewData: ReviewFormData) =>
+  const createReviewMutation = useMutation<
+    ApiResponse<Review>,
+    Error,
+    ReviewFormData
+  >({
+    mutationFn: (reviewData) =>
       reviewService.createReview(productId, reviewData),
     onSuccess: () => {
-      queryClient.invalidateQueries(["productReviews", productId]);
-      queryClient.invalidateQueries(["canReview", productId]);
+      queryClient.invalidateQueries({
+        queryKey: ["productReviews", productId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["canReview", productId],
+      });
     },
   });
 
   // Votar reseña
-  const voteReviewMutation = useMutation({
-    mutationFn: ({ reviewId, vote }: ReviewVote) =>
+  const voteReviewMutation = useMutation<
+    ApiResponse<Review>,
+    Error,
+    ReviewVote
+  >({
+    mutationFn: ({ reviewId, vote }) =>
       axios.post(
         ENDPOINTS.REVIEWS.VOTE_REVIEW.url.replace(":reviewId", reviewId),
-        {
-          vote,
-        }
+        { vote }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries(["productReviews", productId]);
+      queryClient.invalidateQueries({
+        queryKey: ["productReviews", productId],
+      });
     },
   });
 
   // Reportar reseña
-  const reportReviewMutation = useMutation({
-    mutationFn: ({ reviewId, reason, details }: ReportData) =>
+  const reportReviewMutation = useMutation<
+    ApiResponse<void>,
+    Error,
+    ReportData
+  >({
+    mutationFn: ({ reviewId, reason, details }) =>
       axios.post(
         ENDPOINTS.REVIEWS.REPORT_REVIEW.url.replace(":reviewId", reviewId),
-        {
-          reason,
-          details,
-        }
+        { reason, details }
       ),
     onSuccess: () => {
-      // Opcional: Mostrar notificación de éxito
-      queryClient.invalidateQueries(["productReviews", productId]);
-    },
-  });
-
-  // Eliminar reseña
-  const deleteReviewMutation = useMutation({
-    mutationFn: (reviewId: string) =>
-      axios.delete(
-        ENDPOINTS.REVIEWS.DELETE_REVIEW.url.replace(":id", reviewId)
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["productReviews", productId]);
-      queryClient.invalidateQueries(["canReview", productId]);
+      queryClient.invalidateQueries({
+        queryKey: ["productReviews", productId],
+      });
     },
   });
 
   return {
-    // Datos principales
     reviews: reviewsData?.data.reviews || [],
     stats: reviewsData?.data.stats || {
       avgRating: 0,
@@ -149,25 +151,19 @@ export const useProductReviews = (productId: string) => {
     isLoading,
     error,
 
-    // Estado de permisos
     canReview: canReviewData?.data.canReview || false,
     reviewRestrictionReason: canReviewData?.data.reason,
 
-    // Mutaciones
     createReview: createReviewMutation.mutate,
-    isCreating: createReviewMutation.isLoading,
+    isCreating: createReviewMutation.isPending,
     createError: createReviewMutation.error,
 
     voteReview: voteReviewMutation.mutate,
-    isVoting: voteReviewMutation.isLoading,
+    isVoting: voteReviewMutation.isPending,
     voteError: voteReviewMutation.error,
 
     reportReview: reportReviewMutation.mutate,
-    isReporting: reportReviewMutation.isLoading,
+    isReporting: reportReviewMutation.isPending,
     reportError: reportReviewMutation.error,
-
-    deleteReview: deleteReviewMutation.mutate,
-    isDeleting: deleteReviewMutation.isLoading,
-    deleteError: deleteReviewMutation.error,
   };
 };

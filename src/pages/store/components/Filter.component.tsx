@@ -75,12 +75,21 @@ const FilterStore = () => {
     );
   };
 
+  interface FilterUpdates {
+    model: () => Partial<typeof filters>;
+    family: () => Partial<typeof filters>;
+    transmission: () => Partial<typeof filters>;
+    fuel: () => Partial<typeof filters>;
+    line: () => Partial<typeof filters>;
+    brand: () => Partial<typeof filters>;
+  }
+
   // Manejador de cambios en los filtros
   const handleFilterChange = (
     filterType: keyof typeof filters,
     value: string
   ) => {
-    const updates = {
+    const updates: FilterUpdates = {
       model: () => ({
         model: value,
         family: "",
@@ -105,6 +114,9 @@ const FilterStore = () => {
       }),
       line: () => ({
         line: value,
+      }),
+      brand: () => ({
+        brand: value,
       }),
     };
 

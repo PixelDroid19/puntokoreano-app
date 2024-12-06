@@ -74,7 +74,7 @@ const Checkout = () => {
     setStatus("process");
   }, [current]);
 
-  // Persistir los datos del checkout entre pasos
+/*   // Persistir los datos del checkout entre pasos
   const saveCheckoutData = (step: string, data: any) => {
     localStorage.setItem(`checkout_${step}`, JSON.stringify(data));
   };
@@ -90,7 +90,7 @@ const Checkout = () => {
     localStorage.removeItem("checkout_contact");
     localStorage.removeItem("checkout_shipping");
     localStorage.removeItem("checkout_billing");
-  };
+  }; */
 
   return (
     <section className="m-5 lg:mx-auto lg:flex lg:gap-4 xl:max-w-[1250px]">
@@ -112,25 +112,25 @@ const Checkout = () => {
           <Contact
             setStatus={setStatus}
             setCurrent={setCurrent}
-            initialData={getCheckoutData("contact")}
-            onSave={(data) => saveCheckoutData("contact", data)}
+            // initialData={getCheckoutData("contact")}
+            // onSave={(data) => saveCheckoutData("contact", data)}
           />
         )}
         {current === 1 && (
           <Shipping
             setStatus={setStatus}
             setCurrent={setCurrent}
-            initialData={getCheckoutData("shipping")}
-            onSave={(data) => saveCheckoutData("shipping", data)}
+            // initialData={getCheckoutData("shipping")}
+            // onSave={(data) => saveCheckoutData("shipping", data)}
           />
         )}
         {current === 2 && (
           <Billing
             setStatus={setStatus}
             setCurrent={setCurrent}
-            initialData={getCheckoutData("billing")}
-            onSave={(data) => saveCheckoutData("billing", data)}
-            onComplete={clearCheckoutData}
+            // initialData={getCheckoutData("billing")}
+            //onSave={(data) => saveCheckoutData("billing", data)}
+            //onComplete={clearCheckoutData}
           />
         )}
       </div>

@@ -7,10 +7,9 @@ interface User {
   name: string;
   email: string;
   role: "admin" | "user";
-  // Campos adicionales útiles
   avatar?: string;
   lastLogin?: Date;
-  preferences?: {
+  preferences: {
     notifications: boolean;
     newsletter: boolean;
   };
@@ -38,12 +37,20 @@ interface AuthState {
   updateToken: (token: string) => void;
 }
 
-const initialState = {
+const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  login: () => {},
+  logout: () => {},
+  updateUser: () => {},
+  setLoading: () => {},
+  setError: () => {},
+  clearError: () => {},
+  updatePreferences: () => {},
+  updateToken: () => {},
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -83,7 +90,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       updatePreferences: (preferences: Partial<User["preferences"]>) => {
-        set((state) => ({
+        set((state: AuthState) => ({
+          ...state,
           user: state.user
             ? {
                 ...state.user,

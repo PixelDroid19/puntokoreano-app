@@ -34,7 +34,7 @@ class ReviewService {
       formData.append("content", reviewData.content);
 
       if (reviewData.images && reviewData.images.length > 0) {
-        reviewData.images.forEach((image, index) => {
+        reviewData.images.forEach((image) => {
           formData.append(`images`, image);
         });
       }

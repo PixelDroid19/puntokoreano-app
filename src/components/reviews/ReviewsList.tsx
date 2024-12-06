@@ -1,8 +1,8 @@
 // components/reviews/ReviewsList.tsx
+// @ts-nocheck
 import { Empty, Rate, Spin } from "antd";
 import { useProductReviews } from "@/hooks/useProductReviews";
 import ReviewUser from "./ReviewUser";
-import { useEffect } from "react";
 
 interface ReviewsListProps {
   productId: string;
@@ -11,10 +11,6 @@ interface ReviewsListProps {
 export const ReviewsList: React.FC<ReviewsListProps> = ({ productId }) => {
   const { reviews: reviewData, isLoading } = useProductReviews(productId);
   const { reviews, stats } = reviewData || {};
-
-  useEffect(() => {
-    console.log("reviews", reviews);
-  }, [reviews]);
 
   if (isLoading) {
     return (

@@ -1,18 +1,7 @@
-import { useState } from "react";
-import ReactCardFlip from "react-card-flip";
-import VirtualCard from "@/components/cards/VirtualCard.component";
 import { useMediaQuery } from "react-responsive";
-import DigitalCardDesktop from "@/components/cards/DigitalCardDesktop";
 import { Parallax } from "react-parallax";
 import ConsultantCard from "./components/ConsultantCard.jsx";
 const About = () => {
-  // const { isError, data } = useQuery({
-  //     queryKey: ['consultants'],
-  //     queryFn: async() => {
-  //         return await axios.get(`${import.meta.env.VITE_API_REST_URL}/api/consultants`);
-  //     }
-  // });
-
   const isDesktop = useMediaQuery({ query: "(min-width: 1024px)" });
 
   const consultants = [

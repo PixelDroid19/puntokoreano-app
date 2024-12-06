@@ -6,7 +6,7 @@ import { useProductReviews } from "@/hooks/useProductReviews";
 interface ReviewProps {
   review: {
     _id: string;
-    user: any; // Puede ser null
+    user: any;
     title: string;
     content: string;
     rating: number;
@@ -22,9 +22,12 @@ interface ReviewProps {
 const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
   const { voteReview, reportReview } = useProductReviews(review._id);
 
-  const handleVote = async (vote: boolean) => {
+  const handleVote = async (voteType: boolean) => {
     try {
-      await voteReview({ reviewId: review._id, vote });
+      await voteReview({
+        reviewId: review._id,
+        vote: voteType ? "positive" : "negative",
+      });
     } catch (error) {
       console.error("Error voting review:", error);
     }

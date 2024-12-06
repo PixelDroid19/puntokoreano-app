@@ -13,6 +13,7 @@ interface Props {
 
 interface Product {
   _id: string;
+  id: string;
   name: string;
   price: number;
   group: string;

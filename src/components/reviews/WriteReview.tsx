@@ -5,6 +5,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { reviewService } from "../../services/reviewService";
 import type { UploadFile } from "antd/es/upload/interface";
 import { PlusOutlined } from "@ant-design/icons";
+import { ReviewFormData } from "@/types/review.types";
 
 interface ReviewStatus {
   canReview: boolean;

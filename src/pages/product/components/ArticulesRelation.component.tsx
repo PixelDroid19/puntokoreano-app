@@ -1,13 +1,13 @@
 import CardArticle from "@/pages/blog/components/CardArticle.component";
 import { useNavigate } from "react-router-dom";
 
-interface Article {
-  title: string; // Título del artículo
-  image: string; // URL de la imagen del artículo
-  author: string; // Autor del artículo
-  description: string; // Descripción breve del artículo
-  date: string; // Fecha en formato string
-}
+interface Article extends Record<string, string> {
+  title: string;
+  image: string; 
+  author: string;
+  description: string;
+  date: string;
+ }
 
 interface ArticuleRelationProps {
   related_products: Article[];

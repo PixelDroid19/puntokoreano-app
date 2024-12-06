@@ -1,5 +1,14 @@
-import React, { useState } from "react";
-import { Rate, Button, Modal, Form, Input, notification, Tag } from "antd";
+import { useState } from "react";
+import {
+  Rate,
+  Button,
+  Modal,
+  Form,
+  Input,
+  notification,
+  Tag,
+  Select,
+} from "antd";
 import {
   LikeOutlined,
   DislikeOutlined,
@@ -11,14 +20,41 @@ import { useProductReviews } from "@/hooks/useProductReviews";
 import { formatDistance } from "date-fns";
 import { es } from "date-fns/locale";
 
-const ReviewUser = ({ review }) => {
+interface Review {
+  _id: string;
+  user?: {
+    name: string;
+  };
+  product: string;
+  rating: number;
+  title: string;
+  content: string;
+  images?: string[];
+  createdAt: string;
+  purchase_verified: boolean;
+  helpful_votes: {
+    positive: number;
+    negative: number;
+  };
+}
+
+interface ReportFormValues {
+  reason: "inappropriate" | "spam" | "fake" | "other";
+  details: string;
+}
+
+interface ReviewUserProps {
+  review: Review;
+}
+
+const ReviewUser: React.FC<ReviewUserProps> = ({ review }) => {
   const [isReportModalVisible, setIsReportModalVisible] = useState(false);
   const [reportForm] = Form.useForm();
   const { user } = useAuth();
   const { voteReview, reportReview } = useProductReviews(review.product);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-  const handleVote = async (vote) => {
+  const handleVote = async (voteType: boolean) => {
     if (!user) {
       notification.info({
         message: "Inicia sesión",
@@ -28,7 +64,10 @@ const ReviewUser = ({ review }) => {
     }
 
     try {
-      await voteReview({ reviewId: review._id, vote });
+      await voteReview({
+        reviewId: review._id,
+        vote: voteType ? "positive" : "negative",
+      });
       notification.success({
         message: "Voto registrado",
         description: "Gracias por tu retroalimentación",
@@ -41,7 +80,7 @@ const ReviewUser = ({ review }) => {
     }
   };
 
-  const handleReport = async (values) => {
+  const handleReport = async (values: ReportFormValues) => {
     if (!user) {
       notification.info({
         message: "Inicia sesión",
@@ -110,7 +149,7 @@ const ReviewUser = ({ review }) => {
       <p className="text-gray-700 mb-3">{review.content}</p>
 
       {/* Imágenes de la reseña */}
-      {review.images?.length > 0 && (
+      {review.images && review.images.length > 0 && (
         <div className="flex gap-2 mb-3">
           {review.images.map((image, index) => (
             <img
@@ -166,7 +205,7 @@ const ReviewUser = ({ review }) => {
               { required: true, message: "Por favor selecciona un motivo" },
             ]}
           >
-            <Input.Select
+            <Select
               options={[
                 { value: "inappropriate", label: "Contenido inapropiado" },
                 { value: "spam", label: "Spam o publicidad" },

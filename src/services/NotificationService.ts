@@ -3,7 +3,7 @@ import ENDPOINTS from '@/api';
 import axios from 'axios';
 
 class NotificationService {
-  private readonly BASE_URL = ENDPOINTS.NOTIFICATIONS.BASE_URL;
+  private readonly BASE_URL = ENDPOINTS.NOTIFICATIONS.GET_ALL.url;
 
   // Enviar notificación de review aprobado
   async sendReviewApprovedNotification(userId: string, reviewId: string) {

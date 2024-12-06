@@ -49,7 +49,6 @@ export interface Endpoints {
   };
 }
 
-// src/api/config.ts
 const getBaseUrl = (): string => {
   const env = import.meta.env.MODE;
 

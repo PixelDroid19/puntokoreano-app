@@ -34,6 +34,8 @@ interface ProductDetailResponse {
     images: string[];
     name: string;
     price: number;
+    long_description: string;
+    short_description: string;
     related_products: any[];
     shipping: string[];
     stock: number;
@@ -209,7 +211,7 @@ const ProductDetail = () => {
               $ {product.price.toLocaleString()} COP
             </h4>
             <div className="flex items-center gap-2">
-              <CountReview productId={id} />
+              <CountReview  />
               {stats.totalReviews > 0 && (
                 <button
                   onClick={goToReviews}

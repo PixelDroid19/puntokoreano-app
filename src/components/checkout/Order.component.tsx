@@ -3,7 +3,7 @@ import { useCartStore } from "@/store/cart.store";
 
 const Orders = () => {
   // Usar el store del carrito
-  const { items, subTotal, total, calculateTotals } = useCartStore();
+  const { items, subTotal, total } = useCartStore();
 
   return (
     <section className="bg-[#FFFFFF] rounded-lg mt-4 px-4 border shadow-xl pb-5 md:h-fit md:w-fit md:sticky lg:w-2/5 lg:mt-[75px]">
