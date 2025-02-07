@@ -31,7 +31,7 @@ const WhatsAppButton = () => {
       placeholder="Escribe un mensaje ..."
       statusMessage="Normalmente, responde en menos de 20 minutos"
       avatar="https://puntokoreano.com/images/logos/logo_1.png"
-      buttonStyle={{ bottom: `${bottom}rem` }}
+      buttonStyle={{ bottom: `${bottom}rem`, width: "70px", height: "70px" }}
       chatboxStyle={{ bottom: `${bottom + 4}rem` }}
       buttonClassName="transition-all duration-200"
     />

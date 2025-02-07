@@ -1,93 +1,97 @@
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Group from "../../../components/layout/Group.component";
-import CardArticle from "./CardArticle.component";
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { useArticlesByVehicle } from "@/hooks/useBlog";
+import CardArticle from "./CardArticle.component";
+import { ArticleResponse } from "@/types/blog";
 
-const Articules = () => {
-    const articles = [
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog1.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog2.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog3.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog4.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog5.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog6.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog1.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-        {
-            "title": "Dolor sit amet adipisicing elit.",
-            "image": "https://risingtheme.com/html/demo-partsix/partsix/assets/img/blog/blog2.webp",
-            "author": "Joe Doe",
-            "description": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi deleniti cum amet saepe nulla quas veritatis.",
-            "date": "20 Octubre"
-        },
-    ];
+const Articles = () => {
+  const { brand, vehicle } = useParams();
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    if (!brand || !vehicle) {
+      navigate("/blog");
+      return;
+    }
+  }, [brand, vehicle, navigate]);
+
+  const { data: articlesResponse, isError } = useArticlesByVehicle(
+    brand ?? "",
+    vehicle ?? "",
+    page
+  );
+
+  const handlePageChange = (newPage: number) => {
+    if (
+      newPage >= 1 &&
+      newPage <= (articlesResponse?.data?.pagination?.pages || 1)
+    ) {
+      setPage(newPage);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  if (isError) {
     return (
-        <section className="mx-5 mb-5 max-w-[1320px] lg:px-10 xl:mx-auto">
-            <Group title={<><strong>BLOG</strong> & ARTICLE</>}/>
-            <div className="sm:flex sm:flex-wrap sm:justify-around lg:gap-2">
-                {
-                    articles.map( (article, idx) => <div key={`${idx}-${article.title}`}><CardArticle article={article} /></div> )
-                }
-            </div>
-            <div className="bg-[#F7F7F7] flex items-center justify-center py-2 gap-2 rounded-lg">
-                <FontAwesomeIcon icon={faArrowLeft} className="text-lg cursor-pointer" />
-                <button className="py-2 px-4 bg-[#E2060F] text-white font-bold border rounded-full">
-                    1
+      <div className="text-center p-8">
+        <p>Error loading articles. Please try again.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">
+        Artículos sobre {brand?.toUpperCase()} {vehicle?.replace(/-/g, " ")}
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {articlesResponse?.data?.articles?.map(
+          (article: ArticleResponse, idx) => (
+            <CardArticle key={`${article.slug}-${idx}`} article={article} />
+          )
+        )}
+      </div>
+
+      {articlesResponse?.data?.pagination?.pages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-8">
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
+            className="p-2 disabled:opacity-50"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} />
+          </button>
+
+          <div className="flex gap-2">
+            {Array.from({ length: articlesResponse.data.pagination.pages }).map(
+              (_, idx) => (
+                <button
+                  key={`page-${idx}`}
+                  onClick={() => handlePageChange(idx + 1)}
+                  className={`w-8 h-8 rounded ${
+                    page === idx + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
+                  }`}
+                >
+                  {idx + 1}
                 </button>
-                <button className="py-2 px-4 bg-white hover:bg-[#E2060F] hover:text-white transition-all duration-300 font-bold border rounded-full">
-                    2
-                </button>
-                <button className="py-2 px-4 bg-white hover:bg-[#E2060F] hover:text-white transition-all duration-300 font-bold border rounded-full">
-                    3
-                </button>
-                <button className="py-2 px-4 bg-white hover:bg-[#E2060F] hover:text-white transition-all duration-300 font-bold border rounded-full">
-                    4
-                </button>
-                <FontAwesomeIcon icon={faArrowRight} className="text-lg cursor-pointer" />
-            </div>
-        </section>
-    )
+              )
+            )}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page === articlesResponse?.data?.pagination?.pages}
+            className="p-2 disabled:opacity-50"
+          >
+            <FontAwesomeIcon icon={faArrowRight} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };
-export default Articules;
+export default Articles;

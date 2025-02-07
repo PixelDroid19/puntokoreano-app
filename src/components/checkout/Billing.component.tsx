@@ -1,8 +1,7 @@
-// src/components/checkout/Billing.component.tsx
+import { useCheckoutStore } from "@/store/checkout.store";
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Form, Input, Select } from "antd";
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
@@ -12,35 +11,38 @@ interface Props {
   setCurrent: React.Dispatch<React.SetStateAction<number>>;
 }
 
-interface FormData {
-  person: string;
+interface BillingFormData {
+  person: "natural" | "juridica";
   nit?: string;
   registerdName?: string;
-  email?: string;
+  email: string;
   name?: string;
   lastName?: string;
 }
 
+const { Option } = Select;
+
 const Billing: React.FC<Props> = ({ setStatus, setCurrent }) => {
   const navigate = useNavigate();
-  const { Option } = Select;
-  const [person, setPerson] = useState<string | undefined>();
+  const { setShippingInfo, shippingInfo } = useCheckoutStore();
+  const [form] = Form.useForm<BillingFormData>();
 
   // Recuperar datos guardados si existen
   const savedData = localStorage.getItem("checkoutBilling");
   const initialValues = savedData ? JSON.parse(savedData) : undefined;
 
-  // Si hay datos guardados, establecer el tipo de persona
-  useEffect(() => {
-    if (initialValues?.person) {
-      setPerson(initialValues.person);
-    }
-  }, [initialValues?.person]);
-
-  const onFinish = (values: FormData) => {
-    // Guardar datos de facturación
+  const onFinish = (values: BillingFormData) => {
+    // Guardar datos en localStorage
     localStorage.setItem("checkoutBilling", JSON.stringify(values));
-    navigate("/store/finish-order");
+
+    // Actualizar el store
+    setShippingInfo({
+      ...shippingInfo,
+      billing: values,
+      type: "billing",
+    });
+
+    setCurrent(3);
   };
 
   const onFinishFailed = () => {
@@ -48,15 +50,31 @@ const Billing: React.FC<Props> = ({ setStatus, setCurrent }) => {
   };
 
   const handleBack = () => {
+    // Guardar datos actuales antes de retroceder
+    const currentValues = form.getFieldsValue();
+    localStorage.setItem("checkoutBilling", JSON.stringify(currentValues));
     setCurrent(1);
   };
 
-  const handleChangePerson = (value: string) => {
-    setPerson(value);
+  // Manejar cambio de tipo de persona
+  const handlePersonChange = (value: BillingFormData["person"]) => {
+    // Limpiar campos específicos cuando cambia el tipo de persona
+    if (value === "natural") {
+      form.setFieldsValue({
+        nit: undefined,
+        registerdName: undefined,
+      });
+    } else {
+      form.setFieldsValue({
+        name: undefined,
+        lastName: undefined,
+      });
+    }
   };
 
   return (
-    <Form
+    <Form<BillingFormData>
+      form={form}
       onFinish={onFinish}
       onFinishFailed={onFinishFailed}
       layout="vertical"
@@ -70,105 +88,130 @@ const Billing: React.FC<Props> = ({ setStatus, setCurrent }) => {
         label="Tipo de persona"
         rules={[{ required: true, message: "Selecciona el tipo de persona" }]}
       >
-        <Select onChange={handleChangePerson}>
+        <Select onChange={handlePersonChange}>
           <Option value="natural">Persona Natural</Option>
           <Option value="juridica">Persona Jurídica</Option>
         </Select>
       </Form.Item>
 
-      {person === "juridica" && (
-        <>
-          <Form.Item
-            name="registerdName"
-            label="Razón Social"
-            hasFeedback
-            validateDebounce={1000}
-            rules={[
-              {
-                required: true,
-                min: 2,
-                message: "La Razón Social debe tener al menos 2 caracteres",
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="nit"
-            label="Número de Identificación Tributaria (NIT)"
-            hasFeedback
-            validateDebounce={1000}
-            rules={[{ required: true, message: "El NIT es requerido" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Correo electrónico"
-            hasFeedback
-            validateDebounce={1000}
-            rules={[
-              { required: true, message: "El correo electrónico es requerido" },
-              {
-                type: "email",
-                message: "Ingresa un correo electrónico válido",
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-        </>
-      )}
+      <Form.Item noStyle dependencies={["person"]}>
+        {({ getFieldValue }) => {
+          const personType = getFieldValue("person");
 
-      {person === "natural" && (
-        <>
-          <Form.Item
-            label="Nombre"
-            name="name"
-            hasFeedback
-            validateDebounce={1000}
-            rules={[
-              {
-                required: true,
-                min: 2,
-                message: "El nombre debe tener al menos 2 caracteres",
-              },
-            ]}
-          >
-            <Input placeholder="Joe" />
-          </Form.Item>
-          <Form.Item
-            label="Apellido"
-            name="lastName"
-            hasFeedback
-            validateDebounce={1000}
-            rules={[
-              {
-                required: true,
-                min: 2,
-                message: "El apellido debe tener al menos 2 caracteres",
-              },
-            ]}
-          >
-            <Input placeholder="Doe" />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Correo Electrónico"
-            hasFeedback
-            validateDebounce={1000}
-            rules={[
-              { required: true, message: "El correo electrónico es requerido" },
-              {
-                type: "email",
-                message: "Ingresa un correo electrónico válido",
-              },
-            ]}
-          >
-            <Input placeholder="joedoe@gmail.com" />
-          </Form.Item>
-        </>
-      )}
+          if (personType === "juridica") {
+            return (
+              <>
+                <Form.Item
+                  name="registerdName"
+                  label="Razón Social"
+                  hasFeedback
+                  validateDebounce={1000}
+                  rules={[
+                    {
+                      required: true,
+                      min: 2,
+                      message:
+                        "La Razón Social debe tener al menos 2 caracteres",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Nombre de la empresa" />
+                </Form.Item>
+                <Form.Item
+                  name="nit"
+                  label="Número de Identificación Tributaria (NIT)"
+                  hasFeedback
+                  validateDebounce={1000}
+                  rules={[
+                    { required: true, message: "El NIT es requerido" },
+                    {
+                      pattern: /^[0-9-]+$/,
+                      message: "NIT inválido",
+                    },
+                  ]}
+                >
+                  <Input placeholder="900.123.456-7" />
+                </Form.Item>
+                <Form.Item
+                  name="email"
+                  label="Correo electrónico"
+                  hasFeedback
+                  validateDebounce={1000}
+                  rules={[
+                    {
+                      required: true,
+                      message: "El correo electrónico es requerido",
+                    },
+                    {
+                      type: "email",
+                      message: "Ingresa un correo electrónico válido",
+                    },
+                  ]}
+                >
+                  <Input placeholder="empresa@ejemplo.com" />
+                </Form.Item>
+              </>
+            );
+          }
+
+          if (personType === "natural") {
+            return (
+              <>
+                <Form.Item
+                  label="Nombre"
+                  name="name"
+                  hasFeedback
+                  validateDebounce={1000}
+                  rules={[
+                    {
+                      required: true,
+                      min: 2,
+                      message: "El nombre debe tener al menos 2 caracteres",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Joe" />
+                </Form.Item>
+                <Form.Item
+                  label="Apellido"
+                  name="lastName"
+                  hasFeedback
+                  validateDebounce={1000}
+                  rules={[
+                    {
+                      required: true,
+                      min: 2,
+                      message: "El apellido debe tener al menos 2 caracteres",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Doe" />
+                </Form.Item>
+                <Form.Item
+                  name="email"
+                  label="Correo Electrónico"
+                  hasFeedback
+                  validateDebounce={1000}
+                  rules={[
+                    {
+                      required: true,
+                      message: "El correo electrónico es requerido",
+                    },
+                    {
+                      type: "email",
+                      message: "Ingresa un correo electrónico válido",
+                    },
+                  ]}
+                >
+                  <Input placeholder="joedoe@gmail.com" />
+                </Form.Item>
+              </>
+            );
+          }
+
+          return null;
+        }}
+      </Form.Item>
 
       <div className="flex gap-x-5 items-center flex-wrap">
         <button

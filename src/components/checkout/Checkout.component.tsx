@@ -14,6 +14,7 @@ import Shipping from "./Shipping.component";
 import Orders from "./Order.component";
 import Billing from "./Billing.component";
 import { useCartStore } from "@/store/cart.store";
+import Payment from "./Payment.component";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ const Checkout = () => {
     setStatus("process");
   }, [current]);
 
-/*   // Persistir los datos del checkout entre pasos
+  /*   // Persistir los datos del checkout entre pasos
   const saveCheckoutData = (step: string, data: any) => {
     localStorage.setItem(`checkout_${step}`, JSON.stringify(data));
   };
@@ -132,6 +133,10 @@ const Checkout = () => {
             //onSave={(data) => saveCheckoutData("billing", data)}
             //onComplete={clearCheckoutData}
           />
+        )}
+
+        {current === 3 && (
+          <Payment setStatus={setStatus} setCurrent={setCurrent} />
         )}
       </div>
       <Orders />

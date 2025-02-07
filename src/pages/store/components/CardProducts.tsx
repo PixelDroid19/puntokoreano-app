@@ -104,6 +104,11 @@ const CardProducts = ({ inline = false, product }: Props) => {
             </Swiper>
           )}
         </div>
+        <div className="flex h-2">
+          <div className="flex-1 bg-[#E8832F] h-1" />
+          <div className="flex-1 bg-[#302582] h-1" />
+          <div className="flex-1 bg-[#9C089F] h-1" />
+        </div>
 
         {/* Product info */}
         <div className="p-4">
@@ -117,7 +122,7 @@ const CardProducts = ({ inline = false, product }: Props) => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex flex-col">
                 <span className="text-sm text-gray-500">Precio</span>
-                <span className="font-bold text-lg text-[#E2060F]">
+                <span className="font-bold text-lg text-[#000000]">
                   $ {product.price.toLocaleString()} COP
                 </span>
               </div>
@@ -135,18 +140,23 @@ const CardProducts = ({ inline = false, product }: Props) => {
           </div>
 
           {/* Add to cart button */}
+
           <button
             onClick={handleAddToCart}
             disabled={product.stock === 0}
             className={`
-                            w-full px-4 py-2.5 rounded-lg transition-all duration-300
-                            flex items-center justify-center gap-2 font-medium
-                            ${
-                              product.stock === 0
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                : "bg-[#E2060F] text-white hover:bg-[#001529] active:scale-95"
-                            }
-                        `}
+    w-full px-4 py-2.5 rounded-lg transition-all duration-300
+    flex items-center justify-center gap-2 font-medium
+    ${
+      product.stock === 0
+        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+        : `
+          bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+          hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+          active:scale-95
+        `
+    }
+  `}
           >
             <ShoppingCart className="w-5 h-5" />
             {product.stock === 0 ? "Sin stock" : "Añadir al carrito"}

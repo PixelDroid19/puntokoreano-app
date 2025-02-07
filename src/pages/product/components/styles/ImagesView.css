@@ -1,0 +1,25 @@
+/* ImagesView.css */
+.swiper-button-next,
+.swiper-button-prev {
+  color: #E2060F !important;
+  background: white;
+  width: 35px !important;
+  height: 35px !important;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+  font-size: 18px !important;
+  font-weight: bold;
+}
+
+.thumbnail-swiper .swiper-slide {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.thumbnail-swiper .swiper-slide-thumb-active {
+  opacity: 1;
+}

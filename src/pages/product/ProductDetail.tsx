@@ -159,6 +159,8 @@ const ProductDetail = () => {
           name={product?.name}
           long_description={product?.long_description || ""}
           short_description={product?.short_description || ""}
+          group={product?.group}
+          subgroup={product?.subgroup}
         />
       ),
     },
@@ -181,11 +183,11 @@ const ProductDetail = () => {
         <ArticuleRelation related_products={product?.related_products || []} />
       ),
     },
-    {
+   /*  {
       key: "4",
       label: "Aplicaciones",
       children: <Applies />,
-    },
+    }, */
   ];
 
   if (isLoading) return <div>Cargando...</div>;
@@ -207,15 +209,15 @@ const ProductDetail = () => {
         <div>
           <h1 className="font-bold text-xl mb-2 lg:text-2xl">{product.name}</h1>
           <div className="flex gap-4">
-            <h4 className="font-bold text-base text-[#E2060F]">
+            <h4 className="font-bold text-base text-[#030202]">
               $ {product.price.toLocaleString()} COP
             </h4>
             <div className="flex items-center gap-2">
-              <CountReview  />
+              <CountReview />
               {stats.totalReviews > 0 && (
                 <button
                   onClick={goToReviews}
-                  className="text-sm text-gray-500 hover:text-[#E2060F]"
+                  className="text-sm text-gray-500 hover:text-[#59214f]"
                 >
                   Ver {stats.totalReviews} reseñas
                 </button>
@@ -248,7 +250,19 @@ const ProductDetail = () => {
               </button>
             </Space>
             <button
-              className="bg-[#E2060F] hover:bg-[#001529] transition-[background-color] duration-300 text-white px-4 py-2 rounded-full outline-none text-md font-semibold disabled:opacity-50"
+              className={`
+                w-full px-4 py-2.5 rounded-lg transition-all duration-300
+                flex items-center justify-center gap-2 font-medium
+                ${
+                  product.stock === 0
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : `
+                      bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+                      hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+                      active:scale-95
+                    `
+                }
+              `}
               disabled={product.stock === 0}
               onClick={handleAddToCart}
             >
@@ -274,7 +288,19 @@ const ProductDetail = () => {
           </Space>
 
           <button
-            className="bg-[#E2060F] hover:bg-[#001529] transition-[background-color] duration-300 text-white block w-full py-2 rounded-full font-semibold text-base mt-2 disabled:opacity-50"
+            className={`
+            w-full px-4 py-2.5 rounded-lg transition-all duration-300
+            flex items-center justify-center gap-2 font-medium
+            ${
+              product.stock === 0
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : `
+                  bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+                  hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+                  active:scale-95
+                `
+            }
+          `}
             disabled={product.stock === 0}
             onClick={handleBuyNow}
           >

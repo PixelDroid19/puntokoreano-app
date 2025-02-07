@@ -1,4 +1,6 @@
 // src/store/auth.store.ts
+import ENDPOINTS from "@/api";
+import axios from "axios";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
@@ -23,13 +25,17 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  tokenExpiry: number | null;
 
   // Acciones básicas
   login: (user: User, token: string) => void;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
+  checkTokenExpiration: () => boolean;
+  refreshSession: () => Promise<void>;
 
   // Acciones adicionales
+  setTokenExpiry: (expiry: number) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -55,16 +61,38 @@ const initialState: AuthState = {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
 
-      login: (user: User, token: string) => {
+      login: (user: Record<string, any>, token: string) => {
         set({
           user,
           token,
           isAuthenticated: true,
           error: null,
         });
+      },
+
+      tokenExpiry: null,
+
+      setTokenExpiry: (expiry: number) => {
+        set({ tokenExpiry: expiry });
+      },
+
+      checkTokenExpiration: () => {
+        const { tokenExpiry } = get();
+        if (!tokenExpiry) return false;
+        return Date.now() >= tokenExpiry;
+      },
+
+      refreshSession: async () => {
+        try {
+          const response = await axios.post(ENDPOINTS.AUTH.CHECK_SESSION.url);
+          const { token, expiresAt } = response.data;
+          set({ token, tokenExpiry: expiresAt });
+        } catch {
+          get().logout();
+        }
       },
 
       logout: () => {
@@ -115,6 +143,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        tokenExpiry: state.tokenExpiry,
       }),
     }
   )

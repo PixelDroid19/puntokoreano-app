@@ -2,6 +2,7 @@ import { Drawer, Image, notification } from "antd";
 import { useMediaQuery } from "react-responsive";
 import { useWishlistStore } from "@/store/wishlist.store";
 import { useCartStore } from "@/store/cart.store";
+import { formatNumber } from "@/pages/store/utils/formatPrice";
 
 interface Props {
   open: boolean;
@@ -54,7 +55,7 @@ const WishlistModal = ({ open, setOpen }: Props) => {
           </figure>
           <div className="flex flex-col gap-1">
             <h3 className="text-base font-semibold">{item.name}</h3>
-            <p>$ {item.price.toLocaleString("es-CO")} COP</p>
+            <p>$ {formatNumber(item?.price, "es-CO", "COP")} COP</p>
             <div className="flex gap-2">
               <button
                 onClick={() => handleAddToCart(item)}

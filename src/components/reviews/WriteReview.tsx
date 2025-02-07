@@ -6,6 +6,7 @@ import { reviewService } from "../../services/reviewService";
 import type { UploadFile } from "antd/es/upload/interface";
 import { PlusOutlined } from "@ant-design/icons";
 import { ReviewFormData } from "@/types/review.types";
+import { useProductReviews } from "@/hooks/useProductReviews";
 
 interface ReviewStatus {
   canReview: boolean;
@@ -24,6 +25,15 @@ interface Props {
 const WriteReview = ({ productId, onSuccess }: Props) => {
   const [form] = Form.useForm();
   const { isAuthenticated } = useAuth();
+  const {
+    canReview,
+    hasOrdered,
+    hasReviewed,
+    orderInfo,
+    createReview,
+    isCreating,
+  } = useProductReviews(productId);
+
   const [reviewStatus, setReviewStatus] = useState<ReviewStatus | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -61,56 +71,49 @@ const WriteReview = ({ productId, onSuccess }: Props) => {
   }, [productId, isAuthenticated]);
 
   const handleSubmit = async (values: any) => {
-    if (!isAuthenticated) {
-      notification.error({
-        message: "Debes iniciar sesión",
-        description: "Para calificar un producto necesitas iniciar sesión",
-      });
+    if (!isAuthenticated || !canReview) {
       return;
     }
 
-    if (!reviewStatus?.canReview) {
-      return;
-    }
-
-    setSubmitting(true);
     try {
       const reviewData: ReviewFormData = {
         rating: values.rating,
         title: values.title,
         content: values.content,
         images: fileList.map((file) => file.originFileObj as File),
+        orderId: orderInfo?.orderId,
       };
 
-      const response = await reviewService.createReview(productId, reviewData);
+      await createReview(reviewData);
 
-      if (response.success) {
-        notification.success({
-          message: "Calificación enviada",
-          description: "Tu calificación será revisada y publicada pronto",
-        });
+      notification.success({
+        message: "Calificación enviada",
+        description: "Tu calificación será revisada y publicada pronto",
+      });
 
-        form.resetFields();
-        setFileList([]);
-        onSuccess();
-      } else {
-        throw new Error(response.message || "Error al crear la reseña");
-      }
+      form.resetFields();
+      setFileList([]);
+      onSuccess();
     } catch (error: any) {
       notification.error({
         message: "Error",
-        description:
-          error.message ||
-          "No se pudo enviar tu calificación. Intenta de nuevo.",
+        description: error.message || "No se pudo enviar tu calificación",
       });
-    } finally {
-      setSubmitting(false);
     }
   };
-  if (!isAuthenticated) {
+
+  if (!isAuthenticated || !canReview) {
     return (
       <div className="text-center p-4 bg-gray-50 rounded-lg">
-        <p>Debes iniciar sesión para calificar este producto</p>
+        <p>
+          {!isAuthenticated
+            ? "Debes iniciar sesión para calificar"
+            : !hasOrdered
+            ? "Debes comprar este producto para calificarlo"
+            : hasReviewed
+            ? "Ya has calificado este producto"
+            : "No puedes calificar este producto aún"}
+        </p>
       </div>
     );
   }

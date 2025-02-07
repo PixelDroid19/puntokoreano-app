@@ -33,11 +33,9 @@ const GroupComponent = () => {
   const { data } = useQuery({
     queryKey: ["groups"],
     queryFn: () => {
-      return axios
-        .get(ENDPOINTS.GROUPS.GET_ALL.url)
-        .then((resp) => {
-          return resp.data;
-        });
+      return axios.get(ENDPOINTS.GROUPS.GET_ALL.url).then((resp) => {
+        return resp.data;
+      });
     },
   });
 
@@ -45,7 +43,9 @@ const GroupComponent = () => {
     return (
       <div className="absolute -right-6 top-1/2 size-5 -translate-y-1/2 ">
         <button
-          className="bg-yellow-500 hover:bg-[#ddd] rounded-full size-5 flex items-center justify-center"
+          className="bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+          hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+          active:scale-95 hover:bg-[#ddd] rounded-full size-5 flex items-center justify-center"
           onClick={() => slider?.current?.slickNext()}
         >
           <FontAwesomeIcon icon={faArrowRight} size="xs" />
@@ -58,7 +58,9 @@ const GroupComponent = () => {
     return (
       <div className="absolute -left-6 top-1/2 size-5 -translate-y-1/2 ">
         <button
-          className="bg-yellow-500 hover:bg-[#e5e7eb] rounded-full size-5 flex items-center justify-center"
+          className="bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+          hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+          active:scale-95 hover:bg-[#e5e7eb] rounded-full size-5 flex items-center justify-center"
           onClick={() => slider?.current?.slickPrev()}
         >
           <FontAwesomeIcon icon={faArrowLeft} size="xs" />

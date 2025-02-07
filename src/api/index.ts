@@ -15,6 +15,7 @@ export interface Endpoints {
     GET_ALL: ApiEndpoint;
     SEARCH: ApiEndpoint;
     PRODUCT_DETAIL: ApiEndpoint;
+    FILTER: ApiEndpoint;
   };
   FILTERS: {
     GET_ALL: ApiEndpoint;
@@ -30,7 +31,7 @@ export interface Endpoints {
     REPORT_REVIEW: ApiEndpoint;
     CHECK_CAN_REVIEW: ApiEndpoint;
 
-  /*   UPDATE_REVIEW: ApiEndpoint;
+    /*   UPDATE_REVIEW: ApiEndpoint;
     DELETE_REVIEW: ApiEndpoint;
     GET_USER_REVIEWS: ApiEndpoint;
  
@@ -47,6 +48,36 @@ export interface Endpoints {
     GET_ALL: ApiEndpoint;
     MARK_AS_READ: ApiEndpoint;
   };
+
+  BLOG: {
+    GET_BRANDS: ApiEndpoint;
+    GET_VEHICLES_BY_BRAND: ApiEndpoint;
+    GET_ARTICLES_BY_VEHICLE: ApiEndpoint;
+    GET_ARTICLE_DETAIL: ApiEndpoint;
+    GET_ARTICLES: ApiEndpoint;
+    LIKE_ARTICLE: ApiEndpoint;
+    ADD_COMMENT: ApiEndpoint;
+  };
+  ORDERS: {
+    CREATE: ApiEndpoint;
+    GET_ORDER: ApiEndpoint;
+    CALCULATE_SHIPPING: ApiEndpoint;
+  };
+  PAYMENT: {
+    CREATE_INTENT: ApiEndpoint;
+    CREATE_TRANSACTION: ApiEndpoint;
+    CONFIG: ApiEndpoint;
+    WEBHOOK: ApiEndpoint;
+    METHODS: ApiEndpoint;
+    TOKENIZE_CARD: ApiEndpoint;
+    TOKENIZE_NEQUI: ApiEndpoint;
+    NEQUI_TOKEN_STATUS: ApiEndpoint;
+    NEQUI_TOKEN_POLL: ApiEndpoint;
+    NEQUI_PAYMENT_SOURCE: ApiEndpoint;
+  };
+  SETTINGS: {
+    GET_PUBLIC_ABOUT: ApiEndpoint;
+  };
 }
 
 const getBaseUrl = (): string => {
@@ -54,7 +85,7 @@ const getBaseUrl = (): string => {
 
   const urls: Record<string, string> = {
     development: "http://localhost:5000/api/v1",
-    production: import.meta.env.VITE_API_URL,
+    production: import.meta.env.VITE_API_REST_URL,
   };
 
   return urls[env] || urls.development;
@@ -63,6 +94,12 @@ const getBaseUrl = (): string => {
 export const BASE_URL = getBaseUrl();
 
 const ENDPOINTS: Endpoints = {
+  SETTINGS: {
+    GET_PUBLIC_ABOUT: {
+      url: `${BASE_URL}/settings/about`,
+      method: "GET",
+    },
+  },
   AUTH: {
     LOGIN: {
       url: `${BASE_URL}/auth/ecommerce/login`,
@@ -81,8 +118,68 @@ const ENDPOINTS: Endpoints = {
       method: "GET",
     },
   },
+  PAYMENT: {
+    CREATE_INTENT: {
+      url: `${BASE_URL}/payment/create-payment-intent`,
+      method: "POST",
+    },
+    CREATE_TRANSACTION: {
+      url: `${BASE_URL}/payment/create-transaction`,
+      method: "POST",
+    },
+    TOKENIZE_CARD: {
+      url: `${BASE_URL}/payment/wompi/tokenize-card`,
+      method: "POST",
+    },
+    CONFIG: {
+      url: `${BASE_URL}/payment/config`,
+      method: "GET",
+    },
+    WEBHOOK: {
+      url: `${BASE_URL}/payment/webhook`,
+      method: "POST",
+    },
+    METHODS: {
+      url: `${BASE_URL}/payment/methods`,
+      method: "GET",
+    },
+    TOKENIZE_NEQUI: {
+      url: `${BASE_URL}/payment/wompi/tokenize-nequi`,
+      method: "POST",
+    },
+    NEQUI_TOKEN_STATUS: {
+      url: `${BASE_URL}/payment/wompi/nequi-token/:tokenId`,
+      method: "GET",
+    },
+    NEQUI_TOKEN_POLL: {
+      url: `${BASE_URL}/payment/wompi/nequi-token/:tokenId/poll`,
+      method: "GET",
+    },
+    NEQUI_PAYMENT_SOURCE: {
+      url: `${BASE_URL}/payment/wompi/nequi-payment-source`,
+      method: "POST",
+    },
+  },
+  ORDERS: {
+    CREATE: {
+      url: `${BASE_URL}/orders`,
+      method: "POST",
+    },
+    GET_ORDER: {
+      url: `${BASE_URL}/orders/:id`,
+      method: "GET",
+    },
+    CALCULATE_SHIPPING: {
+      url: `${BASE_URL}/orders/calculate-shipping`,
+      method: "POST",
+    },
+  },
 
   PRODUCTS: {
+    FILTER: {
+      url: `${BASE_URL}/products/filter`,
+      method: "GET",
+    },
     PRODUCT_DETAIL: {
       url: `${BASE_URL}/products/detail`,
       method: "GET",
@@ -149,6 +246,36 @@ const ENDPOINTS: Endpoints = {
     },
     MARK_AS_READ: {
       url: `${BASE_URL}/notifications/mark-read`,
+      method: "POST",
+    },
+  },
+  BLOG: {
+    GET_BRANDS: {
+      url: `${BASE_URL}/blog/brands`,
+      method: "GET",
+    },
+    GET_VEHICLES_BY_BRAND: {
+      url: `${BASE_URL}/blog/brands/:brand/models`,
+      method: "GET",
+    },
+    GET_ARTICLES_BY_VEHICLE: {
+      url: `${BASE_URL}/blog/vehicles/:brand/:model/articles`,
+      method: "GET",
+    },
+    GET_ARTICLE_DETAIL: {
+      url: `${BASE_URL}/blog/articles/:slug`,
+      method: "GET",
+    },
+    GET_ARTICLES: {
+      url: `${BASE_URL}/blog/articles`,
+      method: "GET",
+    },
+    LIKE_ARTICLE: {
+      url: `${BASE_URL}/blog/articles/:id/like`,
+      method: "POST",
+    },
+    ADD_COMMENT: {
+      url: `${BASE_URL}/blog/articles/:id/comments`,
       method: "POST",
     },
   },

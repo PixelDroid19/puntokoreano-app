@@ -1,5 +1,6 @@
 import { Badge, Image } from "antd";
 import { useCartStore } from "@/store/cart.store";
+import { formatNumber } from "@/pages/store/utils/formatPrice";
 
 const Orders = () => {
   // Usar el store del carrito
@@ -21,7 +22,7 @@ const Orders = () => {
           </figure>
           <div>
             <h2 className="font-semibold text-lg">{item.name}</h2>
-            <p>$ {item.price.toLocaleString("es-CO")} COP</p>
+            <p>$ {formatNumber(item?.price, "es-CO", "COP")} COP</p>
           </div>
         </div>
       ))}
@@ -29,13 +30,13 @@ const Orders = () => {
       <div className="pt-4 text-base border-b">
         <div className="flex justify-between pb-2">
           <p className="text-gray-400">Subtotal</p>
-          <p>$ {subTotal.toLocaleString("es-CO")} COP</p>
+          <p>$ {formatNumber(subTotal, "es-CO", "COP")} COP</p>
         </div>
       </div>
 
       <div className="pt-4 text-base flex justify-between">
         <p>Total</p>
-        <p>$ {total.toLocaleString("es-CO")} COP</p>
+        <p>$ {formatNumber(total, "es-CO", "COP")} COP</p>
       </div>
     </section>
   );

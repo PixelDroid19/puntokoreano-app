@@ -18,7 +18,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import Footer from "../../pages/home/components/Footer.component";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CartModal from "../Modals/CartModal.component";
 import WhatsAppButton from "../buttons/Whatsapp.component";
 import WishlistModal from "../Modals/Wishlist.component";
@@ -72,6 +72,11 @@ export const MainLayout = ({ children }: Props) => {
     },
   ];
 
+  useEffect(() => {
+  console.log('isAuthenticated',isAuthenticated)
+  }, [isAuthenticated])
+  
+
   const userMenuItems = [
     {
       key: "1",
@@ -86,22 +91,20 @@ export const MainLayout = ({ children }: Props) => {
         </Link>
       ),
     },
-    ...(isAuthenticated
-      ? [
-          {
-            key: "2",
-            label: (
-              <button
-                onClick={logout}
-                className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FontAwesomeIcon icon={faSignOutAlt} />
-                Cerrar Sesión
-              </button>
-            ),
-          },
-        ]
-      : []),
+    ...(isAuthenticated ? [
+      {
+        key: "2",
+        label: (
+          <button
+            onClick={logout}
+            className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faSignOutAlt} />
+            Cerrar Sesión
+          </button>
+        ),
+      }
+    ] : []),
   ];
 
   return (

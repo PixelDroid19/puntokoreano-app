@@ -1,155 +1,184 @@
-import { Button, Divider } from "antd";
-import ssangyong from "../../../assets/SSangYong_blue.png";
-import { useMediaQuery } from "react-responsive";
-import { useNavigate } from "react-router-dom";
-
-import "./styles.css";
+// Sections.tsx
+import { useRef } from "react";
+import { Carousel, Badge, Statistic } from "antd";
+import { 
+  Award,
+  PenTool, 
+  ShieldCheck,
+  Clock,
+  Users,
+  Building,
+  MapPin,
+  Star
+} from "lucide-react";
+import './styles/Sections.component.css'
+interface Achievement {
+  icon: JSX.Element;
+  value: string;
+  title: string;
+  color: string;
+}
 
 const Sections = () => {
-  const navigate = useNavigate();
-  const isBigger = useMediaQuery({ query: "(min-width: 1535px)" });
+  const carouselRef = useRef<typeof Carousel>(null);
+
+  // Datos de logros y estadísticas
+  const achievements: Achievement[] = [
+    {
+      icon: <Award className="w-8 h-8" />,
+      value: "20+",
+      title: "Años de Experiencia",
+      color: "bg-blue-50 text-blue-600"
+    },
+    {
+      icon: <Users className="w-8 h-8" />,
+      value: "10,000+",
+      title: "Clientes Satisfechos",
+      color: "bg-green-50 text-green-600"
+    },
+    {
+      icon: <PenTool className="w-8 h-8" />,
+      value: "5,000+",
+      title: "Repuestos Disponibles",
+      color: "bg-purple-50 text-purple-600"
+    },
+    {
+      icon: <ShieldCheck className="w-8 h-8" />,
+      value: "100%",
+      title: "Garantía de Calidad",
+      color: "bg-red-50 text-red-600"
+    }
+  ];
+
+  // Datos de servicios destacados
+  const highlightedServices = [
+    {
+      title: "Taller Especializado",
+      description: "Servicio técnico certificado con las últimas herramientas de diagnóstico",
+      image: "https://puntokoreano.com/images/carrousel/KORANDO.jpg",
+      stats: [
+        { icon: <Clock />, value: "Atención Rápida" },
+        { icon: <PenTool />, value: "Técnicos Certificados" }
+      ]
+    },
+    {
+      title: "Centro de Repuestos",
+      description: "La más amplia disponibilidad de repuestos originales SsangYong",
+      image: "https://puntokoreano.com/images/carrousel/REXTON.webp",
+      stats: [
+        { icon: <Building />, value: "Stock Permanente" },
+        { icon: <Star />, value: "Calidad Original" }
+      ]
+    },
+    {
+      title: "Servicio Premium",
+      description: "Atención personalizada y seguimiento post-venta garantizado",
+      image: "https://puntokoreano.com/images/carrousel/TORRES.jpg",
+      stats: [
+        { icon: <Users />, value: "Asesoría Experta" },
+        { icon: <MapPin />, value: "Cobertura Nacional" }
+      ]
+    }
+  ];
 
   return (
-    <div data-aos="fade-up" className={`container-sections relative z-10`}>
-      <div className={`container-title`}>
-        <div>
-          <h2>Conoce nuestros espacios digitales</h2>
-          <p>Cada vez un paso mas cerca de nuestros clientes</p>
-        </div>
-        <div className="flex flex-1 items-center justify-center lg:justify-end gap-4">
-          <img
-            src="https://puntokoreano.com/images/logos/kgm_mobility.png"
-            alt=""
-            width={160}
-            className={`mr-4`}
-          />
-          <Divider
-            type="vertical"
-            className={`border-[#2F2482] border-2 h-16 -ml-4`}
-          />
-          <img src={ssangyong} alt="" width={120} className={``} />
-        </div>
-      </div>
+    <div className="bg-gradient-to-b from-white to-gray-50 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Sección de Logros */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 font-glegoo mb-4">
+            LIDERANDO LA EXCELENCIA AUTOMOTRIZ
+          </h2>
+          <div className="w-24 h-1 bg-[#E2060F] mx-auto mb-12"></div>
 
-      <div data-aos="fade-up" className={`container-main-sections`}>
-        <div
-          onClick={() => navigate("/store/search")}
-          className={`flex flex-col-reverse gap-4  mt-8 md:-skew-x-12 md:flex-row lg:justify-between border-2 border-solid border-[#5c4dce] p-4 rounded-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-200 cursor-pointer`}
-        >
-          <div className={`md:flex-1 flex flex-col justify-between`}>
-            <h2
-              className={`text-2xl tracking-wide text-center uppercase md:text-justify 2xl:text-3xl font-glegoo mt-3`}
-            >
-              Tienda Virtual
-            </h2>
-            <p
-              className={`text-center md:text-justify md:w-80 lg:w-96 2xl:text-xl font-exo`}
-            >
-              {<b>Encuentra la pieza que necesitas aquí!</b>}
-              <br />
-              Contamos con una gran variedad de repuestos para tu vehículo a muy
-              buenos precios entra aquí para conocer mas...
-            </p>
-            <Button
-              danger
-              size={isBigger ? "large" : "middle"}
-              className={`rounded-full mx-auto block mt-4 w-fit uppercase md:mx-0 2xl:text-xl`}
-            >
-              {" "}
-              Click here{" "}
-            </Button>
-          </div>
-          <div
-            className={`h-36 w-72 mx-auto md:mr-4 lg:w-[26rem] lg:h-60 lg:mr-8 xl:w-[34rem] 2xl:h-80 2xl:w-[40rem] 2xl:mr-12`}
-          >
-            <img
-              src="https://puntokoreano.com/images/carrousel/KORANDO.jpg"
-              alt=""
-              className="brightness-[.4] w-full h-full object-cover"
-            />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {achievements.map((achievement, index) => (
+              <div 
+                key={index}
+                className="p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300"
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
+              >
+                <div className={`${achievement.color} p-4 rounded-full inline-block mb-4`}>
+                  {achievement.icon}
+                </div>
+                <Statistic 
+                  value={achievement.value} 
+                  title={achievement.title}
+                  className="font-glegoo"
+                />
+              </div>
+            ))}
           </div>
         </div>
 
-        <div
-          onClick={() => navigate("/about")}
-          className={`flex flex-col-reverse gap-4 mt-8 md:-skew-x-12 md:flex-row lg:justify-between border-2 border-solid border-[#5c4dce] p-4 rounded-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-200 cursor-pointer`}
-        >
-          <div className={`md:flex-1 flex flex-col justify-between`}>
-            <h2
-              className={`text-2xl tracking-wide text-center uppercase md:text-justify 2xl:text-3xl font-glegoo`}
-            >
-              ¿Quienes somos?
-            </h2>
-            <p
-              className={`text-center md:text-justify md:w-80 lg:w-96 2xl:text-xl font-exo`}
-            >
-              {<b>Has parte de nuestra familia PUNTO KOREANO</b>}
-              <br />
-              Conócenos a través de nuestra historia y visita nuestra tienda
-              física.
-            </p>
-            <Button
-              onClick={() => navigate("/about")}
-              danger
-              size={isBigger ? "large" : "middle"}
-              className={`rounded-full mx-auto block mt-4 uppercase w-fit md:mx-0 2xl:text-xl`}
-            >
-              {" "}
-              Click here{" "}
-            </Button>
-          </div>
-          <div
-            className={`h-36 w-72 bg-gray-500 mx-auto md:mr-4 lg:w-[26rem] lg:h-60 lg:mr-8 xl:w-[34rem] 2xl:h-80 2xl:w-[40rem] 2xl:mr-12`}
-          >
-            <img
-              src="https://puntokoreano.com/images/carrousel/REXTON.webp"
-              alt=""
-              className="brightness-[.4] w-full h-full object-cover"
-            />
+        {/* Sección de Servicios Destacados */}
+        <div className="mt-20">
+          <h3 className="text-2xl font-bold text-center mb-12 font-glegoo">
+            SERVICIOS DE EXCELENCIA
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {highlightedServices.map((service, index) => (
+              <div 
+                key={index}
+                className="bg-white rounded-xl shadow-lg overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
+                data-aos="fade-up"
+                data-aos-delay={index * 150}
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <h4 className="text-white text-xl font-bold font-glegoo text-center px-4">
+                      {service.title}
+                    </h4>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">{service.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {service.stats.map((stat, idx) => (
+                      <Badge 
+                        key={idx}
+                       /*  count={stat.value}
+                        style={{ backgroundColor: '#E2060F' }}
+                        className="flex items-center gap-2" */
+                      >
+                        {stat.icon}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div
-          onClick={() => navigate("blog")}
-          className={`flex flex-col-reverse gap-4 mt-8 md:-skew-x-12 md:flex-row border-2 border-solid border-[#5c4dce] p-4 rounded-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-200 cursor-pointer`}
+        {/* Banner de Calidad */}
+        <div 
+          className="mt-20 relative overflow-hidden rounded-2xl"
+          data-aos="fade-up"
         >
-          <div className={`md:flex-1 flex flex-col justify-between`}>
-            <h2
-              className={`text-2xl tracking-wide text-center uppercase md:text-justify 2xl:text-3xl font-glegoo`}
-            >
-              Blog Interactivo
-            </h2>
-            <p
-              className={`text-center md:text-justify md:w-80 lg:w-96 2xl:text-xl font-exo`}
-            >
-              {
-                <b>
-                  Haste conocedor de los tips de cuidado mas importantes para tu
-                  vehículo
-                </b>
-              }
+          <div className="absolute inset-0  bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+          hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+          active:scale-95"></div>
+          <div className="relative py-16 px-8 text-center text-white">
+            <h3 className="text-3xl font-bold mb-4 font-glegoo">
+              RESPALDO Y GARANTÍA SSANGYONG
+            </h3>
+            <p className="text-xl max-w-2xl mx-auto">
+              Somos distribuidores autorizados, garantizando la más alta calidad en repuestos y servicio técnico para tu vehículo.
             </p>
-            <Button
-              danger
-              size={isBigger ? "large" : "middle"}
-              className={`rounded-full mx-auto block mt-4 uppercase w-fit md:mx-0 2xl:text-xl`}
-            >
-              {" "}
-              Click here{" "}
-            </Button>
-          </div>
-          <div
-            className={`h-36 w-72 bg-gray-500 mx-auto md:mr-4 lg:w-[26rem] lg:h-60 lg:mr-8 xl:w-[34rem] 2xl:h-80 2xl:w-[40rem] 2xl:mr-12`}
-          >
-            <img
-              src="https://puntokoreano.com/images/carrousel/TORRES.jpg"
-              alt=""
-              className="brightness-[.4] w-full h-full object-cover"
-            />
           </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default Sections;

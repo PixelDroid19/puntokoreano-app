@@ -1,4 +1,3 @@
-// components/reviews/ReviewUser.tsx
 import { Avatar, Rate, Space, Tag, Tooltip } from "antd";
 import { ThumbsUp, ThumbsDown, Flag, User } from "lucide-react";
 import { useProductReviews } from "@/hooks/useProductReviews";
@@ -6,7 +5,7 @@ import { useProductReviews } from "@/hooks/useProductReviews";
 interface ReviewProps {
   review: {
     _id: string;
-    user: any;
+    user: { _id: string; name: string } | null;
     title: string;
     content: string;
     rating: number;
@@ -22,25 +21,11 @@ interface ReviewProps {
 const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
   const { voteReview, reportReview } = useProductReviews(review._id);
 
-  const handleVote = async (voteType: boolean) => {
+  const handleVote = async (vote: "positive" | "negative") => {
     try {
-      await voteReview({
-        reviewId: review._id,
-        vote: voteType ? "positive" : "negative",
-      });
+      await voteReview({ reviewId: review._id, vote });
     } catch (error) {
       console.error("Error voting review:", error);
-    }
-  };
-
-  const handleReport = async () => {
-    try {
-      await reportReview({
-        reviewId: review._id,
-        reason: "inappropriate",
-      });
-    } catch (error) {
-      console.error("Error reporting review:", error);
     }
   };
 
@@ -52,11 +37,11 @@ const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
             size={64}
             icon={<User />}
             className="flex-shrink-0 bg-gray-200"
-          >
-            {/* Usuario anónimo ya que user puede ser null */}
-          </Avatar>
+          />
           <div>
-            <h4 className="text-lg font-semibold">Usuario</h4>
+            <h4 className="text-lg font-semibold">
+              {review.user?.name || "Usuario"}
+            </h4>
             <Rate disabled value={review.rating} className="text-[#E2060F]" />
             {review.purchase_verified && (
               <Tag color="green" className="ml-2">
@@ -65,9 +50,9 @@ const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
             )}
           </div>
         </div>
-        <p className="text-sm text-gray-500">
+        <time className="text-sm text-gray-500">
           {new Date(review.createdAt).toLocaleDateString()}
-        </p>
+        </time>
       </div>
 
       <div className="ml-[80px]">
@@ -78,17 +63,16 @@ const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
           <Space size="large">
             <Tooltip title="Útil">
               <button
-                onClick={() => handleVote(true)}
+                onClick={() => handleVote("positive")}
                 className="flex items-center gap-2 text-gray-500 hover:text-[#E2060F]"
               >
                 <ThumbsUp className="w-4 h-4" />
                 <span>{review.helpful_votes.positive}</span>
               </button>
             </Tooltip>
-
             <Tooltip title="No útil">
               <button
-                onClick={() => handleVote(false)}
+                onClick={() => handleVote("negative")}
                 className="flex items-center gap-2 text-gray-500 hover:text-[#E2060F]"
               >
                 <ThumbsDown className="w-4 h-4" />
@@ -96,10 +80,11 @@ const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
               </button>
             </Tooltip>
           </Space>
-
           <Tooltip title="Reportar">
             <button
-              onClick={handleReport}
+              onClick={() =>
+                reportReview({ reviewId: review._id, reason: "inappropriate" })
+              }
               className="text-gray-400 hover:text-[#E2060F]"
             >
               <Flag className="w-4 h-4" />

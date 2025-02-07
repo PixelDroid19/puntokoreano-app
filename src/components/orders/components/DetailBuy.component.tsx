@@ -1,98 +1,94 @@
-import { useEffect, useState } from "react";
+import { formatNumber } from "@/pages/store/utils/formatPrice";
 
-const DetailBuy = () => {
-    const [ subTotal, setSubTotal ] = useState<number>(0);
-    const [ total, setTotal ] = useState<number>(0);
+// src/components/checkout/DetailBuy.component.tsx
+interface OrderDetails {
+  order_number: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+  shipping_cost: number;
+  total: number;
+  subtotal: number;
+  created_at: string;
+}
 
-    const getTotalAndSubTotal = () => {
-        const total = valuesCart.reduce((sum, item) => {
-            return sum + (item.price * item.quantity);
-        }, 0);
+interface Props {
+  orderDetails: OrderDetails;
+}
 
-        setSubTotal(total);
-        setTotal(total);
-    }
+const DetailBuy: React.FC<Props> = ({ orderDetails }) => {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("es-CO", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
 
-    useEffect(() => {
-        getTotalAndSubTotal()
-    }, [])
+  return (
+    <section className="mt-5 sm:w-[550px] mx-auto">
+      <div className="relative mt-12 bg-white shadow-xl rounded-2xl p-4">
+        <figure className="absolute -top-6 left-[45%]">
+          <img
+            src="https://puntokoreano.com/images/logo-512x512.png"
+            alt="logo"
+            width={50}
+          />
+        </figure>
 
-    const valuesCart = [
-        {
-            name: "Car & Motorbike Care.",
-            image: "https://risingtheme.com/html/demo-partsix/partsix/assets/img/product/small-product/product1.webp",
-            quantity: 2,
-            price: 25000
-        },
-        {
-            name: "Enginer and Drivetrain",
-            image: "https://risingtheme.com/html/demo-partsix/partsix/assets/img/product/small-product/product2.webp",
-            quantity: 5,
-            price: 65000
-        },
-        {
-            name: "Enginer and Drivetrain",
-            image: "https://risingtheme.com/html/demo-partsix/partsix/assets/img/product/small-product/product3.webp",
-            quantity: 1,
-            price: 100000
-        },
-        {
-            name: "Enginer and Drivetrain",
-            image: "https://risingtheme.com/html/demo-partsix/partsix/assets/img/product/small-product/product4.webp",
-            quantity: 3,
-            price: 10000
-        },
-    ];
+        <h3 className="text-xl font-semibold text-center pt-6 pb-2">
+          Punto Koreano
+        </h3>
+        <p className="text-base text-gray-400 text-center border-b pb-2">
+          {formatDate(orderDetails.created_at)}
+        </p>
 
-    return (
-        <section className="mt-5  sm:w-[550px] mx-auto">
-            <div className="relative mt-12 bg-white shadow-xl rounded-2xl p-4">
-                <figure className="absolute -top-6 left-[45%]">
-                    <img src="https://puntokoreano.com/images/logo-512x512.png" alt="logo" width={50} />
-                </figure>
-
-                <h3 className="text-xl font-semibold text-center pt-6 pb-2">Punto Koreano</h3>
-                <p className="text-base text-gray-400 text-center border-b pb-2">14 Julio de 2024</p>
-
-                <p className="text-base text-gray-400 mt-2">Detalle de la operación</p>
-                <div>
-                    {
-                        valuesCart.map((cart) => {
-                            return (
-                                <div className="border-b border-dotted mt-2 flex justify-between items-end pb-2">
-                                    <div className="w-fit">
-                                        <h4 className="text-lg font-bold">{ cart.name }</h4>
-                                        <div className="flex justify-between text-gray-400">
-                                            <p className="text-base">$ { cart.price.toLocaleString('es-CO') } COP</p>
-                                            <p className="text-base">x{ cart.quantity }</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-base font-bold">$ { (cart.price * cart.quantity).toLocaleString('es-CO') } COP</p>
-                                </div>
-                            )
-                        })
-                    }
-                    <div className="pt-4 text-base border-b">
-                        <div className="flex justify-between pb-2">
-                            <p className="text-gray-400">Subtotal</p>
-                            <p>$ { subTotal.toLocaleString('es-CO') } COP</p>
-                        </div>
-                    </div>
-
-                    <div className="pt-4 text-base border-b">
-                        <div className="flex justify-between pb-2">
-                            <p className="text-gray-400">Envío</p>
-                            <p>$ { 0 } COP</p>
-                        </div>
-                    </div>
-
-                    <div className="pt-4 text-base flex justify-between">
-                        <p>Total</p>
-                        <p>$ { total.toLocaleString('es-CO') } COP</p>
-                    </div>
+        <p className="text-base text-gray-400 mt-2">Detalle de la operación</p>
+        <div>
+          {orderDetails.items.map((item, index) => (
+            <div
+              key={index}
+              className="border-b border-dotted mt-2 flex justify-between items-end pb-2"
+            >
+              <div className="w-fit">
+                <h4 className="text-lg font-bold">{item.name}</h4>
+                <div className="flex justify-between text-gray-400">
+                  <p className="text-base">
+                    $ {formatNumber(item?.price, "es-CO", "COP")} COP
+                  </p>
+                  <p className="text-base">x{item.quantity}</p>
                 </div>
+              </div>
+              <p className="text-base font-bold">
+                $ {formatNumber(item.price * item.quantity, "es-CO", "COP")} COP
+              </p>
             </div>
-        </section>
-    )
+          ))}
+
+          <div className="pt-4 text-base border-b">
+            <div className="flex justify-between pb-2">
+              <p className="text-gray-400">Subtotal</p>
+              <p>$ {formatNumber(orderDetails?.subtotal, "es-CO", "COP")} COP</p>
+            </div>
+          </div>
+
+          <div className="pt-4 text-base border-b">
+            <div className="flex justify-between pb-2">
+              <p className="text-gray-400">Envío</p>
+              <p>$ {formatNumber(orderDetails?.shipping_cost, "es-CO", "COP")} COP</p>
+            </div>
+          </div>
+
+          <div className="pt-4 text-base flex justify-between">
+            <p>Total</p>
+            <p>$ {formatNumber(orderDetails?.total, "es-CO", "COP")} COP</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 };
+
 export default DetailBuy;

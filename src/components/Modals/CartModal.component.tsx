@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "@/store/cart.store";
+import { formatNumber } from "@/pages/store/utils/formatPrice";
 
 interface Props {
   open: boolean;
@@ -69,7 +70,7 @@ const CartModal = ({ open, setOpen }: Props) => {
           </figure>
           <div className="flex flex-col gap-1">
             <h3 className="text-base font-semibold">{item.name}</h3>
-            <p>$ {item.price.toLocaleString("es-CO")} COP</p>
+            <p>$ {formatNumber(item?.price, "es-CO", "COP")} COP</p>
             <Space className="gap-0 relative flex">
               <button
                 onClick={() => handleQuantityChange(item.id, 1, item.quantity)}
@@ -106,13 +107,13 @@ const CartModal = ({ open, setOpen }: Props) => {
         <div className="flex justify-between mb-4">
           <p className="font-medium text-base">SubTotal:</p>
           <p className="font-medium text-base">
-            $ {subTotal.toLocaleString("es-CO")} COP
+            $ {formatNumber(subTotal, "es-CO", "COP")} COP
           </p>
         </div>
         <div className="flex justify-between">
           <p className="font-medium text-base">Total:</p>
           <p className="font-medium text-base">
-            $ {total.toLocaleString("es-CO")} COP
+            $ {formatNumber(total, "es-CO", "COP")} COP
           </p>
         </div>
       </section>

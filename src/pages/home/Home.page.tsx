@@ -4,16 +4,13 @@ import Sections from "./components/Sections.component";
 import Banner from "./components/Banner.component";
 
 export const Home = () => {
-    return (
-        <div>
-            <HomeCarousel />
-
-            <Banner />
-
-            <Services />
-
-            <Sections />
-        </div>
-    )
+  return (
+    <div>
+      <HomeCarousel />
+      <Banner />
+      <Services />
+      <Sections />
+    </div>
+  );
 };
 export default Home;

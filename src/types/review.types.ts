@@ -67,4 +67,5 @@ export interface ReviewFormData {
   title: string;
   content: string;
   images?: File[];
+  orderId?: number | string
 }

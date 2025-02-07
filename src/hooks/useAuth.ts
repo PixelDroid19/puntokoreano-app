@@ -14,6 +14,16 @@ interface RegisterData {
   document_number?: string;
 }
 
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: Record<string, any>; // Allow dynamic user properties
+    token: string;
+    expiresAt: number;
+  };
+}
+
 export const useAuth = () => {
   const navigate = useNavigate();
   const {
@@ -23,33 +33,58 @@ export const useAuth = () => {
     login: storeLogin,
     logout: storeLogout,
     updateUser: storeUpdateUser,
+    setTokenExpiry,
   } = useAuthStore();
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      const response = await axios.post(ENDPOINTS.AUTH.LOGIN.url, {
-        email,
-        password,
-      });
+      const response = await axios.post<LoginResponse>(
+        ENDPOINTS.AUTH.LOGIN.url,
+        { email, password }
+      );
 
-      const { user, token } = response.data.data;
+      const { user, token, expiresAt } = response.data.data;
 
-      // Guardar en el store
+      // Store complete user data and token expiry
       storeLogin(user, token);
+      setTokenExpiry(expiresAt);
 
-      // Configurar token en axios
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      // Configure axios
+      configureAxiosAuth(token);
 
       navigate("/");
       return { success: true };
     } catch (error: any) {
-      const message = error.response?.data?.message || "Credenciales inválidas";
-      notification.error({
-        message: "Error al iniciar sesión",
-        description: message,
-      });
-      return { success: false, error: message };
+      handleAuthError(error, "Error al iniciar sesión");
+      return { success: false, error: error.response?.data?.message };
     }
+  };
+
+  const configureAxiosAuth = (token: string) => {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+    // Add response interceptor for token expiration
+    axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          handleLogout();
+          notification.error({
+            message: "Sesión expirada",
+            description: "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
+          });
+        }
+        return Promise.reject(error);
+      }
+    );
+  };
+
+  const handleAuthError = (error: any, defaultMessage: string) => {
+    const message = error.response?.data?.message || defaultMessage;
+    notification.error({
+      message: defaultMessage,
+      description: message,
+    });
   };
 
   const handleRegister = async (data: RegisterData) => {

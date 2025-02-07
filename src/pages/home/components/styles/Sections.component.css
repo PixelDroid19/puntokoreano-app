@@ -1,0 +1,22 @@
+/* styles.css */
+.group:hover .group-hover\:scale-110 {
+    transform: scale(1.1);
+  }
+  
+  .transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+  
+  .ant-statistic-title {
+    color: theme('colors.gray.600') !important;
+    font-size: theme('fontSize.sm') !important;
+    margin-top: theme('spacing.2') !important;
+  }
+  
+  .ant-statistic-content-value {
+    font-size: theme('fontSize.3xl') !important;
+    font-weight: theme('fontWeight.bold') !important;
+    color: theme('colors.gray.900') !important;
+  }

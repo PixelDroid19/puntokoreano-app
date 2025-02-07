@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Image, Space, Table, notification } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useCartStore } from "@/store/cart.store";
+import { formatNumber } from "../store/utils/formatPrice";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const Cart = () => {
     {
       title: "Precio",
       dataIndex: "price",
-      render: (price: number) => <p>$ {price.toLocaleString("es-CO")} COP</p>,
+      render: (price: number) => <p>$ {formatNumber(price, "es-CO", "COP")} COP</p>,
     },
     {
       title: "Cantidad",
@@ -140,7 +141,7 @@ const Cart = () => {
                           SubTotal:
                         </p>
                         <p className="font-medium text-base">
-                          $ {subTotal.toLocaleString("es-CO")} COP
+                          $ {formatNumber(subTotal, "es-CO", "COP")} COP
                         </p>
                       </div>
                     </Table.Summary.Cell>
@@ -152,7 +153,7 @@ const Cart = () => {
                           Total:
                         </p>
                         <p className="font-medium text-base">
-                          $ {total.toLocaleString("es-CO")} COP
+                          $ {formatNumber(total, "es-CO", "COP")} COP
                         </p>
                       </div>
                     </Table.Summary.Cell>

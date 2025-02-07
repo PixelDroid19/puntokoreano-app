@@ -24,8 +24,17 @@ interface ReviewsData {
   stats: ReviewStats;
 }
 
+interface OrderInfo {
+  orderId: string;
+  orderNumber: string;
+  orderStatus: string;
+}
+
 interface CanReviewData {
   canReview: boolean;
+  hasOrdered: boolean;
+  hasReviewed: boolean;
+  orderInfo?: OrderInfo;
   reason?: string;
 }
 
@@ -70,18 +79,16 @@ export const useProductReviews = (productId: string) => {
   // Verificar si el usuario puede escribir reseña
   const { data: canReviewData } = useQuery<ApiResponse<CanReviewData>>({
     queryKey: ["canReview", productId],
-    queryFn: () =>
-      axios
-        .get<ApiResponse<CanReviewData>>(
-          ENDPOINTS.REVIEWS.CHECK_CAN_REVIEW.url.replace(
-            ":productId",
-            productId
-          ),
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((res) => res.data),
+    queryFn: async () => {
+      const response = await axios.get<ApiResponse<CanReviewData>>(
+        ENDPOINTS.REVIEWS.CHECK_CAN_REVIEW.url.replace(":productId", productId),
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      return response.data;
+    },
     enabled: !!productId && isAuthenticated,
     staleTime: 1000 * 60 * 5,
   });
@@ -152,6 +159,9 @@ export const useProductReviews = (productId: string) => {
     error,
 
     canReview: canReviewData?.data.canReview || false,
+    orderInfo: canReviewData?.data.orderInfo,
+    hasOrdered: canReviewData?.data.hasOrdered || false,
+    hasReviewed: canReviewData?.data.hasReviewed || false,
     reviewRestrictionReason: canReviewData?.data.reason,
 
     createReview: createReviewMutation.mutate,

@@ -20,7 +20,6 @@ import Checkout from "../components/checkout/Checkout.component";
 import ThanksOrder from "../components/orders/Thanks.component";
 import Blog from "../pages/blog/Blog.page";
 import VehiclesBrand from "../pages/blog/components/Vehicles.component";
-import Articules from "../pages/blog/components/Articules.component";
 import BlogPost from "../pages/blog/components/Post.component";
 import Cart from "../pages/cart/Cart.page";
 import Login from "../pages/auth/Login";
@@ -31,6 +30,8 @@ import axios from "axios";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Register from "@/pages/auth/Register";
+import Articles from "../pages/blog/components/Articules.component";
+import DevelopmentView from "@/components/DevelopmentView/DevelopmentView";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -48,10 +49,10 @@ const router = createBrowserRouter(
         <Route path="/store/search" element={<FilterStore />} />
         <Route path="/store" element={<Store />} />
         <Route path="/store/product/:id" element={<ProductDetail />} />
-        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog" element={<DevelopmentView />} /> {/* components <Blog /> */}
         <Route path="/blog/:brand/vehicles" element={<VehiclesBrand />} />
-        <Route path="/blog/:brand/:vehicle/articles" element={<Articules />} />
-        <Route path="/blog/post/:id" element={<BlogPost />} />
+        <Route path="/blog/:brand/:vehicle/articles" element={<Articles />} />
+        <Route path="/blog/article/:slug" element={<BlogPost />} />
         <Route path="/store/cart" element={<Cart />} />
         <Route path="/store/checkout" element={<Checkout />} />
         <Route path="/store/finish-order" element={<ThanksOrder />} />

@@ -1,0 +1,66 @@
+/* components/About.page.css */
+.social-mission {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+   }
+   
+   .social-mission-content {
+    position: relative;
+    z-index: 20;
+    padding: 40px 20px;
+   }
+   
+   .section-header {
+    width: 100%;
+    margin: 30px 0;
+    padding: 0;
+   }
+   
+   .section-header h2 {
+    margin: 0;
+    padding: 15px;
+   }
+   
+   .consultants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 20px 0;
+    width: 100%;
+   }
+   
+   .map-container {
+    width: 100%;
+    margin: 30px 0;
+   }
+   
+   .map-container iframe {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+   }
+   
+   @media (max-width: 768px) {
+    .section-header {
+      margin: 20px 0;
+    }
+   
+    .consultants-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+   
+    .social-mission-content {
+      padding: 30px 15px;
+    }
+    
+    .social-mission-content h1 {
+      font-size: 1.5rem;
+    }
+   
+    .social-mission-content p {
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+   }

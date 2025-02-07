@@ -1,7 +1,7 @@
 import { Divider } from "antd";
-import korea from "../../../assets/bandera_korea.png";
-import alemania from "../../../assets/banera_alemania.png";
-import colombia from "../../../assets/bandera_colombia.webp";
+import korea from "/images/bandera_korea.png";
+import alemania from "/images/banera_alemania.png";
+import colombia from "/images/bandera_colombia.webp";
 import { useMediaQuery } from "react-responsive";
 
 import './styles.css';
