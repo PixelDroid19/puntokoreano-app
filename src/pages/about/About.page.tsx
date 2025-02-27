@@ -81,17 +81,26 @@ const About = () => {
       {/* Location section */}
       <div className="max-w-[1320px] mx-auto px-4 mb-20">
         <div className="pb-4">
-          {" "}
           <SectionHeader title="Donde nos ubicamos" />
         </div>
 
-        <iframe
-          src={settings.location.mapUrl}
-          className="w-full h-[450px] border-0"
-          loading="lazy"
-          allowFullScreen
-          referrerPolicy="no-referrer-when-downgrade"
-        />
+        <div className="map-container rounded-lg overflow-hidden shadow-lg">
+          {settings.location.mapUrl ? (
+            <iframe
+              src={settings.location.mapUrl}
+              className="w-full h-[450px] border-0"
+              loading="lazy"
+              allowFullScreen
+              allow="geolocation"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Ubicación de Punto Koreano"
+            />
+          ) : (
+            <div className="w-full h-[450px] flex items-center justify-center bg-gray-100">
+              <p>Ubicación no disponible</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import axios from "axios";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+// Mejora de interfaces con tipos más específicos
 interface User {
   id: string;
   name: string;
@@ -14,27 +15,32 @@ interface User {
   preferences: {
     notifications: boolean;
     newsletter: boolean;
+    theme?: 'light' | 'dark'; // Agregado para soporte de temas
+    language?: string; // Soporte multiidioma
   };
   verified?: boolean;
+  isDevelopment?: boolean; // Para distinguir entorno de desarrollo
 }
 
+// Interfaz para el estado de autenticación mejorada
 interface AuthState {
-  // Estado
+  // Estado base
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   tokenExpiry: number | null;
+  loginAttempts?: number; // Control de intentos de login
 
-  // Acciones básicas
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  // Acciones de autenticación mejoradas
+  login: (user: User, token: string, expiresAt?: number) => void;
+  logout: () => Promise<void>; // Convertido a async para manejar limpieza
   updateUser: (userData: Partial<User>) => void;
   checkTokenExpiration: () => boolean;
   refreshSession: () => Promise<void>;
 
-  // Acciones adicionales
+  // Acciones de gestión de estado
   setTokenExpiry: (expiry: number) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
@@ -43,96 +49,119 @@ interface AuthState {
   updateToken: (token: string) => void;
 }
 
-const initialState: AuthState = {
+// Estado inicial mejorado
+const initialState: Partial<AuthState> = {
   user: null,
   token: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  login: () => {},
-  logout: () => {},
-  updateUser: () => {},
-  setLoading: () => {},
-  setError: () => {},
-  clearError: () => {},
-  updatePreferences: () => {},
-  updateToken: () => {},
+  tokenExpiry: null,
+  loginAttempts: 0,
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      ...initialState,
+      ...initialState as AuthState,
 
-      login: (user: Record<string, any>, token: string) => {
-        set({
-          user,
-          token,
-          isAuthenticated: true,
-          error: null,
-        });
+      login: async (user: User, token: string, expiresAt?: number) => {
+        try {
+          // Configurar axios con el nuevo token
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+            error: null,
+            tokenExpiry: expiresAt || null,
+            loginAttempts: 0, // Reset intentos al login exitoso
+          });
+        } catch (error) {
+          set(state => ({
+            ...state,
+            loginAttempts: (state.loginAttempts || 0) + 1,
+            error: "Error en inicio de sesión"
+          }));
+        }
       },
 
-      tokenExpiry: null,
+      logout: async () => {
+        try {
+          const token = get().token;
+          if (token) {
+            // Intentar logout en el servidor
+            await axios.post(ENDPOINTS.AUTH.LOGOUT.url);
+          }
+        } catch (error) {
+          console.error("Error during logout:", error);
+        } finally {
+          // Limpiar headers y estado
+          delete axios.defaults.headers.common["Authorization"];
+          set(initialState as AuthState);
+        }
+      },
+
+      refreshSession: async () => {
+        try {
+          set({ isLoading: true });
+          const response = await axios.post(ENDPOINTS.AUTH.CHECK_SESSION.url);
+          const { token, expiresAt } = response.data;
+
+          if (token) {
+            axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+            set({ 
+              token, 
+              tokenExpiry: expiresAt,
+              error: null 
+            });
+          } else {
+            throw new Error("No token received");
+          }
+        } catch (error) {
+          await get().logout();
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      checkTokenExpiration: () => {
+        const { tokenExpiry } = get();
+        if (!tokenExpiry) return true;
+        return Date.now() >= tokenExpiry;
+      },
+
+      updateUser: (userData: Partial<User>) => {
+        set(state => ({
+          user: state.user ? { ...state.user, ...userData } : null,
+        }));
+      },
 
       setTokenExpiry: (expiry: number) => {
         set({ tokenExpiry: expiry });
       },
 
-      checkTokenExpiration: () => {
-        const { tokenExpiry } = get();
-        if (!tokenExpiry) return false;
-        return Date.now() >= tokenExpiry;
-      },
+      setLoading: (isLoading: boolean) => set({ isLoading }),
 
-      refreshSession: async () => {
-        try {
-          const response = await axios.post(ENDPOINTS.AUTH.CHECK_SESSION.url);
-          const { token, expiresAt } = response.data;
-          set({ token, tokenExpiry: expiresAt });
-        } catch {
-          get().logout();
-        }
-      },
+      setError: (error: string | null) => set({ error }),
 
-      logout: () => {
-        set(initialState);
-      },
-
-      updateUser: (userData: Partial<User>) => {
-        set((state) => ({
-          user: state.user ? { ...state.user, ...userData } : null,
-        }));
-      },
-
-      setLoading: (isLoading: boolean) => {
-        set({ isLoading });
-      },
-
-      setError: (error: string | null) => {
-        set({ error });
-      },
-
-      clearError: () => {
-        set({ error: null });
-      },
+      clearError: () => set({ error: null }),
 
       updatePreferences: (preferences: Partial<User["preferences"]>) => {
-        set((state: AuthState) => ({
-          ...state,
-          user: state.user
-            ? {
-                ...state.user,
-                preferences: {
-                  ...state.user.preferences,
-                  ...preferences,
-                },
-              }
-            : null,
+        set(state => ({
+          user: state.user ? {
+            ...state.user,
+            preferences: {
+              ...state.user.preferences,
+              ...preferences,
+            },
+          } : null,
         }));
       },
 
       updateToken: (token: string) => {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         set({ token });
       },
     }),
@@ -149,9 +178,10 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-// Selectores útiles
+// Selectores mejorados
 export const selectUser = (state: AuthState) => state.user;
-export const selectIsAuthenticated = (state: AuthState) =>
-  state.isAuthenticated;
+export const selectIsAuthenticated = (state: AuthState) => state.isAuthenticated;
 export const selectToken = (state: AuthState) => state.token;
 export const selectIsAdmin = (state: AuthState) => state.user?.role === "admin";
+export const selectIsLoading = (state: AuthState) => state.isLoading;
+export const selectError = (state: AuthState) => state.error;

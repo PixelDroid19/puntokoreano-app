@@ -64,6 +64,8 @@ export interface Endpoints {
     CALCULATE_SHIPPING: ApiEndpoint;
   };
   PAYMENT: {
+    WOMPI_NEQUI_PAYMENT: ApiEndpoint;
+    TRANSACTION_STATUS: ApiEndpoint;
     CREATE_INTENT: ApiEndpoint;
     CREATE_TRANSACTION: ApiEndpoint;
     CONFIG: ApiEndpoint;
@@ -119,6 +121,14 @@ const ENDPOINTS: Endpoints = {
     },
   },
   PAYMENT: {
+    WOMPI_NEQUI_PAYMENT: {
+      url: `${BASE_URL}/payment/wompi/nequi/payment`,
+      method: "POST",
+    },
+    TRANSACTION_STATUS: {
+      url: `${BASE_URL}/payment/transaction`,
+      method: "GET",
+    },
     CREATE_INTENT: {
       url: `${BASE_URL}/payment/create-payment-intent`,
       method: "POST",
@@ -166,7 +176,7 @@ const ENDPOINTS: Endpoints = {
       method: "POST",
     },
     GET_ORDER: {
-      url: `${BASE_URL}/orders/:id`,
+      url: `${BASE_URL}/orders/getOrder/:id`,
       method: "GET",
     },
     CALCULATE_SHIPPING: {

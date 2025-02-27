@@ -129,6 +129,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
     }));
   };
 
+  useEffect(() => {
+    console.log("formData", formData);
+  }, [formData]);
+
   // Preparar datos para el backend
   const preparePaymentData = () => {
     const data = formData[paymentMethod.toLowerCase()];
@@ -144,9 +148,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
       case "CARD":
         return {
           ...baseData,
-          card_data: data.card_data,
-          token: data.token,
-          installments: data.installments,
+          card_data: { card_data: { ...data } },
+          installments: data.installments ?? 1,
         };
       case "PSE":
         return {
@@ -224,9 +227,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
 
       // Manejar redirección según el método de pago
       if (payment.paymentUrl || payment.redirectUrl) {
-        window.location.href = payment.paymentUrl || payment.redirectUrl;
+        window.location.href = `/store/finish-order`;
+        //  window.location.href = payment.paymentUrl || payment.redirectUrl;
       } else {
-        window.location.href = `/checkout/result?order=${order.order_number}`;
+        // window.location.href = `/checkout/result?order=${order.order_number}`;
+        window.location.href = `/store/finish-order`;
       }
 
       setStatus("finish");

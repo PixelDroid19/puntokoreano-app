@@ -28,7 +28,7 @@ class ReviewService {
 
   async createReview(productId: string, reviewData: ReviewFormData) {
     try {
-      const formData = new FormData();
+    /*   const formData = new FormData();
       formData.append("rating", reviewData.rating.toString());
       formData.append("title", reviewData.title);
       formData.append("content", reviewData.content);
@@ -37,14 +37,14 @@ class ReviewService {
         reviewData.images.forEach((image) => {
           formData.append(`images`, image);
         });
-      }
+      } */
 
       const response = await axios.request({
         url: this.endpoints.CREATE_REVIEW.url.replace(":productId", productId),
         method: this.endpoints.CREATE_REVIEW.method,
-        data: formData,
+        data: reviewData,
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",	
         },
       });
 

@@ -1,8 +1,4 @@
-import { useEffect, useState } from "react";
-import { Form, Input, Select, notification } from "antd";
-import axios from "axios";
-import ENDPOINTS from "@/api";
-import { debounce } from "lodash";
+import { Form, Input, Select } from "antd";
 
 interface CardFormProps {
   onValidChange: (isValid: boolean, paymentData?: any) => void;
@@ -10,81 +6,6 @@ interface CardFormProps {
 
 export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [validationInProgress, setValidationInProgress] = useState(false);
-
-  // Manejar la tokenización de manera debounced
-  const debouncedTokenize = debounce(async (values) => {
-    try {
-      setValidationInProgress(true);
-      setLoading(true);
-
-      // Obtener configuración de Wompi
-      const { data: configResponse } = await axios.get(ENDPOINTS.PAYMENT.CONFIG.url);
-      const publicKey = configResponse.data?.publicKey;
-
-      if (!publicKey) {
-        throw new Error("Missing Wompi public key");
-      }
-
-      // Formatear datos de la tarjeta
-      const [month, year] = values.expiry.split("/");
-      const cardData = {
-        number: values.cardNumber.replace(/\s/g, ""),
-        exp_month: month,
-        exp_year: year,
-        cvc: values.cvv,
-        card_holder: values.cardHolder.toUpperCase(),
-      };
-
-      // Tokenizar tarjeta
-      const { data: tokenResponse } = await axios.post(
-        ENDPOINTS.PAYMENT.TOKENIZE_CARD.url, 
-        cardData
-      );
-
-      // Preparar datos para el backend
-      const paymentData = {
-        method: "wompi",
-        provider: "wompi",
-        payment_method_type: "CARD",
-        card_data: {
-          ...cardData,
-          token: tokenResponse.data.id
-        },
-        installments: Number(values.installments)
-      };
-
-      onValidChange(true, paymentData);
-    } catch (error: any) {
-      console.error("Card tokenization error:", error);
-      notification.error({
-        message: "Error",
-        description: error.response?.data?.message || "Error validando la tarjeta"
-      });
-      onValidChange(false);
-    } finally {
-      setLoading(false);
-      setValidationInProgress(false);
-    }
-  }, 500);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      debouncedTokenize.cancel();
-    };
-  }, [debouncedTokenize]);
-
-  // Validación del formulario
-  const handleChange = async () => {
-    try {
-      const values = await form.validateFields();
-      debouncedTokenize(values);
-    } catch (error) {
-      onValidChange(false);
-    }
-  };
 
   // Formatters
   const formatCardNumber = (value: string) => {
@@ -104,10 +25,10 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
   };
 
   return (
-    <Form 
+    <Form
       form={form}
       layout="vertical"
-      onValuesChange={handleChange}
+      onValuesChange={onValidChange}
       className="space-y-4"
     >
       <Form.Item
@@ -115,15 +36,14 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
         name="cardNumber"
         rules={[
           { required: true, message: "Ingrese el número de tarjeta" },
-          { pattern: /^[0-9\s]{13,19}$/, message: "Número de tarjeta inválido" }
+          {
+            pattern: /^[0-9\s]{13,19}$/,
+            message: "Número de tarjeta inválido",
+          },
         ]}
         getValueFromEvent={(e) => formatCardNumber(e.target.value)}
       >
-        <Input
-          placeholder="4242 4242 4242 4242"
-          maxLength={19}
-          disabled={loading}
-        />
+        <Input placeholder="4242 4242 4242 4242" maxLength={19} />
       </Form.Item>
 
       <div className="flex gap-4">
@@ -132,18 +52,14 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
           name="expiry"
           rules={[
             { required: true, message: "Ingrese fecha de expiración" },
-            { 
+            {
               pattern: /^(0[1-9]|1[0-2])\/([0-9]{2})$/,
-              message: "Formato inválido (MM/YY)"
-            }
+              message: "Formato inválido (MM/YY)",
+            },
           ]}
           getValueFromEvent={(e) => formatExpiry(e.target.value)}
         >
-          <Input 
-            placeholder="MM/YY"
-            maxLength={5}
-            disabled={loading}
-          />
+          <Input placeholder="MM/YY" maxLength={5} />
         </Form.Item>
 
         <Form.Item
@@ -151,14 +67,10 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
           name="cvv"
           rules={[
             { required: true, message: "Ingrese el CVV" },
-            { pattern: /^[0-9]{3,4}$/, message: "CVV inválido" }
+            { pattern: /^[0-9]{3,4}$/, message: "CVV inválido" },
           ]}
         >
-          <Input 
-            type="password"
-            maxLength={4}
-            disabled={loading}
-          />
+          <Input type="password" maxLength={4} />
         </Form.Item>
       </div>
 
@@ -169,23 +81,16 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
           { required: true, message: "Ingrese el nombre del titular" },
           {
             pattern: /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]{3,50}$/,
-            message: "Nombre inválido"
-          }
+            message: "Nombre inválido",
+          },
         ]}
         getValueFromEvent={(e) => e.target.value.toUpperCase()}
       >
-        <Input 
-          placeholder="Como aparece en la tarjeta"
-          disabled={loading}
-        />
+        <Input placeholder="Como aparece en la tarjeta" />
       </Form.Item>
 
-      <Form.Item
-        label="Cuotas"
-        name="installments"
-        initialValue="1"
-      >
-        <Select disabled={loading}>
+      <Form.Item label="Cuotas" name="installments" initialValue={1}>
+        <Select>
           {[...Array(36)].map((_, i) => (
             <Select.Option key={i + 1} value={String(i + 1)}>
               {i + 1} {i === 0 ? "cuota" : "cuotas"}
@@ -193,12 +98,6 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
           ))}
         </Select>
       </Form.Item>
-
-      {validationInProgress && (
-        <div className="text-center text-gray-500">
-          <p>Validando información de la tarjeta...</p>
-        </div>
-      )}
     </Form>
   );
 };

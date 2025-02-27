@@ -77,21 +77,72 @@ export const useProductReviews = (productId: string) => {
   });
 
   // Verificar si el usuario puede escribir reseña
-  const { data: canReviewData } = useQuery<ApiResponse<CanReviewData>>({
+  const canReviewQuery = useQuery<ApiResponse<CanReviewData>>({
     queryKey: ["canReview", productId],
     queryFn: async () => {
-      const response = await axios.get<ApiResponse<CanReviewData>>(
-        ENDPOINTS.REVIEWS.CHECK_CAN_REVIEW.url.replace(":productId", productId),
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      try {
+        // Validar token antes de hacer la petición
+        if (!token) {
+          return {
+            success: false,
+            data: {
+              canReview: false,
+              hasOrdered: false,
+              hasReviewed: false,
+              reason: "User not authenticated",
+            },
+          };
         }
-      );
 
-      return response.data;
+        const response = await axios.get<ApiResponse<CanReviewData>>(
+          ENDPOINTS.REVIEWS.CHECK_CAN_REVIEW.url.replace(
+            ":productId",
+            productId
+          ),
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        // Validar la respuesta
+        if (!response.data || !response.data.success) {
+          throw new Error(
+            response.data?.message || "Error checking review permission"
+          );
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error("Error checking can review status:", error);
+        return {
+          success: false,
+          data: {
+            canReview: false,
+            hasOrdered: false,
+            hasReviewed: false,
+            reason:
+              error instanceof Error ? error.message : "Unknown error occurred",
+          },
+        };
+      }
     },
-    enabled: !!productId && isAuthenticated,
-    staleTime: 1000 * 60 * 5,
+    enabled: Boolean(productId) && isAuthenticated && Boolean(token),
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 2, // Intentar 2 veces en caso de fallo
+    retryDelay: 1000, // Esperar 1 segundo entre reintentos
   });
+
+  // Extraer los valores con seguridad null
+  const canReviewStatus = canReviewQuery.data?.data || {
+    canReview: false,
+    hasOrdered: false,
+    hasReviewed: false,
+    orderInfo: undefined,
+    reason: canReviewQuery.error ? String(canReviewQuery.error) : undefined,
+  };
 
   // Crear reseña
   const createReviewMutation = useMutation<
@@ -158,11 +209,13 @@ export const useProductReviews = (productId: string) => {
     isLoading,
     error,
 
-    canReview: canReviewData?.data.canReview || false,
-    orderInfo: canReviewData?.data.orderInfo,
-    hasOrdered: canReviewData?.data.hasOrdered || false,
-    hasReviewed: canReviewData?.data.hasReviewed || false,
-    reviewRestrictionReason: canReviewData?.data.reason,
+    canReview: canReviewStatus.canReview,
+    orderInfo: canReviewStatus.orderInfo,
+    hasOrdered: canReviewStatus.hasOrdered,
+    hasReviewed: canReviewStatus.hasReviewed,
+    reviewRestrictionReason: canReviewStatus.reason,
+    isCheckingPermission: canReviewQuery.isLoading,
+    checkPermissionError: canReviewQuery.error,
 
     createReview: createReviewMutation.mutate,
     isCreating: createReviewMutation.isPending,

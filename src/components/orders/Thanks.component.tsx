@@ -42,8 +42,9 @@ const ThanksOrder = () => {
         <>
           <img
             className="block mx-auto"
-            src="https://puntokoreano.com/images/box_success.png"
-            alt="box"
+            src="https://puntokoreano.com/images/logo-512x512.png"
+            alt="logo"
+            width={50}
           />
           <h1 className="font-bold text-2xl text-center">
             Gracias por tu compra
