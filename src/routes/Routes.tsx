@@ -32,7 +32,7 @@ import "aos/dist/aos.css";
 import Register from "@/pages/auth/Register";
 import Articles from "../pages/blog/components/Articules.component";
 import DevelopmentView from "@/components/DevelopmentView/DevelopmentView";
-
+import Account from "@/pages/account/Account";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -61,8 +61,8 @@ const router = createBrowserRouter(
       {/* Protected routes (require login) */}
       <Route element={<PrivateRoutes />}>
         {/* Add any routes that should require authentication here */}
+        <Route path="/account" element={<Account />} />
       </Route>
-
       {/* Redirect */}
       <Route path="*" element={<Navigate to="/" />} />
     </>

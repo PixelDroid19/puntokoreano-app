@@ -62,6 +62,10 @@ export interface Endpoints {
     CREATE: ApiEndpoint;
     GET_ORDER: ApiEndpoint;
     CALCULATE_SHIPPING: ApiEndpoint;
+    GET_USER_ORDERS: ApiEndpoint;
+    GET_ORDER_DETAILS: ApiEndpoint;
+    CANCEL_ORDER: ApiEndpoint;
+    TRACK_ORDER: ApiEndpoint;
   };
   PAYMENT: {
     WOMPI_NEQUI_PAYMENT: ApiEndpoint;
@@ -79,6 +83,26 @@ export interface Endpoints {
   };
   SETTINGS: {
     GET_PUBLIC_ABOUT: ApiEndpoint;
+  };
+  USER: {
+    GET_REVIEWS: ApiEndpoint;
+    GET_ORDERS: ApiEndpoint;
+    GET_PROFILE: ApiEndpoint;
+    UPDATE_PROFILE: ApiEndpoint;
+    CHANGE_PASSWORD: ApiEndpoint;
+    GET_ADDRESSES: ApiEndpoint;
+    ADD_ADDRESS: ApiEndpoint;
+    UPDATE_ADDRESS: ApiEndpoint;
+    DELETE_ADDRESS: ApiEndpoint;
+    SET_DEFAULT_ADDRESS: ApiEndpoint;
+    GET_PAYMENT_METHODS: ApiEndpoint;
+    ADD_PAYMENT_METHOD: ApiEndpoint;
+    DELETE_PAYMENT_METHOD: ApiEndpoint;
+    SET_DEFAULT_PAYMENT_METHOD: ApiEndpoint;
+    GET_WISHLIST: ApiEndpoint;
+    ADD_TO_WISHLIST: ApiEndpoint;
+    REMOVE_FROM_WISHLIST: ApiEndpoint;
+    GET_USER_REVIEWS: ApiEndpoint;
   };
 }
 
@@ -183,8 +207,97 @@ const ENDPOINTS: Endpoints = {
       url: `${BASE_URL}/orders/calculate-shipping`,
       method: "POST",
     },
+    GET_USER_ORDERS: {
+      url: `${BASE_URL}/orders/user`,
+      method: "GET",
+    },
+    GET_ORDER_DETAILS: {
+      url: `${BASE_URL}/orders/:orderId/details`,
+      method: "GET",
+    },
+    CANCEL_ORDER: {
+      url: `${BASE_URL}/orders/:orderId/cancel`,
+      method: "POST",
+    },
+    TRACK_ORDER: {
+      url: `${BASE_URL}/orders/:orderId/track`,
+      method: "GET",
+    },
   },
-
+  USER: {
+    GET_REVIEWS: {
+      url: `${BASE_URL}/user/reviews`,
+      method: "GET",
+    },
+    GET_ORDERS: {
+      url: `${BASE_URL}/user/orders`,
+      method: "GET",
+    },
+    GET_PROFILE: {
+      url: `${BASE_URL}/user/profile`,
+      method: "GET",
+    },
+    UPDATE_PROFILE: {
+      url: `${BASE_URL}/user/profile`,
+      method: "PUT",
+    },
+    CHANGE_PASSWORD: {
+      url: `${BASE_URL}/user/change-password`,
+      method: "POST",
+    },
+    GET_ADDRESSES: {
+      url: `${BASE_URL}/user/addresses`,
+      method: "GET",
+    },
+    ADD_ADDRESS: {
+      url: `${BASE_URL}/user/addresses`,
+      method: "POST",
+    },
+    UPDATE_ADDRESS: {
+      url: `${BASE_URL}/user/addresses/:addressId`,
+      method: "PUT",
+    },
+    DELETE_ADDRESS: {
+      url: `${BASE_URL}/user/addresses/:addressId`,
+      method: "DELETE",
+    },
+    SET_DEFAULT_ADDRESS: {
+      url: `${BASE_URL}/user/addresses/:addressId/default`,
+      method: "PUT",
+    },
+    GET_PAYMENT_METHODS: {
+      url: `${BASE_URL}/user/payment-methods`,
+      method: "GET",
+    },
+    ADD_PAYMENT_METHOD: {
+      url: `${BASE_URL}/user/payment-methods`,
+      method: "POST",
+    },
+    DELETE_PAYMENT_METHOD: {
+      url: `${BASE_URL}/user/payment-methods/:methodId`,
+      method: "DELETE",
+    },
+    SET_DEFAULT_PAYMENT_METHOD: {
+      url: `${BASE_URL}/user/payment-methods/:methodId/default`,
+      method: "PUT",
+    },
+    GET_WISHLIST: {
+      url: `${BASE_URL}/user/wishlist`,
+      method: "GET",
+    },
+    ADD_TO_WISHLIST: {
+      url: `${BASE_URL}/user/wishlist/:productId`,
+      method: "POST",
+    },
+    REMOVE_FROM_WISHLIST: {
+      url: `${BASE_URL}/user/wishlist/:productId`,
+      method: "DELETE",
+    },
+    GET_USER_REVIEWS: {
+      url: `${BASE_URL}/user/reviews`,
+      method: "GET",
+    },
+  },
   PRODUCTS: {
     FILTER: {
       url: `${BASE_URL}/products/filter`,

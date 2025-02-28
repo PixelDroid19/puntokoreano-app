@@ -95,6 +95,14 @@ export const MainLayout = ({ children }: Props) => {
       {
         key: "2",
         label: (
+          <Link to="/account" className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+            Mi Cuenta
+          </Link>
+        ),
+      },
+      {
+        key: "3",
+        label: (
           <button
             onClick={logout}
             className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center gap-2"
