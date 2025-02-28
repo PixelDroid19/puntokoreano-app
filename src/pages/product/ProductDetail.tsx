@@ -9,7 +9,7 @@ import { faHeart } from "@fortawesome/free-regular-svg-icons";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate, useParams } from "react-router-dom";
 import SectionProducts from "../store/components/SectionProducts.component";
-import ArticuleRelation from "./components/ArticulesRelation.component";
+import ArticleRelation from "./components/ArticulesRelation.component";
 import Applies from "./components/Applies.component";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -153,7 +153,7 @@ const ProductDetail = () => {
   const tabs = [
     {
       key: "1",
-      label: "Descripcion",
+      label: "Descripción",
       children: (
         <DescriptionProduct
           name={product?.name}
@@ -180,7 +180,7 @@ const ProductDetail = () => {
       key: "3",
       label: "Artículos relacionados",
       children: (
-        <ArticuleRelation related_products={product?.related_products || []} />
+        <ArticleRelation related_products={product?.related_products || []} />
       ),
     },
    /*  {
@@ -257,7 +257,7 @@ const ProductDetail = () => {
                   product.stock === 0
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : `
-                      bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+                      bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
                       hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
                       active:scale-95
                     `
@@ -295,7 +295,7 @@ const ProductDetail = () => {
               product.stock === 0
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : `
-                  bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+                  bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
                   hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
                   active:scale-95
                 `
@@ -330,7 +330,7 @@ const ProductDetail = () => {
       </div>
 
       <div>
-        <SectionProducts inline />
+        <SectionProducts inline title={'Productos relacionados'} search={false} />
       </div>
     </div>
   );

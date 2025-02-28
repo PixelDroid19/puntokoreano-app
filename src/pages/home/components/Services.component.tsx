@@ -6,7 +6,7 @@ import "./styles.css";
 const Services = () => {
   const services = [
     {
-      label: "Multiples medios de pago",
+      label: "Múltiples medios de pago",
       icon: "https://puntokoreano.com/images/icons/billetera.png",
       images: [
         "https://puntokoreano.com/images/others/american-express.png",
@@ -40,7 +40,7 @@ const Services = () => {
       ],
     },
     {
-      label: "Donde estamos ubicados",
+      label: "Dónde estamos ubicados",
       icon: "https://puntokoreano.com/images/icons/pin.png",
       images: [
         "https://puntokoreano.com/images/others/maps.png",

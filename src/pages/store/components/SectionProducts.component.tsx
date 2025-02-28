@@ -14,6 +14,8 @@ import "swiper/css";
 
 interface Props {
   inline?: boolean;
+  title?: string | null;
+  search?: boolean;
 }
 
 interface Product {
@@ -30,7 +32,7 @@ interface Product {
   active: boolean;
 }
 
-const SectionProducts = ({ inline }: Props) => {
+const SectionProducts = ({ inline, title, search = true }: Props) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
@@ -107,27 +109,34 @@ const SectionProducts = ({ inline }: Props) => {
     <div className="mx-5 mb-10 max-w-[1280px] lg:px-0 xl:mx-auto lg:mx-auto">
       <div className="flex flex-col gap-4 mt-8">
         {/* Barra de búsqueda */}
-        <div className="w-full max-w-md mx-auto">
-          <Input
-            placeholder="Buscar..."
-            prefix={<SearchOutlined />}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="rounded-full py-2 px-4 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            size="large"
-          />
-        </div>
+        {!!search && (
+          <div className="w-full max-w-md mx-auto">
+            <Input
+              placeholder="Buscar..."
+              prefix={<SearchOutlined />}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="rounded-full py-2 px-4 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              size="large"
+            />
+          </div>
+        )}
 
         {/* Título con resultados */}
         <div className="flex items-center gap-2 mt-2 py-2 border-b border-b-[#e5e5e5]">
           <h2 className="text-xl uppercase lg:text-2xl">
-            <strong>
-              {searchTerm
-                ? `Resultados para "${searchTerm}"`
-                : hasActiveFilters
-                ? "Productos filtrados"
-                : "Productos"}
-            </strong>
+            {title ? (
+              <strong>{title}</strong>
+            ) : (
+              <strong>
+                {searchTerm
+                  ? `Resultados para "${searchTerm}"`
+                  : hasActiveFilters
+                  ? "Productos filtrados"
+                  : "Productos"}
+              </strong>
+            )}
+
             {!hasActiveFilters && !searchTerm && " populares"}
           </h2>
         </div>
@@ -141,27 +150,37 @@ const SectionProducts = ({ inline }: Props) => {
           </p>
         </div>
       ) : inline ? (
-        <Swiper
-          data-aos="fade-left"
-          navigation
-          loop={products.length > 3}
-          modules={[Navigation]}
-          slidesPerView={
-            xl3 ? 3 : xl2 ? 3 : xl ? 3 : lg ? 3 : md ? 2 : sm ? 2 : 1
-          }
-          spaceBetween={20}
-          style={
-            {
-              "--swiper-navigation-size": "30px",
-            } as React.CSSProperties
-          }
-        >
-          {products.map((product: Product) => (
-            <SwiperSlide key={product._id}>
-              <CardProducts inline product={product} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <div className="relative px-10 py-4"> {/* Añadimos un contenedor con padding para los botones */}
+          <Swiper
+            data-aos="fade-left"
+            navigation={{
+              nextEl: '.swiper-button-next',
+              prevEl: '.swiper-button-prev',
+            }}
+            loop={products.length > 3}
+            modules={[Navigation]}
+            slidesPerView={
+              xl3 ? 3 : xl2 ? 3 : xl ? 3 : lg ? 3 : md ? 2 : sm ? 2 : 1
+            }
+            spaceBetween={30}
+            className="products-swiper" // Añadimos una clase específica
+            style={
+              {
+                "--swiper-navigation-size": "25px",
+                "--swiper-theme-color": "#9C089F",
+              } as React.CSSProperties
+            }
+          >
+            {products.map((product: Product) => (
+              <SwiperSlide key={product._id}>
+                <CardProducts inline product={product} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          {/* Añadimos botones de navegación personalizados */}
+          <div className="swiper-button-prev absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full shadow-md w-10 h-10 flex items-center justify-center cursor-pointer"></div>
+          <div className="swiper-button-next absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full shadow-md w-10 h-10 flex items-center justify-center cursor-pointer"></div>
+        </div>
       ) : (
         <div className="flex justify-center flex-wrap gap-8 lg:justify-evenly">
           {products.map((product: Product) => (
@@ -173,7 +192,7 @@ const SectionProducts = ({ inline }: Props) => {
       )}
 
       {/* Paginación */}
-      {data?.data?.pagination && (
+      {data?.data?.pagination && !!search && (
         <div className="flex justify-center mt-8">
           <div className="flex gap-2">
             {Array.from({ length: data.data.pagination.pages }, (_, i) => (
@@ -199,7 +218,7 @@ const SectionProducts = ({ inline }: Props) => {
       )}
 
       {/* Info de resultados */}
-      {data?.data?.pagination && (
+      {data?.data?.pagination && !!search && (
         <div className="text-center text-gray-500 mt-4">
           Mostrando {products.length} de {data.data.pagination.total} productos
         </div>

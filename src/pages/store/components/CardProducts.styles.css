@@ -38,3 +38,47 @@
 .product-card-image:hover {
     @apply scale-105;
 }
+/* Estilos existentes */
+
+/* Estilos para los botones de navegación del carrusel */
+.products-swiper .swiper-button-next,
+.products-swiper .swiper-button-prev {
+  color: #9C089F;
+  background-color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.products-swiper .swiper-button-next:after,
+.products-swiper .swiper-button-prev:after {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.products-swiper .swiper-button-disabled {
+  opacity: 0.35;
+  cursor: auto;
+  pointer-events: none;
+}
+
+/* Ajuste para el contenedor del carrusel */
+.products-swiper {
+  padding: 10px 5px;
+  margin: 0 15px;
+}
+
+/* Ajuste para pantallas pequeñas */
+@media (max-width: 640px) {
+  .products-swiper .swiper-button-next,
+  .products-swiper .swiper-button-prev {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .products-swiper .swiper-button-next:after,
+  .products-swiper .swiper-button-prev:after {
+    font-size: 14px;
+  }
+}
