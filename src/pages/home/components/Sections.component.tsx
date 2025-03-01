@@ -164,16 +164,25 @@ const Sections = () => {
           className="mt-20 relative overflow-hidden rounded-2xl"
           data-aos="fade-up"
         >
-          <div className="absolute inset-0  bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
+          <div className="absolute inset-0 bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
           hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
           active:scale-95"></div>
-          <div className="relative py-16 px-8 text-center text-white">
-            <h3 className="text-3xl font-bold mb-4 font-glegoo">
-              RESPALDO Y GARANTÍA SSANGYONG
-            </h3>
-            <p className="text-xl max-w-2xl mx-auto">
-              Somos distribuidores autorizados, garantizando la más alta calidad en repuestos y servicio técnico para tu vehículo.
-            </p>
+          <div className="relative py-6 px-36 flex items-center justify-between text-white">
+            <div className="flex-1 text-center">
+              <h3 className="text-3xl font-bold mb-4 font-glegoo">
+              AUTORIZACIÓN Y RESPALDO 
+              </h3>
+              <p className="text-xl max-w-2xl mx-auto">
+              Somos distribuidores autorizados de la marca Ssangyong-KGM y contamos con el conocimiento técnico que garantiza un diagnostico de calidad. 
+              </p>
+            </div>
+            <div className="hidden md:flex items-center justify-center">
+              <div>
+                <a href="https://www.kgm.com.co/almacenes-de-repuestosconcesionarios-centros-de-servicios/" target="_blank" rel="noopener noreferrer">
+                  <img src="https://puntokoreano.com/images/mark_water.jpeg" alt="Verification Badge" className="w-40 h-40 object-cover z-10 rounded-full hover:opacity-90 transition-opacity" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
