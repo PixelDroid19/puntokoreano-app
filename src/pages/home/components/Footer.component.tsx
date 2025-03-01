@@ -25,7 +25,7 @@ export const Footer = () => {
                 <Divider type={isTablet ? "horizontal" : "vertical"} className="border-white my-3 lg:h-10" />
                 <h3 className="2xl:text-2xl">TEL: 7027821 - 7027735</h3>
                 <Divider type={isTablet ? "horizontal" : "vertical"} className="border-white my-3 lg:h-10" />
-                <h3 className="text-center lg:text-left lg:w-48 xl:w-64 2xl:text-2xl">Distribuidor autorizado Ssangyong Motor Colombia</h3>
+                <h3 className="text-center lg:text-left lg:w-48 xl:w-64 2xl:text-2xl">Distribuidor autorizado por SsangYong motor Colombia</h3>
                 <Divider type={isTablet ? "horizontal" : "vertical"} />
                 <div className="flex gap-4">
                     <img src={colombia} className="w-10 h-10 2xl:w-12 2xl:h-12" alt="Bandera Colombia"/>

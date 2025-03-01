@@ -16,7 +16,7 @@ const Services = () => {
       ],
     },
     {
-      label: "Despacho a nivel nacional",
+      label: "Despachos a nivel nacional y rastreo de pedidos",
       icon: "https://puntokoreano.com/images/icons/delivery.png",
       images: [
         "https://puntokoreano.com/images/others/servientrega.png",
@@ -24,9 +24,15 @@ const Services = () => {
         "https://puntokoreano.com/images/others/deprisa.png",
         "https://puntokoreano.com/images/others/envia.png",
       ],
+      urls: [
+        "https://www.servientrega.com/wps/portal/rastreo-envio",
+        "https://rapidisimo.co",
+        "https://www.deprisa.com/",
+        "https://www.envia.co/rastrear-guia/",
+      ],
     },
     {
-      label: "Servicio técnico especializado",
+      label: "Encuentranos en redes sociales",
       icon: "https://puntokoreano.com/images/icons/connection.png",
       images: [
         "https://puntokoreano.com/images/others/insta.png",

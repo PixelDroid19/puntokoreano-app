@@ -87,37 +87,10 @@ const Sections = () => {
         {/* Sección de Logros */}
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-900 font-glegoo mb-4">
-            LIDERANDO LA EXCELENCIA AUTOMOTRIZ
+          Espacios que te podrían interesar
           </h2>
           <div className="w-24 h-1 bg-[#E2060F] mx-auto mb-12"></div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {achievements.map((achievement, index) => (
-              <div 
-                key={index}
-                className="p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300"
-                data-aos="fade-up"
-                data-aos-delay={index * 100}
-              >
-                <div className={`${achievement.color} p-4 rounded-full inline-block mb-4`}>
-                  {achievement.icon}
-                </div>
-                <Statistic 
-                  value={achievement.value} 
-                  title={achievement.title}
-                  className="font-glegoo"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Sección de Servicios Destacados */}
-        <div className="mt-20">
-          <h3 className="text-2xl font-bold text-center mb-12 font-glegoo">
-            SERVICIOS DE EXCELENCIA
-          </h3>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {highlightedServices.map((service, index) => (
               <div 
@@ -154,6 +127,33 @@ const Sections = () => {
                     ))}
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sección de Servicios Destacados */}
+        <div className="mt-20">
+          <h3 className="text-2xl font-bold text-center mb-12 font-glegoo">
+          Lidereando servicio de asesoría automotriz  
+          </h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {achievements.map((achievement, index) => (
+              <div 
+                key={index}
+                className="p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300"
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
+              >
+                <div className={`${achievement.color} p-4 rounded-full inline-block mb-4`}>
+                  {achievement.icon}
+                </div>
+                <Statistic 
+                  value={achievement.value} 
+                  title={achievement.title}
+                  className="font-glegoo"
+                />
               </div>
             ))}
           </div>

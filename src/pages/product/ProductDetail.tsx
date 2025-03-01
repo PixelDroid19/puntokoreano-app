@@ -204,122 +204,123 @@ const ProductDetail = () => {
         <p className="text-lg font-semibold">Tienda</p>
       </div>
 
-      <section className="mt-5 lg:flex lg:gap-5 2xl:w-[1280px] 2xl:mx-auto">
+      <section className="mt-5 lg:flex lg:gap-8 2xl:w-[1280px] 2xl:mx-auto">        
         <ImagesView images={product.images} />
-        <div>
-          <h1 className="font-bold text-xl mb-2 lg:text-2xl">{product.name}</h1>
-          <div className="flex gap-4">
-            <h4 className="font-bold text-base text-[#030202]">
-              $ {product.price.toLocaleString()} COP
-            </h4>
-            <div className="flex items-center gap-2">
-              <CountReview />
-              {stats.totalReviews > 0 && (
-                <button
-                  onClick={goToReviews}
-                  className="text-sm text-gray-500 hover:text-[#59214f]"
-                >
-                  Ver {stats.totalReviews} reseñas
-                </button>
-              )}
+        <div className="flex flex-col h-full lg:min-h-[400px] lg:flex-1 lg:py-2 lg:justify-start space-y-4">
+          <div>
+            <h1 className="font-bold text-xl mb-2 lg:text-2xl">{product.name}</h1>
+            <div className="flex gap-4 mb-3">
+              <h4 className="font-bold text-base text-[#030202]">
+                $ {product.price.toLocaleString()} COP
+              </h4>
+              <div className="flex items-center gap-2">
+                <CountReview />
+                {stats.totalReviews > 0 && (
+                  <button
+                    onClick={goToReviews}
+                    className="text-sm text-gray-500 hover:text-[#59214f]"
+                  >
+                    Ver {stats.totalReviews} reseñas
+                  </button>
+                )}
+              </div>
             </div>
+            <p className="text-gray-700 mb-2">{product.description}</p>
           </div>
 
-          <p>{product.description}</p>
-          <Space className="mt-4 gap-8">
-            <Space className="gap-0">
+          <div className="py-2 border-t border-gray-100">
+            <Space className="mt-2 gap-8 w-full">
+              <Space className="gap-0">
+                <button
+                  onClick={handleClicRest}
+                  className="w-8 h-10 bg-gray-300 rounded-l-full font-bold text-xl flex justify-center items-center"
+                >
+                  -
+                </button>
+                <input
+                  ref={inputRef}
+                  value={count}
+                  type="number"
+                  className="outline-none h-10 px-2 w-2 text-lg font-bold text-center box-content"
+                  readOnly
+                />
+                <button
+                  onClick={handleClicPlus}
+                  disabled={product.stock === 0 || Number(count) >= product.stock}
+                  className="w-8 h-10 bg-gray-300 rounded-r-full font-bold text-xl flex justify-center items-center disabled:opacity-50"
+                >
+                  +
+                </button>
+              </Space>
               <button
-                onClick={handleClicRest}
-                className="w-8 h-10 bg-gray-300 rounded-l-full font-bold text-xl flex justify-center items-center"
+                className={`
+                  w-full px-4 py-2.5 rounded-lg transition-all duration-300
+                  flex items-center justify-center gap-2 font-medium
+                  ${
+                    product.stock === 0
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : `
+                        bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
+                        hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+                        active:scale-95
+                      `
+                  }
+                `}
+                disabled={product.stock === 0}
+                onClick={handleAddToCart}
               >
-                -
-              </button>
-              <input
-                ref={inputRef}
-                value={count}
-                type="number"
-                className="outline-none h-10 px-2 w-2 text-lg font-bold text-center box-content"
-                readOnly
-              />
-              <button
-                onClick={handleClicPlus}
-                disabled={product.stock === 0 || Number(count) >= product.stock}
-                className="w-8 h-10 bg-gray-300 rounded-r-full font-bold text-xl flex justify-center items-center disabled:opacity-50"
-              >
-                +
+                Añadir al carrito
               </button>
             </Space>
+
+            <div className="mt-4 flex items-center cursor-pointer w-fit hover:text-[#E2060F]" onClick={handleWishlist}>
+              <FontAwesomeIcon
+                icon={isProductInWishlist ? faHeartSolid : faHeart}
+                className={`text-lg mr-2 ${
+                  isProductInWishlist ? "text-[#E2060F]" : ""
+                }`}
+              />
+              <p className="text-base">
+                {isProductInWishlist
+                  ? "Quitar de la lista de deseos"
+                  : "Añadir a la lista de deseos"}
+              </p>
+            </div>
+
             <button
               className={`
-                w-full px-4 py-2.5 rounded-lg transition-all duration-300
-                flex items-center justify-center gap-2 font-medium
-                ${
-                  product.stock === 0
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : `
-                      bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
-                      hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
-                      active:scale-95
-                    `
-                }
-              `}
+              w-full px-4 py-2.5 rounded-lg transition-all duration-300 mt-4
+              flex items-center justify-center gap-2 font-medium
+              ${
+                product.stock === 0
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : `
+                    bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
+                    hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
+                    active:scale-95
+                  `
+              }
+            `}
               disabled={product.stock === 0}
-              onClick={handleAddToCart}
+              onClick={handleBuyNow}
             >
-              Añadir al carrito
+              Comprar ahora
             </button>
-          </Space>
 
-          <Space
-            className="mt-4 flex items-center cursor-pointer w-fit hover:text-[#E2060F]"
-            onClick={handleWishlist}
-          >
-            <FontAwesomeIcon
-              icon={isProductInWishlist ? faHeartSolid : faHeart}
-              className={`text-lg ${
-                isProductInWishlist ? "text-[#E2060F]" : ""
-              }`}
-            />
-            <p className="text-base">
-              {isProductInWishlist
-                ? "Quitar de la lista de deseos"
-                : "Añadir a la lista de deseos"}
-            </p>
-          </Space>
+            {product.stock === 0 && (
+              <p className="text-red-500 mt-2 text-center">
+                Producto sin stock disponible
+              </p>
+            )}
+          </div>
 
-          <button
-            className={`
-            w-full px-4 py-2.5 rounded-lg transition-all duration-300
-            flex items-center justify-center gap-2 font-medium
-            ${
-              product.stock === 0
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : `
-                  bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
-                  hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
-                  active:scale-95
-                `
-            }
-          `}
-            disabled={product.stock === 0}
-            onClick={handleBuyNow}
-          >
-            Comprar ahora
-          </button>
-
-          {product.stock === 0 && (
-            <p className="text-red-500 mt-2 text-center">
-              Producto sin stock disponible
-            </p>
-          )}
-
-          <Space className="flex flex-col justify-start items-start">
-            <p className="mt-2 font-bold text-base">Pago seguro garantizado</p>
+          <div className="mt-auto pt-4 border-t border-gray-100">
+            <p className="font-bold text-base mb-2">Pago seguro garantizado</p>
             <Image
               preview={false}
               src="https://risingtheme.com/html/demo-partsix/partsix/assets/img/other/safe-checkout.webp"
             />
-          </Space>
+          </div>
         </div>
       </section>
       <div className="w-full 2xl:w-[1280px] 2xl:mx-auto" ref={reviewsRef}>

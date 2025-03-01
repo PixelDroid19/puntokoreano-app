@@ -40,14 +40,7 @@ const DescriptionProduct: FC<DescriptionProduct> = ({
         {/* Descriptions */}
         <div className="space-y-6">
           {/* Short Description */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <Text strong className="block mb-2">
-              Resumen
-            </Text>
-            <Paragraph className="!mb-0 text-gray-600">
-              {short_description}
-            </Paragraph>
-          </div>
+        
 
           {/* Long Description */}
           <div>
@@ -73,28 +66,6 @@ const DescriptionProduct: FC<DescriptionProduct> = ({
                 <li key={index}>{feature.trim()}</li>
               ))}
           </ul>
-        </div>
-      </div>
-
-      {/* Product Images Section - only if additional detail images are provided */}
-      <div className="mt-8 space-y-6">
-        <Divider className="!mt-8">Imágenes Detalladas</Divider>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* We could map through detail images here if provided by the API */}
-          <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
-            <img
-              src="https://via.placeholder.com/600x400"
-              alt="Detalle del producto"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
-            <img
-              src="https://via.placeholder.com/600x400"
-              alt="Detalle del producto"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            />
-          </div>
         </div>
       </div>
     </div>
