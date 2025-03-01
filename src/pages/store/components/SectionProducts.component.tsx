@@ -55,6 +55,8 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
     fuel: searchParams.get("fuel"),
     line: searchParams.get("line"),
     brand: searchParams.get("brand"),
+    group: searchParams.get("group"),
+    subgroup: searchParams.get("subgroup"),
     page: searchParams.get("page") || "1",
     limit: searchParams.get("limit") || "10",
   };

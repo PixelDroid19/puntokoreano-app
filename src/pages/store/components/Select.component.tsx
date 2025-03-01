@@ -1,4 +1,5 @@
 import React, { Dispatch } from "react";
+import { useSearchParams } from "react-router-dom";
 
 type group = {
     name: string;
@@ -17,6 +18,14 @@ interface Props {
 }
 
 const SelectDropdown = ({ hoveredCategory, setHoveredCategory }: Props) => {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const handleSubgroupClick = (subgroup: subgroups) => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("subgroup", subgroup.name);
+        newParams.set("page", "1"); // Reset page when changing subgroup
+        setSearchParams(newParams);
+    };
 
     return (
         <>
@@ -40,6 +49,7 @@ const SelectDropdown = ({ hoveredCategory, setHoveredCategory }: Props) => {
                                             <span
                                             key={`${idx}-${hoveredCategory.name}`}
                                             className="w-fit cursor-pointer hover:text-secondary_3"
+                                            onClick={() => handleSubgroupClick(subgroup)}
                                             >
                                                 { subgroup.name }
                                             </span>

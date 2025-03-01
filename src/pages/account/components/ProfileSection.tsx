@@ -9,7 +9,7 @@ interface ProfileFormData {
   name: string;
   lastName: string;
   email: string;
-  phone?: string;
+  phone?: string | number;
 }
 
 interface PasswordFormData {

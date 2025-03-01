@@ -63,7 +63,7 @@ const GroupsModal = ({ open, setOpen }: Props) => {
         />
       }
     >
-      {groupsData?.data.map((group: group, idx: number) => (
+      {groupsData?.data?.groups?.map((group: group, idx: number) => (
         <div
           key={`${idx}-${group.name}`}
           className="flex items-center justify-between py-3"

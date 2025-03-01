@@ -4,8 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useResizeObserver from "use-resize-observer";
 import SelectDropdown from "./Select.component";
-
-// import groupsData from "../../../assets/puntokoreano_db.groups_collection.json";
+import { useSearchParams } from "react-router-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
@@ -24,6 +23,7 @@ type subgroups = {
 
 const GroupComponent = () => {
   const slider = useRef<Slider | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [slidesToShow, setSlidesToSHow] = useState(1);
   const [hoveredCategory, setHoveredCategory] = useState<null | group>(null);
@@ -38,6 +38,13 @@ const GroupComponent = () => {
       });
     },
   });
+
+  const handleGroupClick = (group: group) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("group", group.name);
+    newParams.set("page", "1"); // Reset page when changing group
+    setSearchParams(newParams);
+  };
 
   const NextArrow = () => {
     return (
@@ -92,12 +99,13 @@ const GroupComponent = () => {
             nextArrow={<NextArrow />}
             prevArrow={<PrevArrow />}
           >
-            {data?.data.map((group: group, idx: number) => {
+            {data?.data?.groups?.map((group: group, idx: number) => {
               return (
                 <div
                   key={`${idx}-${group.name}`}
                   onMouseEnter={() => setHoveredCategory(group)}
                   onMouseLeave={() => setHoveredCategory(null)}
+                  onClick={() => handleGroupClick(group)}
                   className={`whitespace-nowrap text-center px-4 cursor-pointer ${
                     hoveredCategory?.name === group.name &&
                     "text-white bg-header"
