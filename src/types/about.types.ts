@@ -11,6 +11,7 @@ export interface Consultant {
   description?: string;
   order?: number;
   active?: boolean;
+  headerImage?: string;
 }
 
 export interface SocialMission {

@@ -14,8 +14,8 @@ const DigitalCardDesktop = ({ consultant }: DigitalCardDesktopProps) => {
       <figcaption className="w-full h-40 relative">
         <img
           className="absolute h-40 w-full object-cover grayscale rounded-2xl"
-          src="https://puntokoreano.com/images/carrousel/KORANDO.jpg"
-          alt=""
+          src={consultant.headerImage}
+          alt={consultant.name}
         />
         <img
           className="relative w-20"
@@ -25,7 +25,7 @@ const DigitalCardDesktop = ({ consultant }: DigitalCardDesktopProps) => {
       </figcaption>
 
       <div className="relative bg-cardInfo rounded-2xl px-4 pt-4 pb-2 mt-2"> {/* Reduced padding */}
-        <figure className="w-28 h-28 sm:w-32 sm:h-32 absolute -top-12 sm:-top-16 right-1">
+        <figure className="w-28 h-28 sm:w-36 sm:h-36 absolute -top-12 sm:-top-16 right-1">
           {/* Further reduced sizes */}
           <img
             className="w-full h-full object-cover object-top rounded-full border-2 border-solid border-secondary_1"
