@@ -4,6 +4,7 @@ import { useAuthStore } from "../store/auth.store";
 import axios from "axios";
 import ENDPOINTS from "@/api";
 import { notification } from "antd";
+import setupAxiosInterceptors from "../utils/axiosInterceptor";
 
 interface RegisterData {
   name: string;
@@ -62,21 +63,9 @@ export const useAuth = () => {
 
   const configureAxiosAuth = (token: string) => {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    // Add response interceptor for token expiration
-    axios.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        if (error.response?.status === 401) {
-          handleLogout();
-          notification.error({
-            message: "Sesión expirada",
-            description: "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
-          });
-        }
-        return Promise.reject(error);
-      }
-    );
+    
+    // Setup axios interceptors for token expiration
+    setupAxiosInterceptors();
   };
 
   const handleAuthError = (error: any, defaultMessage: string) => {
@@ -139,6 +128,7 @@ export const useAuth = () => {
   // Configurar axios con el token guardado al inicializar
   if (token) {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    setupAxiosInterceptors(); // Setup interceptors on hook initialization if token exists
   }
 
   return {
