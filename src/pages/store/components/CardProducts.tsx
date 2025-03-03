@@ -19,7 +19,7 @@ interface Product {
   shipping: string[];
   images: string[];
   active: boolean;
-  model: string;
+  line: string;
 }
 
 interface Props {
@@ -121,7 +121,7 @@ const CardProducts = ({ inline = false, product }: Props) => {
               {product.name}
             </h3>
             <p className=" mb-2">
-              {product.model}
+              {product.line}
             </p>
             <div className="flex items-center justify-between mb-4">
               <div className="flex flex-col">
