@@ -19,6 +19,7 @@ interface Product {
   shipping: string[];
   images: string[];
   active: boolean;
+  model: string;
 }
 
 interface Props {
@@ -116,9 +117,12 @@ const CardProducts = ({ inline = false, product }: Props) => {
             className="cursor-pointer"
             onClick={() => navigate(`/store/product/${product.id}`)}
           >
-            <h3 className="font-bold text-lg mb-2 line-clamp-2 min-h-[56px]">
+            <h3 className="font-bold text-lg line-clamp-2 min-h-[30px]">
               {product.name}
             </h3>
+            <p className=" mb-2">
+              {product.model}
+            </p>
             <div className="flex items-center justify-between mb-4">
               <div className="flex flex-col">
                 <span className="text-sm text-gray-500">Precio</span>

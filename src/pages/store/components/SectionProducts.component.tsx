@@ -30,6 +30,7 @@ interface Product {
   shipping: string[];
   images: string[];
   active: boolean;
+  model: string;
 }
 
 const SectionProducts = ({ inline, title, search = true }: Props) => {
