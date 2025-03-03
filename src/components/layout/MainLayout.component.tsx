@@ -23,6 +23,7 @@ import CartModal from "../Modals/CartModal.component";
 import WhatsAppButton from "../buttons/Whatsapp.component";
 import WishlistModal from "../Modals/Wishlist.component";
 import GroupsModal from "../Modals/GroupsModal.component";
+import TermsModal from "../Modals/TermsModal.component";
 import { useAuthStore } from "@/store/auth.store";
 import { useCartStore } from "@/store/cart.store";
 import { useWishlistStore } from "@/store/wishlist.store";
@@ -43,7 +44,7 @@ export const MainLayout = ({ children }: Props) => {
   const [openCart, setOpenCart] = useState<boolean>(false);
   const [openWish, setOpenWish] = useState<boolean>(false);
   const [openGroups, setOpenGroups] = useState<boolean>(false);
-
+  const [openTerms, setOpenTerms] = useState<boolean>(!localStorage.getItem("termsAccepted"));
   // Auth and store hooks
   const { isAuthenticated, user } = useAuthStore();
   const { totalItems: cartItems } = useCartStore();
@@ -223,6 +224,7 @@ export const MainLayout = ({ children }: Props) => {
       <WishlistModal open={openWish} setOpen={setOpenWish} />
       <CartModal open={openCart} setOpen={setOpenCart} />
       <GroupsModal open={openGroups} setOpen={setOpenGroups} />
+      <TermsModal open={openTerms} setOpen={setOpenTerms} />
 
       <Footer />
     </Layout>
