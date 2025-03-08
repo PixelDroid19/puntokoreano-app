@@ -18,7 +18,7 @@ import FilterStore from "../pages/store/components/Filter.component";
 import ProductDetail from "../pages/product/ProductDetail";
 import Checkout from "../components/checkout/Checkout.component";
 import ThanksOrder from "../components/orders/Thanks.component";
-import Blog from "../pages/blog/Blog.page";
+//import Blog from "../pages/blog/Blog.page";
 import VehiclesBrand from "../pages/blog/components/Vehicles.component";
 import BlogPost from "../pages/blog/components/Post.component";
 import Cart from "../pages/cart/Cart.page";
