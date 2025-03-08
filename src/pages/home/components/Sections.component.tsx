@@ -1,6 +1,7 @@
 // Sections.tsx
-import { useRef } from "react";
-import { Carousel, Badge, Statistic } from "antd";
+import { useRef, useState, useEffect } from "react";
+import { Carousel, Badge, Statistic, Spin } from "antd";
+import * as AntIcons from '@ant-design/icons';
 import { 
   Award,
   PenTool, 
@@ -11,75 +12,185 @@ import {
   MapPin,
   Star
 } from "lucide-react";
+import axios from "axios";
+import ENDPOINTS from "@/api";
 import './styles/Sections.component.css'
 interface Achievement {
-  icon: JSX.Element;
+  icon_url: string;
   value: string;
   title: string;
-  color: string;
+  active: boolean;
+  order: number;
+  _id: string;
 }
+
+interface Stat {
+  icon: JSX.Element;
+  value: string;
+}
+
+interface HighlightedService {
+  title: string;
+  description: string;
+  image: string;
+  stats: Stat[];
+  _id?: string;
+  identifier?: string;
+}
+
+// Mapping de iconos para asignar dinámicamente según el nombre
+const iconMap: Record<string, JSX.Element> = {
+  Award: <Award className="w-8 h-8" />,
+  PenTool: <PenTool className="w-8 h-8" />,
+  ShieldCheck: <ShieldCheck className="w-8 h-8" />,
+  Clock: <Clock className="w-8 h-8" />,
+  Users: <Users className="w-8 h-8" />,
+  Building: <Building className="w-8 h-8" />,
+  MapPin: <MapPin className="w-8 h-8" />,
+  Star: <Star className="w-8 h-8" />
+};
 
 const Sections = () => {
   const carouselRef = useRef<typeof Carousel>(null);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [highlightedServices, setHighlightedServices] = useState<HighlightedService[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Datos de logros y estadísticas
-  const achievements: Achievement[] = [
-    {
-      icon: <Award className="w-8 h-8" />,
-      value: "20+",
-      title: "Años de Experiencia",
-      color: "bg-blue-50 text-blue-600"
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      value: "10,000+",
-      title: "Clientes Satisfechos",
-      color: "bg-green-50 text-green-600"
-    },
-    {
-      icon: <PenTool className="w-8 h-8" />,
-      value: "5,000+",
-      title: "Repuestos Disponibles",
-      color: "bg-purple-50 text-purple-600"
-    },
-    {
-      icon: <ShieldCheck className="w-8 h-8" />,
-      value: "100%",
-      title: "Garantía de Calidad",
-      color: "bg-red-50 text-red-600"
+  // Función para asignar iconos según el nombre recibido de la API
+  const getIconByName = (iconName: string): JSX.Element => {
+    // Check if it's a Lucide icon first
+    if (iconMap[iconName]) {
+      return iconMap[iconName];
     }
-  ];
+    
+    // Check if it's an Ant Design icon
+    const AntIcon = (AntIcons as any)[iconName];
+    if (AntIcon) {
+      return <AntIcon className="w-8 h-8" />;
+    }
+    
+    // Default icon if not found
+    return <Award className="w-8 h-8" />;
+  };
 
-  // Datos de servicios destacados
-  const highlightedServices = [
-    {
-      title: "Taller Especializado",
-      description: "Servicio técnico certificado con las últimas herramientas de diagnóstico",
-      image: "https://puntokoreano.com/images/carrousel/KORANDO.jpg",
-      stats: [
-        { icon: <Clock />, value: "Atención Rápida" },
-        { icon: <PenTool />, value: "Técnicos Certificados" }
-      ]
-    },
-    {
-      title: "Centro de Repuestos",
-      description: "La más amplia disponibilidad de repuestos originales SsangYong",
-      image: "https://puntokoreano.com/images/carrousel/REXTON.webp",
-      stats: [
-        { icon: <Building />, value: "Stock Permanente" },
-        { icon: <Star />, value: "Calidad Original" }
-      ]
-    },
-    {
-      title: "Servicio Premium",
-      description: "Atención personalizada y seguimiento post-venta garantizado",
-      image: "https://puntokoreano.com/images/carrousel/TORRES.jpg",
-      stats: [
-        { icon: <Users />, value: "Asesoría Experta" },
-        { icon: <MapPin />, value: "Cobertura Nacional" }
-      ]
-    }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch achievements
+        const achievementsResponse = await axios.get(ENDPOINTS.SETTINGS.GET_ACHIEVEMENTS.url);
+        
+        // Use achievements data directly since it matches our interface
+        const mappedAchievements = achievementsResponse.data.data;
+        
+        setAchievements(mappedAchievements);
+        
+        // Fetch highlighted services
+        const servicesResponse = await axios.get(ENDPOINTS.SETTINGS.GET_HIGHLIGHTED_SERVICES.url);
+        
+        // Mapear los servicios y asignar iconos a las estadísticas
+        const mappedServices = servicesResponse.data.data.map((service: any) => ({
+          ...service,
+          stats: service.stats?.map((stat: any) => ({
+            ...stat,
+            icon: stat.icon ? getIconByName(stat.icon) : <Clock />
+          })) || []
+        }));
+        
+        setHighlightedServices(mappedServices);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Error al cargar los datos. Por favor, intente nuevamente.');
+        
+        // Fallback a datos estáticos en caso de error
+        setAchievements([
+          {
+            value: "20+",
+            title: "Años de Experiencia",
+            icon_url: "",
+            active: true,
+            order: 1,
+            _id: "1"
+          },
+          {
+            value: "10,000+",
+            title: "Clientes Satisfechos",
+            icon_url: "",
+            active: true,
+            order: 2,
+            _id: "2"
+          },
+          {
+            value: "5,000+",
+            title: "Repuestos Disponibles",
+            icon_url: "",
+            active: true,
+            order: 3,
+            _id: "3"
+          },
+          {
+            value: "100%",
+            title: "Garantía de Calidad",
+            icon_url: "",
+            active: true,
+            order: 4,
+            _id: "4"
+          }
+        ]);
+        
+        setHighlightedServices([
+          {
+            title: "Taller Especializado",
+            description: "Servicio técnico certificado con las últimas herramientas de diagnóstico",
+            image: "https://puntokoreano.com/images/carrousel/KORANDO.jpg",
+            stats: [
+              { icon: <Clock />, value: "Atención Rápida" },
+              { icon: <PenTool />, value: "Técnicos Certificados" }
+            ]
+          },
+          {
+            title: "Centro de Repuestos",
+            description: "La más amplia disponibilidad de repuestos originales SsangYong",
+            image: "https://puntokoreano.com/images/carrousel/REXTON.webp",
+            stats: [
+              { icon: <Building />, value: "Stock Permanente" },
+              { icon: <Star />, value: "Calidad Original" }
+            ]
+          },
+          {
+            title: "Servicio Premium",
+            description: "Atención personalizada y seguimiento post-venta garantizado",
+            image: "https://puntokoreano.com/images/carrousel/TORRES.jpg",
+            stats: [
+              { icon: <Users />, value: "Asesoría Experta" },
+              { icon: <MapPin />, value: "Cobertura Nacional" }
+            ]
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500 py-10">
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-b from-white to-gray-50 py-20">
@@ -94,7 +205,7 @@ const Sections = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {highlightedServices.map((service, index) => (
               <div 
-                key={index}
+                key={service._id || index}
                 className="bg-white rounded-xl shadow-lg overflow-hidden group hover:shadow-2xl transition-shadow duration-300"
                 data-aos="fade-up"
                 data-aos-delay={index * 150}
@@ -141,13 +252,13 @@ const Sections = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {achievements.map((achievement, index) => (
               <div 
-                key={index}
+                key={achievement._id || index}
                 className="p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300"
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
               >
-                <div className={`${achievement.color} p-4 rounded-full inline-block mb-4`}>
-                  {achievement.icon}
+                <div className="bg-blue-50 text-blue-600 p-4 rounded-full inline-block mb-4">
+                  <img src={achievement.icon_url} alt={achievement.title} className="w-8 h-8" />
                 </div>
                 <Statistic 
                   value={achievement.value} 

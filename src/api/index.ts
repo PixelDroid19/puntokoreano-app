@@ -10,6 +10,7 @@ export interface Endpoints {
     CHECK_SESSION: ApiEndpoint;
     REGISTER: ApiEndpoint;
     LOGOUT: ApiEndpoint;
+    ENCRYPTION_KEY: ApiEndpoint;
   };
   PRODUCTS: {
     GET_ALL: ApiEndpoint;
@@ -83,6 +84,8 @@ export interface Endpoints {
   };
   SETTINGS: {
     GET_PUBLIC_ABOUT: ApiEndpoint;
+    GET_ACHIEVEMENTS: ApiEndpoint;
+    GET_HIGHLIGHTED_SERVICES: ApiEndpoint;
   };
   USER: {
     GET_REVIEWS: ApiEndpoint;
@@ -125,6 +128,14 @@ const ENDPOINTS: Endpoints = {
       url: `${BASE_URL}/settings/about`,
       method: "GET",
     },
+    GET_ACHIEVEMENTS: {
+      url: `${BASE_URL}/highlighted-services/achievements`,
+      method: "GET",
+    },
+    GET_HIGHLIGHTED_SERVICES: {
+      url: `${BASE_URL}/highlighted-services`,
+      method: "GET",
+    },
   },
   AUTH: {
     LOGIN: {
@@ -141,6 +152,10 @@ const ENDPOINTS: Endpoints = {
     },
     CHECK_SESSION: {
       url: `${BASE_URL}/auth/ecommerce/check-session`,
+      method: "GET",
+    },
+    ENCRYPTION_KEY: {
+      url: `${BASE_URL}/auth/encryption-key`,
       method: "GET",
     },
   },

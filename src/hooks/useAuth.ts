@@ -5,6 +5,7 @@ import axios from "axios";
 import ENDPOINTS from "@/api";
 import { notification } from "antd";
 import setupAxiosInterceptors from "../utils/axiosInterceptor";
+import EncryptionService from "@/services/EncryptionService";
 
 interface RegisterData {
   name: string;
@@ -39,9 +40,20 @@ export const useAuth = () => {
 
   const handleLogin = async (email: string, password: string) => {
     try {
+      // Step 1: Get encryption key from server
+      const { key, sessionId } = await EncryptionService.getEncryptionKey();
+      
+      // Step 2: Encrypt password using the key
+      const encryptedPassword = EncryptionService.encryptPassword(password, key);
+      
+      // Step 3: Send login request with encrypted password and sessionId
       const response = await axios.post<LoginResponse>(
         ENDPOINTS.AUTH.LOGIN.url,
-        { email, password }
+        { 
+          email, 
+          encryptedPassword, 
+          sessionId 
+        }
       );
 
       const { user, token, expiresAt } = response.data.data;

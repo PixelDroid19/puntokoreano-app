@@ -10,7 +10,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate, useParams } from "react-router-dom";
 import SectionProducts from "../store/components/SectionProducts.component";
 import ArticleRelation from "./components/ArticulesRelation.component";
-import Applies from "./components/Applies.component";
+//import Applies from "./components/Applies.component";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import ENDPOINTS from "@/api";
