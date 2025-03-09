@@ -34,10 +34,10 @@ const ConsultantCard: React.FC<ConsultantCardProps> = ({ consultant, isDesktop }
     </div>
   );
 
-  const CardContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className={cardBaseStyles} onClick={handleClick}>
-      <FlipIndicator  />
-      <div className="w-full h-full">{children}</div>
+  const CardContainer: React.FC<{ children: React.ReactNode; isBack?: boolean }> = ({ children, isBack }) => (
+    <div className={`${cardBaseStyles} ${isBack ? 'bg-white' : ''}`} onClick={handleClick}>
+      <FlipIndicator />
+      <div className="w-full h-full bg-white rounded-xl overflow-hidden">{children}</div>
     </div>
   );
 
@@ -63,7 +63,7 @@ const ConsultantCard: React.FC<ConsultantCardProps> = ({ consultant, isDesktop }
         </CardContainer>
 
         {/* Back */}
-        <CardContainer>
+        <CardContainer isBack={true}>
           {isDesktop ? (
             <DigitalCardDesktop consultant={consultant} />
           ) : (

@@ -246,18 +246,18 @@ const Sections = () => {
         {/* Sección de Servicios Destacados */}
         <div className="mt-20">
           <h3 className="text-2xl font-bold text-center mb-12 font-glegoo">
-          Lidereando servicio de asesoría automotriz  
+          liderándo el servicio automotriz 
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {achievements.map((achievement, index) => (
               <div 
                 key={achievement._id || index}
-                className="p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300"
+                className="p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300 flex flex-col items-center"
                 data-aos="fade-up"
                 data-aos-delay={index * 100}
               >
-                <div className="bg-blue-50 text-blue-600 p-4 rounded-full inline-block mb-4">
+                <div className="bg-blue-50 text-blue-600 p-4 rounded-full inline-flex justify-center items-center mb-4">
                   <img src={achievement.icon_url} alt={achievement.title} className="w-8 h-8" />
                 </div>
                 <Statistic 

@@ -132,9 +132,15 @@ const FilterStore = () => {
   };
 
   const handleSearch = () => {
-    // Crear URLSearchParams con los filtros
+    // Asegurar que el término de búsqueda actual se use inmediatamente cuando se presiona Enter
+    const updatedFilters = {
+      ...filters,
+      search: searchTerm // Usar searchTerm directamente en lugar de filters.search
+    };
+    
+    // Crear URLSearchParams con los filtros actualizados
     const searchParams = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
+    Object.entries(updatedFilters).forEach(([key, value]) => {
       if (value) searchParams.append(key, value);
     });
 
@@ -187,6 +193,7 @@ const FilterStore = () => {
               prefix={<SearchOutlined className="text-gray-400" />}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onPressEnter={handleSearch}
               className="rounded-lg"
               size="large"
             />
