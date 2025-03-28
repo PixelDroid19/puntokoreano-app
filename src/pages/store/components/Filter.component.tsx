@@ -418,13 +418,11 @@ const FilterStore = () => {
                 className={`
                 w-full px-4 py-2.5 rounded-lg transition-all duration-300
                 flex items-center justify-center gap-2 font-medium
-                ${
-                 `
+                ${`
                       bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white 
                       hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
                       active:scale-95
-                    `
-                }
+                    `}
               `}
                 onClick={handleSearch}
               >
