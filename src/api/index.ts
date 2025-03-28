@@ -13,10 +13,9 @@ export interface Endpoints {
     ENCRYPTION_KEY: ApiEndpoint;
   };
   PRODUCTS: {
-    GET_ALL: ApiEndpoint;
     SEARCH: ApiEndpoint;
     PRODUCT_DETAIL: ApiEndpoint;
-    FILTER: ApiEndpoint;
+    VEHICLE_FILTER_OPTIONS: ApiEndpoint;
   };
   FILTERS: {
     GET_ALL: ApiEndpoint;
@@ -314,20 +313,16 @@ const ENDPOINTS: Endpoints = {
     },
   },
   PRODUCTS: {
-    FILTER: {
-      url: `${BASE_URL}/products/filter`,
+    SEARCH: {
+      url: `${BASE_URL}/products/search`, // La ruta que definimos en el backend
+      method: "POST", // Cambiado a POST
+    },
+    VEHICLE_FILTER_OPTIONS: {
+      url: `${BASE_URL}/products/vehicle-filter-options`, // GET para obtener las opciones de filtro
       method: "GET",
     },
     PRODUCT_DETAIL: {
-      url: `${BASE_URL}/products/detail`,
-      method: "GET",
-    },
-    GET_ALL: {
-      url: `${BASE_URL}/products/get-products`,
-      method: "GET",
-    },
-    SEARCH: {
-      url: `${BASE_URL}/products/search`,
+      url: `${BASE_URL}/products/detail`, // Sin cambios, sigue siendo GET por ID
       method: "GET",
     },
   },
