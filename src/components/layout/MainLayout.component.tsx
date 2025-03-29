@@ -17,7 +17,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import Footer from "../../pages/home/components/Footer.component";
+import Footer from "../../pages/home/components/Footer.component"; // Adjust path if needed
 import { useEffect, useState } from "react";
 import CartModal from "../Modals/CartModal.component";
 import WhatsAppButton from "../buttons/Whatsapp.component";
@@ -27,7 +27,7 @@ import TermsModal from "../Modals/TermsModal.component";
 import { useAuthStore } from "@/store/auth.store";
 import { useCartStore } from "@/store/cart.store";
 import { useWishlistStore } from "@/store/wishlist.store";
-
+import { useTermsStore } from "@/store/terms.store"; // Import the terms store
 import "./style.css";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -41,42 +41,36 @@ export const MainLayout = ({ children }: Props) => {
   const isTablet = useMediaQuery({ query: "(max-width: 1023px)" });
   const isDesk = useMediaQuery({ query: "(min-width: 1024px)" });
 
+  // State for other modals
   const [openCart, setOpenCart] = useState<boolean>(false);
   const [openWish, setOpenWish] = useState<boolean>(false);
   const [openGroups, setOpenGroups] = useState<boolean>(false);
-  const [openTerms, setOpenTerms] = useState<boolean>(!localStorage.getItem("termsAccepted"));
-  // Auth and store hooks
+
+  const {
+    isOpen: termsIsOpen,
+    acceptTerms,
+    checkInitialAcceptanceAndOpen,
+  } = useTermsStore();
+
+  // Auth and other store hooks
   const { isAuthenticated, user } = useAuthStore();
   const { totalItems: cartItems } = useCartStore();
   const { items: wishlistItems } = useWishlistStore();
   const { logout } = useAuth();
 
+  useEffect(() => {
+    checkInitialAcceptanceAndOpen();
+  }, []);
+
   const handleOpenCarModal = () => setOpenCart(true);
   const handleOpenWishModal = () => setOpenWish(true);
 
   const items = [
-    {
-      key: 1,
-      label: <Link to={"/"}>Inicio</Link>,
-    },
-    {
-      key: 2,
-      label: <Link to={"/store/search"}>Tienda</Link>,
-    },
-    {
-      key: 3,
-      label: <Link to={"/blog"}>Blog</Link>,
-    },
-    {
-      key: 4,
-      label: <Link to={"/about"}>Nosotros</Link>,
-    },
+    { key: 1, label: <Link to={"/"}>Inicio</Link> },
+    { key: 2, label: <Link to={"/store/search"}>Tienda</Link> },
+    { key: 3, label: <Link to={"/blog"}>Blog</Link> },
+    { key: 4, label: <Link to={"/about"}>Nosotros</Link> },
   ];
-
-  useEffect(() => {
-  console.log('isAuthenticated',isAuthenticated)
-  }, [isAuthenticated])
-  
 
   const userMenuItems = [
     {
@@ -92,28 +86,33 @@ export const MainLayout = ({ children }: Props) => {
         </Link>
       ),
     },
-    ...(isAuthenticated ? [
-      {
-        key: "2",
-        label: (
-          <Link to="/account" className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
-            Mi Cuenta
-          </Link>
-        ),
-      },
-      {
-        key: "3",
-        label: (
-          <button
-            onClick={logout}
-            className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center gap-2"
-          >
-            <FontAwesomeIcon icon={faSignOutAlt} />
-            Cerrar Sesión
-          </button>
-        ),
-      }
-    ] : []),
+    ...(isAuthenticated
+      ? [
+          {
+            key: "2",
+            label: (
+              <Link
+                to="/account"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+              >
+                Mi Cuenta
+              </Link>
+            ),
+          },
+          {
+            key: "3",
+            label: (
+              <button
+                onClick={logout}
+                className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 flex items-center gap-2"
+              >
+                <FontAwesomeIcon icon={faSignOutAlt} />
+                Cerrar Sesión
+              </button>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -214,18 +213,16 @@ export const MainLayout = ({ children }: Props) => {
           </div>
         </div>
       </Header>
-
       <Content className="relative">
         {children}
         <WhatsAppButton />
       </Content>
-
       {/* Modals */}
       <WishlistModal open={openWish} setOpen={setOpenWish} />
       <CartModal open={openCart} setOpen={setOpenCart} />
       <GroupsModal open={openGroups} setOpen={setOpenGroups} />
-      <TermsModal open={openTerms} setOpen={setOpenTerms} />
 
+      <TermsModal open={termsIsOpen} onAccept={acceptTerms} />
       <Footer />
     </Layout>
   );
