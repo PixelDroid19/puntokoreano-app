@@ -1,77 +1,83 @@
-import { Modal } from "antd";
-import { useEffect, useState } from "react";
+import type React from "react"
+
+import { Modal } from "antd"
+import { useEffect, useState } from "react"
 
 interface Props {
-  open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  open: boolean
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const TermsModal = ({ open, setOpen }: Props) => {
-  const [hasAccepted, setHasAccepted] = useState<boolean>(false);
+  const [hasAccepted, setHasAccepted] = useState<boolean>(false)
 
   useEffect(() => {
-    const accepted = localStorage.getItem("termsAccepted");
+    const accepted = localStorage.getItem("termsAccepted")
     if (accepted) {
-      setHasAccepted(true);
-      setOpen(false);
+      setHasAccepted(true)
+      setOpen(false)
     }
-  }, []);
+  }, [])
 
   const handleAccept = () => {
-    localStorage.setItem("termsAccepted", "true");
-    setHasAccepted(true);
-    setOpen(false);
-  };
+    localStorage.setItem("termsAccepted", "true")
+    setHasAccepted(true)
+    setOpen(false)
+  }
 
   return (
     <Modal
-      title="Términos y Condiciones"
+      title={<h2 className="text-lg font-medium">Términos y Condiciones</h2>}
       open={open && !hasAccepted}
       onOk={handleAccept}
       onCancel={() => {}}
-      cancelButtonProps={{ style: { display: 'none' } }}
+      cancelButtonProps={{ style: { display: "none" } }}
       closable={false}
       maskClosable={false}
       okText="Aceptar"
-      className="terms-modal"
+      okButtonProps={{
+        className: "bg-primary hover:bg-primary/90 text-white w-full",
+      }}
+      className="max-w-md"
+      bodyStyle={{ padding: "16px" }}
+      centered
     >
-      <div className="terms-content">
-        <h3 className="text-lg font-semibold mb-4">Bienvenido a Punto Koreano</h3>
-        
-        <section className="mb-6">
-          <h4 className="font-semibold mb-2">Uso de Cookies</h4>
-          <p className="text-gray-600 mb-4">
-            Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestro sitio web. 
-            Estas nos permiten recordar sus preferencias, entender cómo utiliza nuestro sitio y personalizar 
-            el contenido que le mostramos.
-          </p>
-        </section>
+      <div className="space-y-5 text-sm">
+        <div>
+          <h3 className="font-medium mb-1">Bienvenido a Punto Koreano</h3>
+        </div>
 
-        <section className="mb-6">
-          <h4 className="font-semibold mb-2">Política de Privacidad</h4>
-          <p className="text-gray-600 mb-4">
-            Nos comprometemos a proteger su privacidad y a manejar sus datos personales de manera segura y 
-            responsable. La información que recopilamos se utiliza únicamente para mejorar nuestros servicios 
-            y su experiencia de compra.
+        <div>
+          <h4 className="font-medium text-sm mb-1">Uso de Cookies</h4>
+          <p className="text-gray-500 text-xs leading-relaxed">
+            Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestro sitio web. Estas nos
+            permiten recordar sus preferencias y personalizar el contenido.
           </p>
-        </section>
+        </div>
 
-        <section className="mb-6">
-          <h4 className="font-semibold mb-2">Términos de Uso</h4>
-          <p className="text-gray-600 mb-4">
-            Al utilizar nuestro sitio web, usted acepta cumplir con nuestros términos y condiciones. 
-            Esto incluye el uso apropiado de nuestros servicios, el respeto a los derechos de propiedad 
-            intelectual y el cumplimiento de las leyes aplicables.
+        <div className="border-t border-gray-100 pt-4">
+          <h4 className="font-medium text-sm mb-1">Política de Privacidad</h4>
+          <p className="text-gray-500 text-xs leading-relaxed">
+            Nos comprometemos a proteger su privacidad y a manejar sus datos personales de manera segura. La información
+            recopilada se utiliza únicamente para mejorar nuestros servicios.
           </p>
-        </section>
+        </div>
 
-        <p className="text-sm text-gray-500 mt-4">
-          Al hacer clic en "Aceptar", usted confirma que ha leído y está de acuerdo con nuestros términos 
-          y condiciones, política de privacidad y uso de cookies.
+        <div className="border-t border-gray-100 pt-4">
+          <h4 className="font-medium text-sm mb-1">Términos de Uso</h4>
+          <p className="text-gray-500 text-xs leading-relaxed">
+            Al utilizar nuestro sitio web, usted acepta cumplir con nuestros términos y condiciones, incluyendo el uso
+            apropiado de servicios y el respeto a los derechos de propiedad intelectual.
+          </p>
+        </div>
+
+        <p className="text-xs text-gray-400 mt-4 italic">
+          Al hacer clic en "Aceptar", confirma que está de acuerdo con nuestros términos y condiciones.
         </p>
       </div>
     </Modal>
-  );
-};
+  )
+}
 
-export default TermsModal;
+export default TermsModal
+

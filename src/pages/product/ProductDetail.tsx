@@ -1,4 +1,3 @@
-// src/pages/product/ProductDetail.tsx
 import { Image, Space, Tabs, notification } from "antd";
 import CountReview from "../store/components/CountReview.component";
 import ImagesView from "./components/Images.component";
@@ -10,7 +9,6 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate, useParams } from "react-router-dom";
 import SectionProducts from "../store/components/SectionProducts.component";
 import ArticleRelation from "./components/ArticulesRelation.component";
-//import Applies from "./components/Applies.component";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import ENDPOINTS from "@/api";
@@ -19,29 +17,93 @@ import { useWishlistStore } from "@/store/wishlist.store";
 import DescriptionProduct from "./components/Description.component";
 import ReviewsProduct from "./components/Reviews.component";
 import { useProductReviews } from "@/hooks/useProductReviews";
+import Applies from "./components/Applies.component";
 
-// Definir interfaces
+interface Seo {
+  title: string;
+  description: string;
+  keywords: string[];
+}
+
+interface Discount {
+  isActive: boolean;
+  type: "permanent" | "temporary";
+  percentage: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface CompatibleVehicleModel {
+  _id: string;
+  name: string;
+  year: number;
+}
+
+interface CompatibleVehicleLine {
+  _id: string;
+  name: string;
+  model_id: CompatibleVehicleModel;
+}
+
+interface CompatibleVehicle {
+  _id: string;
+  line_id: CompatibleVehicleLine;
+  transmission_id: string;
+  fuel_id: string;
+  color: string;
+  price: number | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface RatingDistribution {
+  "1": number;
+  "2": number;
+  "3": number;
+  "4": number;
+  "5": number;
+}
+
+interface Rating {
+  average: number;
+  total: number;
+  count: number;
+  distribution: RatingDistribution;
+}
+
+interface ProductData {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  code: string;
+  short_description: string;
+  long_description: string;
+  group: string;
+  subgroup: string;
+  shipping: string[];
+  images: string[];
+  active: boolean;
+  discount: Discount | null;
+  specifications: any[];
+  variants: any[];
+  videoUrl: string;
+  warranty: string;
+  seo: Seo;
+  compatible_vehicles: CompatibleVehicle[];
+  related_products: any[];
+  createdAt: string;
+  updatedAt: string;
+  views: number;
+  rating: Rating;
+}
+
 interface ProductDetailResponse {
   success: boolean;
   message: string;
-  data: {
-    id: string;
-    active: boolean;
-    code: number;
-    created_at: string;
-    description: string;
-    group: string;
-    images: string[];
-    name: string;
-    price: number;
-    long_description: string;
-    short_description: string;
-    related_products: any[];
-    shipping: string[];
-    stock: number;
-    subgroup: string;
-    updated_at: string;
-  };
+  data: ProductData;
 }
 
 const ProductDetail = () => {
@@ -69,10 +131,54 @@ const ProductDetail = () => {
       axios
         .get(`${ENDPOINTS.PRODUCTS.PRODUCT_DETAIL.url}/${id}`)
         .then((response) => response.data),
+    enabled: !!id,
   });
 
   const product = productResponse?.data;
   const isProductInWishlist = product ? isInWishlist(product.id) : false;
+
+  let displayPrice = product?.price || 0;
+  let originalPrice: number | undefined = product?.price;
+  let discountPercentage = 0;
+  let isDiscounted = false;
+  let finalPriceForCart = product?.price || 0;
+
+  if (product?.discount?.isActive && product.discount.percentage > 0) {
+    let discountAppliesNow = false;
+
+    if (product.discount.type === "permanent") {
+      discountAppliesNow = true;
+    } else if (product.discount.type === "temporary") {
+      const now = new Date();
+      const startDate = product.discount.startDate
+        ? new Date(product.discount.startDate)
+        : null;
+      const endDate = product.discount.endDate
+        ? new Date(product.discount.endDate)
+        : null;
+
+      if (startDate && endDate && now >= startDate && now <= endDate) {
+        discountAppliesNow = true;
+      }
+    }
+
+    if (discountAppliesNow) {
+      isDiscounted = true;
+      discountPercentage = product.discount.percentage;
+      displayPrice = product.price * (1 - discountPercentage / 100);
+      finalPriceForCart = displayPrice;
+    } else {
+      isDiscounted = false;
+      displayPrice = product.price;
+      finalPriceForCart = product.price;
+      originalPrice = undefined;
+    }
+  } else {
+    isDiscounted = false;
+    displayPrice = product?.price || 0;
+    finalPriceForCart = product?.price || 0;
+    originalPrice = undefined;
+  }
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -80,9 +186,10 @@ const ProductDetail = () => {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: finalPriceForCart,
       image: product.images[0],
       stock: product.stock,
+      quantity: Number(count),
     });
 
     notification.success({
@@ -96,7 +203,7 @@ const ProductDetail = () => {
 
     if (isProductInWishlist) {
       removeFromWishlist(product.id);
-      notification.success({
+      notification.info({
         message: "Producto eliminado",
         description: "El producto fue eliminado de la lista de deseos",
       });
@@ -104,7 +211,7 @@ const ProductDetail = () => {
       addToWishlist({
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: finalPriceForCart,
         image: product.images[0],
         stock: product.stock,
       });
@@ -116,8 +223,14 @@ const ProductDetail = () => {
   };
 
   const handleClicPlus = () => {
-    if (product?.stock && Number(count) < product.stock) {
+    if (product?.stock && product.stock > 0 && Number(count) < product.stock) {
       setCount(`${Number(count) + 1}`);
+    } else if (product?.stock === 0) {
+      notification.warning({ message: "Producto sin stock" });
+    } else {
+      notification.warning({
+        message: `Solo quedan ${product?.stock} unidades en stock`,
+      });
     }
   };
 
@@ -132,7 +245,8 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.style.width = `${count.length * 10 + 2}px`;
+      const width = Math.max(20, count.length * 10 + 2);
+      inputRef.current.style.width = `${width}px`;
     }
   }, [count]);
 
@@ -140,13 +254,21 @@ const ProductDetail = () => {
     if (window.location.hash === "#reviews" && reviewsRef.current) {
       reviewsRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, []);
+    return () => {
+      if (window.location.hash === "#reviews") {
+        window.history.pushState(
+          "",
+          document.title,
+          window.location.pathname + window.location.search
+        );
+      }
+    };
+  }, [id]);
 
   const goToReviews = () => {
-    const reviewsTab = document.querySelector('[data-tab-key="2"]');
-    if (reviewsTab) {
-      reviewsTab.scrollIntoView({ behavior: "smooth" });
-      window.history.pushState(null, "", "#reviews");
+    if (reviewsRef.current) {
+      reviewsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.location.hash = "reviews";
     }
   };
 
@@ -183,86 +305,129 @@ const ProductDetail = () => {
         <ArticleRelation related_products={product?.related_products || []} />
       ),
     },
-   /*  {
+    {
       key: "4",
       label: "Aplicaciones",
-      children: <Applies />,
-    }, */
+      children: (
+        <Applies compatibleVehicles={product?.compatible_vehicles || []} />
+      ),
+    },
   ];
 
-  if (isLoading) return <div>Cargando...</div>;
-  if (isError) return <div>Error al cargar el producto</div>;
-  if (!product) return <div>Producto no encontrado</div>;
+  if (isLoading) return <div className="text-center p-10">Cargando...</div>;
+  if (isError)
+    return (
+      <div className="text-center p-10 text-red-500">
+        Error al cargar el producto.
+      </div>
+    );
+  if (!product)
+    return <div className="text-center p-10">Producto no encontrado.</div>;
 
   return (
     <div className="px-5 mb-10 max-w-[1280px] lg:mx-auto lg:px-10">
       <div
-        className="flex items-center gap-2 mb-4 w-fit mt-5 cursor-pointer"
+        className="flex items-center gap-2 mb-4 w-fit mt-5 cursor-pointer group"
         onClick={() => navigate("/store")}
       >
-        <FontAwesomeIcon icon={faArrowLeft} className="text-base" />
-        <p className="text-lg font-semibold">Tienda</p>
+        <FontAwesomeIcon
+          icon={faArrowLeft}
+          className="text-base group-hover:text-[rgb(96,36,170)] transition-colors"
+        />
+        <p className="text-lg font-semibold group-hover:text-[rgb(96,36,170)] transition-colors">
+          Tienda
+        </p>
       </div>
 
-      <section className="mt-5 lg:flex lg:gap-8 2xl:w-[1280px] 2xl:mx-auto">        
+      <section className="mt-5 lg:flex lg:gap-8">
         <ImagesView images={product.images} />
-        <div className="flex flex-col h-full lg:min-h-[400px] lg:flex-1 lg:py-2 lg:justify-start space-y-4">
+        <div className="flex flex-col lg:flex-1 lg:py-2 space-y-4 mt-4 lg:mt-0">
           <div>
-            <h1 className="font-bold text-xl mb-2 lg:text-2xl">{product.name}</h1>
-            <div className="flex gap-4 mb-3">
-              <h4 className="font-bold text-base text-[#030202]">
-                $ {product.price.toLocaleString()} COP
-              </h4>
+            <h1 className="font-bold text-xl mb-2 lg:text-2xl">
+              {product.name}
+            </h1>
+
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
+              {isDiscounted && originalPrice !== undefined ? (
+                <>
+                  <h4 className="font-bold text-xl text-red-600">
+                    $ {displayPrice.toLocaleString("es-CO")} COP
+                  </h4>
+                  <h5 className="text-base text-gray-500 line-through">
+                    $ {originalPrice.toLocaleString("es-CO")} COP
+                  </h5>
+                  <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded">
+                    -{discountPercentage}% OFF
+                  </span>
+                </>
+              ) : (
+                <h4 className="font-bold text-xl text-[#030202]">
+                  $ {displayPrice.toLocaleString("es-CO")} COP
+                </h4>
+              )}
               <div className="flex items-center gap-2">
-                <CountReview />
-                {stats.totalReviews > 0 && (
+                <CountReview average={product.rating.average} />
+                {stats.totalReviews > 0 ? (
                   <button
                     onClick={goToReviews}
-                    className="text-sm text-gray-500 hover:text-[#59214f]"
+                    className="text-sm text-gray-500 hover:text-[#59214f] hover:underline"
                   >
-                    Ver {stats.totalReviews} reseñas
+                    ({stats.totalReviews} reseñas)
                   </button>
+                ) : (
+                  <span className="text-sm text-gray-500">(Sin reseñas)</span>
                 )}
               </div>
             </div>
-            <p className="text-gray-700 mb-2">{product.description}</p>
           </div>
 
-          <div className="py-2 border-t border-gray-100">
-            <Space className="mt-2 gap-8 w-full">
+          <div className="py-1 border-t border-b border-gray-100 space-y-4">
+            {product.stock > 0 && (
+              <p className="text-sm text-green-600 font-medium">
+                En Stock ({product.stock} disponibles)
+              </p>
+            )}
+            <Space className="gap-4 w-full items-center">
               <Space className="gap-0">
                 <button
                   onClick={handleClicRest}
-                  className="w-8 h-10 bg-gray-300 rounded-l-full font-bold text-xl flex justify-center items-center"
+                  disabled={Number(count) <= 1}
+                  className="w-8 h-10 bg-gray-200 rounded-l-md font-bold text-xl flex justify-center items-center hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Disminuir cantidad"
                 >
                   -
                 </button>
                 <input
                   ref={inputRef}
                   value={count}
-                  type="number"
-                  className="outline-none h-10 px-2 w-2 text-lg font-bold text-center box-content"
+                  type="text"
+                  inputMode="numeric"
+                  className="outline-none h-10 px-1 w-8 text-lg font-bold text-center box-content border-y border-gray-200 bg-white"
                   readOnly
+                  aria-label="Cantidad seleccionada"
                 />
                 <button
                   onClick={handleClicPlus}
-                  disabled={product.stock === 0 || Number(count) >= product.stock}
-                  className="w-8 h-10 bg-gray-300 rounded-r-full font-bold text-xl flex justify-center items-center disabled:opacity-50"
+                  disabled={
+                    product.stock === 0 || Number(count) >= product.stock
+                  }
+                  className="w-8 h-10 bg-gray-200 rounded-r-md font-bold text-xl flex justify-center items-center hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Aumentar cantidad"
                 >
                   +
                 </button>
               </Space>
               <button
                 className={`
-                  w-full px-4 py-2.5 rounded-lg transition-all duration-300
-                  flex items-center justify-center gap-2 font-medium
+                  flex-1 px-4 py-2.5 rounded-lg transition-all duration-300
+                  flex items-center justify-center gap-2 font-medium text-base
                   ${
                     product.stock === 0
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : `
                         bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
                         hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
-                        active:scale-95
+                        active:scale-95 shadow-md hover:shadow-lg
                       `
                   }
                 `}
@@ -273,34 +438,20 @@ const ProductDetail = () => {
               </button>
             </Space>
 
-            <div className="mt-4 flex items-center cursor-pointer w-fit hover:text-[#E2060F]" onClick={handleWishlist}>
-              <FontAwesomeIcon
-                icon={isProductInWishlist ? faHeartSolid : faHeart}
-                className={`text-lg mr-2 ${
-                  isProductInWishlist ? "text-[#E2060F]" : ""
-                }`}
-              />
-              <p className="text-base">
-                {isProductInWishlist
-                  ? "Quitar de la lista de deseos"
-                  : "Añadir a la lista de deseos"}
-              </p>
-            </div>
-
             <button
               className={`
-              w-full px-4 py-2.5 rounded-lg transition-all duration-300 mt-4
-              flex items-center justify-center gap-2 font-medium
-              ${
-                product.stock === 0
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : `
-                    bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white
-                    hover:from-[rgb(96,36,170)] hover:to-[rgb(171,71,214)]
-                    active:scale-95
-                  `
-              }
-            `}
+                w-full px-4 py-2.5 rounded-lg transition-all duration-300
+                flex items-center justify-center gap-2 font-medium text-base
+                ${
+                  product.stock === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : `
+                        bg-gradient-to-r from-purple-600 to-indigo-700 text-white
+                        hover:from-purple-700 hover:to-indigo-800
+                        active:scale-95 shadow-md hover:shadow-lg
+                      `
+                }
+                `}
               disabled={product.stock === 0}
               onClick={handleBuyNow}
             >
@@ -308,22 +459,44 @@ const ProductDetail = () => {
             </button>
 
             {product.stock === 0 && (
-              <p className="text-red-500 mt-2 text-center">
-                Producto sin stock disponible
+              <p className="text-red-600 mt-2 text-center font-semibold">
+                Producto agotado
               </p>
             )}
+
+            <div
+              className="mt-4 flex items-center cursor-pointer w-fit group"
+              onClick={handleWishlist}
+            >
+              <FontAwesomeIcon
+                icon={isProductInWishlist ? faHeartSolid : faHeart}
+                className={`text-xl mr-2 transition-colors duration-200 ${
+                  isProductInWishlist
+                    ? "text-red-500"
+                    : "text-gray-400 group-hover:text-red-400"
+                }`}
+              />
+              <p className="text-base text-gray-600 group-hover:text-black transition-colors">
+                {isProductInWishlist
+                  ? "Quitar de Lista de Deseos"
+                  : "Añadir a Lista de Deseos"}
+              </p>
+            </div>
           </div>
 
-          <div className="mt-auto pt-4 border-t border-gray-100">
+          <div className="mt-auto pt-4">
             <p className="font-bold text-base mb-2">Pago seguro garantizado</p>
             <Image
+              className="max-w-[300px]"
               preview={false}
               src="https://risingtheme.com/html/demo-partsix/partsix/assets/img/other/safe-checkout.webp"
+              alt="Métodos de pago seguro"
             />
           </div>
         </div>
       </section>
-      <div className="w-full 2xl:w-[1280px] 2xl:mx-auto" ref={reviewsRef}>
+
+      <div className="w-full mt-10" ref={reviewsRef}>
         <Tabs
           defaultActiveKey={window.location.hash === "#reviews" ? "2" : "1"}
           items={tabs}
@@ -331,7 +504,11 @@ const ProductDetail = () => {
       </div>
 
       <div>
-        <SectionProducts inline title={'Productos relacionados'} search={false} />
+        <SectionProducts
+          inline
+          title={"Productos relacionados"}
+          search={false}
+        />
       </div>
     </div>
   );
