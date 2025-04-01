@@ -1,4 +1,4 @@
-import CardArticle from "@/pages/blog/components/CardArticle.component";
+//import CardArticle from "@/pages/blog/components/New folder/CardArticle.component";
 import { useNavigate } from "react-router-dom";
 
 interface Article extends Record<string, string> {
@@ -19,13 +19,13 @@ const ArticuleRelation = ({ related_products }: ArticuleRelationProps) => {
 
   return (
     <div className="gap-2 mb-4 bg-white p-4 rounded-xl xl:px-10 xl:py-6">
-      <div className="flex flex-wrap justify-around">
+     {/*  <div className="flex flex-wrap justify-around">
         {related_products.map((article, idx) => (
           <div key={`${idx}-${article.title}`}>
             <CardArticle article={article} />
           </div>
         ))}
-      </div>
+      </div> */}
 
       <p
         onClick={() => navigate("/blog")}

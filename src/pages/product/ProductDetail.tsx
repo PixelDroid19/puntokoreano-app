@@ -18,7 +18,7 @@ import DescriptionProduct from "./components/Description.component";
 import ReviewsProduct from "./components/Reviews.component";
 import { useProductReviews } from "@/hooks/useProductReviews";
 import Applies from "./components/Applies.component";
-
+  
 interface Seo {
   title: string;
   description: string;

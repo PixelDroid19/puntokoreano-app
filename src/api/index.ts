@@ -50,13 +50,12 @@ export interface Endpoints {
   };
 
   BLOG: {
-    GET_BRANDS: ApiEndpoint;
-    GET_VEHICLES_BY_BRAND: ApiEndpoint;
-    GET_ARTICLES_BY_VEHICLE: ApiEndpoint;
-    GET_ARTICLE_DETAIL: ApiEndpoint;
-    GET_ARTICLES: ApiEndpoint;
-    LIKE_ARTICLE: ApiEndpoint;
-    ADD_COMMENT: ApiEndpoint;
+    GET_PUBLISHED: ApiEndpoint;
+    GET_BY_SLUG: ApiEndpoint;
+    GET_CATEGORIES: ApiEndpoint;
+    GET_TAGS: ApiEndpoint;
+    GET_FEATURED: ApiEndpoint;
+    GET_RELATED: ApiEndpoint;
   };
   ORDERS: {
     CREATE: ApiEndpoint;
@@ -383,34 +382,12 @@ const ENDPOINTS: Endpoints = {
     },
   },
   BLOG: {
-    GET_BRANDS: {
-      url: `${BASE_URL}/blog/brands`,
-      method: "GET",
-    },
-    GET_VEHICLES_BY_BRAND: {
-      url: `${BASE_URL}/blog/brands/:brand/models`,
-      method: "GET",
-    },
-    GET_ARTICLES_BY_VEHICLE: {
-      url: `${BASE_URL}/blog/vehicles/:brand/:model/articles`,
-      method: "GET",
-    },
-    GET_ARTICLE_DETAIL: {
-      url: `${BASE_URL}/blog/articles/:slug`,
-      method: "GET",
-    },
-    GET_ARTICLES: {
-      url: `${BASE_URL}/blog/articles`,
-      method: "GET",
-    },
-    LIKE_ARTICLE: {
-      url: `${BASE_URL}/blog/articles/:id/like`,
-      method: "POST",
-    },
-    ADD_COMMENT: {
-      url: `${BASE_URL}/blog/articles/:id/comments`,
-      method: "POST",
-    },
+    GET_PUBLISHED: { url: `${BASE_URL}/blog`, method: "GET" },
+    GET_BY_SLUG: { url: `${BASE_URL}/blog/post/:slug`, method: "GET" },
+    GET_CATEGORIES: { url: `${BASE_URL}/blog/categories`, method: "GET" },
+    GET_TAGS: { url: `${BASE_URL}/blog/tags`, method: "GET" },
+    GET_FEATURED: { url: `${BASE_URL}/blog/featured`, method: "GET" },
+    GET_RELATED: { url: `${BASE_URL}/blog/related`, method: "GET" },
   },
 };
 

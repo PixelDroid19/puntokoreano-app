@@ -18,9 +18,6 @@ import FilterStore from "../pages/store/components/Filter.component";
 import ProductDetail from "../pages/product/ProductDetail";
 import Checkout from "../components/checkout/Checkout.component";
 import ThanksOrder from "../components/orders/Thanks.component";
-//import Blog from "../pages/blog/Blog.page";
-import VehiclesBrand from "../pages/blog/components/Vehicles.component";
-import BlogPost from "../pages/blog/components/Post.component";
 import Cart from "../pages/cart/Cart.page";
 import Login from "../pages/auth/Login";
 import { useEffect } from "react";
@@ -28,13 +25,12 @@ import { useAuthStore } from "@/store/auth.store";
 import axios from "axios";
 import setupAxiosInterceptors from "@/utils/axiosInterceptor";
 
-
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Register from "@/pages/auth/Register";
-import Articles from "../pages/blog/components/Articules.component";
-import DevelopmentView from "@/components/DevelopmentView/DevelopmentView";
 import Account from "@/pages/account/Account";
+import BlogListPage from "@/pages/blog/BlogListPage";
+import BlogDetailPage from "@/pages/blog/BlogDetailPage";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -51,10 +47,8 @@ const router = createBrowserRouter(
         <Route path="/store/search" element={<FilterStore />} />
         <Route path="/store" element={<Store />} />
         <Route path="/store/product/:id" element={<ProductDetail />} />
-        <Route path="/blog" element={<DevelopmentView />} /> {/* components <Blog /> */}
-        <Route path="/blog/:brand/vehicles" element={<VehiclesBrand />} />
-        <Route path="/blog/:brand/:vehicle/articles" element={<Articles />} />
-        <Route path="/blog/article/:slug" element={<BlogPost />} />
+        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog/:slug" element={<BlogDetailPage />} />
         <Route path="/store/cart" element={<Cart />} />
         <Route path="/store/checkout" element={<Checkout />} />
         <Route path="/store/finish-order" element={<ThanksOrder />} />
@@ -82,7 +76,7 @@ const Routes = () => {
   useEffect(() => {
     // Setup axios interceptors for token expiration handling
     setupAxiosInterceptors();
-    
+
     if (token) {
       // Set axios default headers
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
