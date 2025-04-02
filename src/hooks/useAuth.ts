@@ -5,7 +5,6 @@ import axios from "axios";
 import ENDPOINTS from "@/api";
 import { notification } from "antd";
 import setupAxiosInterceptors from "../utils/axiosInterceptor";
-import EncryptionService from "@/services/EncryptionService";
 
 interface RegisterData {
   name: string;
@@ -20,7 +19,7 @@ interface LoginResponse {
   success: boolean;
   message: string;
   data: {
-    user: Record<string, any>; // Allow dynamic user properties
+    user: Record<string, any>;
     token: string;
     expiresAt: number;
   };
@@ -40,19 +39,12 @@ export const useAuth = () => {
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      // Step 1: Get encryption key from server
-      const { key, sessionId } = await EncryptionService.getEncryptionKey();
-      
-      // Step 2: Encrypt password using the key
-      const encryptedPassword = EncryptionService.encryptPassword(password, key);
-      
       // Step 3: Send login request with encrypted password and sessionId
       const response = await axios.post<LoginResponse>(
         ENDPOINTS.AUTH.LOGIN.url,
-        { 
-          email, 
-          encryptedPassword, 
-          sessionId 
+        {
+          email,
+          password,
         }
       );
 
@@ -75,7 +67,7 @@ export const useAuth = () => {
 
   const configureAxiosAuth = (token: string) => {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    
+
     // Setup axios interceptors for token expiration
     setupAxiosInterceptors();
   };
