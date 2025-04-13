@@ -311,7 +311,7 @@ const FilterStore = () => {
               </Form.Item>
 
               {/* Modelo (depende de Familia) */}
-              <Form.Item label="Modelo y Año" required className="font-bold">
+              <Form.Item label="Modelo" required className="font-bold">
                 <Select
                   showSearch
                   value={selectedFilters.modelId}
@@ -323,7 +323,7 @@ const FilterStore = () => {
                   placeholder={
                     !selectedFilters.familyId
                       ? "Selecciona una familia primero"
-                      : "Selecciona el modelo y año"
+                      : "Selecciona el modelo"
                   }
                   className="w-full"
                   filterOption={(input, option) =>
