@@ -1,15 +1,16 @@
 // src/pages/account/components/ProfileSection.tsx
 import { useState } from "react";
-import { Form, Input, Button, Card, Space, notification } from "antd";
+import { Form, Input, Button, Card, Space, notification, Select } from "antd";
 import { useAuthStore } from "@/store/auth.store";
 import axios from "axios";
 import ENDPOINTS from "@/api";
 
 interface ProfileFormData {
   name: string;
-  lastName: string;
   email: string;
   phone?: string | number;
+  document_type?: string;
+  document_number?: string;
 }
 
 interface PasswordFormData {
@@ -38,10 +39,21 @@ const ProfileSection = () => {
           description: "Tu información ha sido actualizada exitosamente",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error al actualizar perfil:", error);
+      
+      let errorMessage = "No se pudo actualizar el perfil";
+      if (error.response) {
+        if (error.response.data?.errors?.length > 0) {
+          errorMessage = error.response.data.errors.join(", ");
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      }
+      
       notification.error({
         message: "Error",
-        description: "No se pudo actualizar el perfil",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -53,6 +65,14 @@ const ProfileSection = () => {
       notification.error({
         message: "Error",
         description: "Las contraseñas no coinciden",
+      });
+      return;
+    }
+
+    if (values.newPassword.length < 8) {
+      notification.error({
+        message: "Error",
+        description: "La contraseña debe tener al menos 8 caracteres",
       });
       return;
     }
@@ -69,10 +89,23 @@ const ProfileSection = () => {
         description: "Tu contraseña ha sido actualizada exitosamente",
       });
       passwordForm.resetFields();
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error al cambiar contraseña:", error);
+      
+      let errorMessage = "No se pudo actualizar la contraseña";
+      if (error.response) {
+        if (error.response.data?.code === "INVALID_CURRENT_PASSWORD") {
+          errorMessage = "La contraseña actual es incorrecta";
+        } else if (error.response.data?.code === "WEAK_PASSWORD") {
+          errorMessage = "La nueva contraseña es demasiado débil";
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      }
+      
       notification.error({
         message: "Error",
-        description: "No se pudo actualizar la contraseña",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -86,25 +119,18 @@ const ProfileSection = () => {
           form={profileForm}
           layout="vertical"
           initialValues={{
-            name: user?.name,
-            lastName: user?.last_name,
-            email: user?.email,
-            phone: user?.phone,
+            name: user?.name || '',
+            email: user?.email || '',
+            phone: user?.phone || '',
+            document_type: user?.document_type || '',
+            document_number: user?.document_number || '',
           }}
           onFinish={handleProfileUpdate}
         >
           <Form.Item
-            label="Nombre"
+            label="Nombre completo"
             name="name"
-            rules={[{ required: true, message: "Por favor ingresa tu nombre" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="Apellido"
-            name="lastName"
-            rules={[{ required: true, message: "Por favor ingresa tu apellido" }]}
+            rules={[{ required: true, message: "Por favor ingresa tu nombre completo" }]}
           >
             <Input />
           </Form.Item>
@@ -121,6 +147,19 @@ const ProfileSection = () => {
           </Form.Item>
 
           <Form.Item label="Teléfono" name="phone">
+            <Input />
+          </Form.Item>
+
+          <Form.Item label="Tipo de documento" name="document_type">
+            <Select placeholder="Selecciona tipo de documento">
+              <Select.Option value="cc">Cédula de Ciudadanía</Select.Option>
+              <Select.Option value="ce">Cédula de Extranjería</Select.Option>
+              <Select.Option value="passport">Pasaporte</Select.Option>
+              <Select.Option value="nit">NIT</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Número de documento" name="document_number">
             <Input />
           </Form.Item>
 

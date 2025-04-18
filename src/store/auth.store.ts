@@ -12,6 +12,9 @@ interface User {
   role: "admin" | "user";
   avatar?: string;
   lastLogin?: Date;
+  phone?: string;
+  document_type?: string;
+  document_number?: string;
   preferences: {
     notifications: boolean;
     newsletter: boolean;

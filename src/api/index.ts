@@ -252,7 +252,7 @@ const ENDPOINTS: Endpoints = {
     },
     UPDATE_PROFILE: {
       url: `${BASE_URL}/user/profile`,
-      method: "PUT",
+      method: "PATCH",
     },
     CHANGE_PASSWORD: {
       url: `${BASE_URL}/user/change-password`,
