@@ -31,6 +31,8 @@ import Register from "@/pages/auth/Register";
 import Account from "@/pages/account/Account";
 import BlogListPage from "@/pages/blog/BlogListPage";
 import BlogDetailPage from "@/pages/blog/BlogDetailPage";
+import AnimationProvider from "@/components/AnimationProvider";
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -84,11 +86,14 @@ const Routes = () => {
   }, [token]);
 
   useEffect(() => {
+    // Configuramos AOS para usar animaciones más ligeras
+    // Ya que ahora usaremos Anime.js para las animaciones principales
     AOS.init({
       startEvent: "DOMContentLoaded",
       offset: 200,
-      duration: 800,
+      duration: 400, // Reducida duración para que no interfiera con Anime.js
       once: true,
+      disable: 'mobile', // Desactivamos en móvil para usar nuestras animaciones personalizadas
     });
   }, []);
 
@@ -124,7 +129,9 @@ const Routes = () => {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <AnimationProvider>
+          <RouterProvider router={router} />
+        </AnimationProvider>
       </QueryClientProvider>
     </ConfigProvider>
   );

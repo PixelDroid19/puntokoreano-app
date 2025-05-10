@@ -209,15 +209,27 @@ const FilterStore = () => {
   // --- Renderizado ---
   return (
     <div className="">
-      {/* Imágenes de fondo (sin cambios) */}
-      <div className="absolute inset-0 flex justify-between pointer-events-none">
-        {/* ... imágenes ... */}
+       {/* Imágenes de fondo */}
+       <div className="absolute inset-0 flex justify-between pointer-events-none">
+        <div className="w-1/3 hidden 2xl:block relative">
+          <img
+            src="/images/part-diagram-1.png"
+            alt="Diagrama 1"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <div className="w-1/3 hidden 2xl:block relative">
+          <img
+            src="/images/part-diagram-2.png"
+            alt="Diagrama 2"
+            className="w-full h-full object-contain"
+          />
+        </div>
       </div>
-
       {/* Contenido principal */}
       <div className="relative z-10 py-10">
         <div className="max-w-2xl mx-auto px-4">
-          {/* Título (sin cambios) */}
+          {/* Título */}
           <div className="mb-10">
             {/* ... título y barra de colores ... */}
             <h1 className="text-3xl font-bold text-center mb-4">
