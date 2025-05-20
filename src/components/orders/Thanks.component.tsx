@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
   ArrowRight,
   Box,
@@ -11,11 +10,11 @@ import {
   Truck,
 } from "lucide-react";
 
-import ENDPOINTS from "@/api";
 import { useCheckoutStore } from "@/store/checkout.store";
 import StatusBadge from "./components/StatusBadge";
 import OrderItem from "./components/OrderItem";
 import OrderSummary from "./components/OrderSummary";
+import { apiGet, ENDPOINTS } from "@/api/apiClient";
 
 interface OrderDetails {
   id: string;
@@ -26,11 +25,12 @@ interface OrderDetails {
       id: string;
       name: string;
       code: string;
-      base_price: number;
       images: string[];
+      imageGroup?: { images: { url: string }[] };
+      useGroupImages?: boolean;
     };
     quantity: number;
-    price_paid: number;
+    price: number;
     total: number;
   }>;
   customer: {
@@ -86,9 +86,9 @@ const ThanksOrder = () => {
 
       try {
         setLoading(true);
-        const { data } = await axios.get(
-          ENDPOINTS.ORDERS.GET_ORDER.url.replace(":id", orderId)
-        );
+        const data = await apiGet(ENDPOINTS.ORDERS.GET_ORDER, {
+          id: orderId,
+        });
         setOrderDetails(data.data);
       } catch (error) {
         /*   toast({

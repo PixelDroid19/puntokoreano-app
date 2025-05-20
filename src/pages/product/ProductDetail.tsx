@@ -10,15 +10,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import SectionProducts from "../store/components/SectionProducts.component";
 import ArticleRelation from "./components/ArticulesRelation.component";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import ENDPOINTS from "@/api";
+import { apiGet, ENDPOINTS } from "@/api/apiClient";
 import { useCartStore } from "@/store/cart.store";
 import { useWishlistStore } from "@/store/wishlist.store";
 import DescriptionProduct from "./components/Description.component";
 import ReviewsProduct from "./components/Reviews.component";
 import { useProductReviews } from "@/hooks/useProductReviews";
 import Applies from "./components/Applies.component";
-  
+
 interface Seo {
   title: string;
   description: string;
@@ -128,9 +127,11 @@ const ProductDetail = () => {
   } = useQuery<ProductDetailResponse>({
     queryKey: ["Product", id],
     queryFn: () =>
-      axios
-        .get(`${ENDPOINTS.PRODUCTS.PRODUCT_DETAIL.url}/${id}`)
-        .then((response) => response.data),
+      id ? apiGet<ProductDetailResponse>(
+            ENDPOINTS.PRODUCTS.PRODUCT_DETAIL,
+            { id }
+          )
+        : Promise.reject("No id"),
     enabled: !!id,
   });
 
@@ -189,8 +190,10 @@ const ProductDetail = () => {
       price: finalPriceForCart,
       image: product.images[0],
       stock: product.stock,
-      quantity: Number(count),
     });
+    if (Number(count) > 1) {
+      useCartStore.getState().updateQuantity(product.id, Number(count));
+    }
 
     notification.success({
       message: "Producto agregado",
@@ -366,7 +369,7 @@ const ProductDetail = () => {
                 </h4>
               )}
               <div className="flex items-center gap-2">
-                <CountReview average={product.rating.average} />
+                <CountReview rating={product.rating.average} />
                 {stats.totalReviews > 0 ? (
                   <button
                     onClick={goToReviews}

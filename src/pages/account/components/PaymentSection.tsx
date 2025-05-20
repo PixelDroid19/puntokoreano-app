@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, List, Form, Input, Modal, Select, notification, Popconfirm } from "antd";
 import { PlusOutlined, DeleteOutlined, CreditCardOutlined } from "@ant-design/icons";
-import axios from "axios";
-import ENDPOINTS from "@/api";
+import { apiDelete, apiGet, apiPost, ENDPOINTS } from "@/api/apiClient";
 
 interface PaymentMethod {
   id: string;
@@ -35,7 +34,7 @@ const PaymentSection = () => {
   const fetchPaymentMethods = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(ENDPOINTS.USER.GET_PAYMENT_METHODS.url);
+      const response = await apiGet(ENDPOINTS.USER.GET_PAYMENT_METHODS);
       if (response.data.success) {
         setPaymentMethods(response.data.data);
       }
@@ -61,8 +60,9 @@ const PaymentSection = () => {
 
   const handleDeletePaymentMethod = async (methodId: string) => {
     try {
-      const response = await axios.delete(
-        ENDPOINTS.USER.DELETE_PAYMENT_METHOD.url.replace(":methodId", methodId)
+      const response = await apiDelete(
+        ENDPOINTS.USER.DELETE_PAYMENT_METHOD,
+        { methodId }
       );
       if (response.data.success) {
         notification.success({
@@ -84,7 +84,7 @@ const PaymentSection = () => {
       // Remove CVV from data sent to server for security
       const { cvv, ...paymentData } = values;
       
-      const response = await axios.post(ENDPOINTS.USER.ADD_PAYMENT_METHOD.url, paymentData);
+      const response = await apiPost(ENDPOINTS.USER.ADD_PAYMENT_METHOD, paymentData);
       if (response.data.success) {
         notification.success({
           message: "Método de pago agregado",

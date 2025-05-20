@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import BlogService from "../services/blog.service";
-import type { BlogFilters, BlogPostDataToSend } from "../types/blog.types";
+import type { BlogFilters } from "../types/blog.types";
 
 export const blogKeys = {
   publicAll: ["publicBlogs"] as const,

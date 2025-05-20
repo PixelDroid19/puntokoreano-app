@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, List, Form, Input, Modal, Select, notification, Popconfirm } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import axios from "axios";
-import ENDPOINTS from "@/api";
+import { apiGet, apiPost, apiPut, apiDelete, ENDPOINTS } from "@/api/apiClient";
 
 interface Address {
   id: string;
@@ -41,9 +40,9 @@ const AddressSection = () => {
   const fetchAddresses = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(ENDPOINTS.USER.GET_ADDRESSES.url);
-      if (response.data.success) {
-        setAddresses(response.data.data);
+      const response = await apiGet<{ success: boolean; data: Address[] }>(ENDPOINTS.USER.GET_ADDRESSES);
+      if (response.success) {
+        setAddresses(response.data);
       }
     } catch (error) {
       notification.error({
@@ -82,10 +81,11 @@ const AddressSection = () => {
 
   const handleDeleteAddress = async (addressId: string) => {
     try {
-      const response = await axios.delete(
-        ENDPOINTS.USER.DELETE_ADDRESS.url.replace(":addressId", addressId)
+      const response = await apiDelete<{ success: boolean }>(
+        ENDPOINTS.USER.DELETE_ADDRESS,
+        { addressId }
       );
-      if (response.data.success) {
+      if (response.success) {
         notification.success({
           message: "Dirección eliminada",
           description: "La dirección ha sido eliminada exitosamente",
@@ -104,11 +104,12 @@ const AddressSection = () => {
     try {
       if (editingAddress) {
         // Update existing address
-        const response = await axios.patch(
-          ENDPOINTS.USER.UPDATE_ADDRESS.url.replace(":addressId", editingAddress.id),
-          values
+        const response = await apiPut<{ success: boolean }>(
+          ENDPOINTS.USER.UPDATE_ADDRESS,
+          values,
+          { addressId: editingAddress.id }
         );
-        if (response.data.success) {
+        if (response.success) {
           notification.success({
             message: "Dirección actualizada",
             description: "La dirección ha sido actualizada exitosamente",
@@ -116,8 +117,11 @@ const AddressSection = () => {
         }
       } else {
         // Add new address
-        const response = await axios.post(ENDPOINTS.USER.ADD_ADDRESS.url, values);
-        if (response.data.success) {
+        const response = await apiPost<{ success: boolean }>(
+          ENDPOINTS.USER.ADD_ADDRESS,
+          values
+        );
+        if (response.success) {
           notification.success({
             message: "Dirección agregada",
             description: "La dirección ha sido agregada exitosamente",

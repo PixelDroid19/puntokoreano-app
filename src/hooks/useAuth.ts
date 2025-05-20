@@ -1,10 +1,8 @@
 // src/hooks/useAuth.ts
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth.store";
-import axios from "axios";
 import ENDPOINTS from "@/api";
-import { notification } from "antd";
-import setupAxiosInterceptors from "../utils/axiosInterceptor";
+import { apiGet, apiPost } from "@/api/apiClient";
 
 interface RegisterData {
   name: string;
@@ -25,6 +23,24 @@ interface LoginResponse {
   };
 }
 
+// Definición del tipo de preferencias del usuario
+interface UserPreferences {
+  notifications: boolean;
+  newsletter: boolean;
+  theme?: "light" | "dark";
+  language?: string;
+}
+
+// Definición del tipo User para resolver el error del linter
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin"; // Restringido a valores permitidos
+  preferences: UserPreferences;
+  [key: string]: any; // Para permitir propiedades adicionales
+}
+
 export const useAuth = () => {
   const navigate = useNavigate();
   const {
@@ -39,101 +55,108 @@ export const useAuth = () => {
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      // Step 3: Send login request with encrypted password and sessionId
-      const response = await axios.post<LoginResponse>(
-        ENDPOINTS.AUTH.LOGIN.url,
-        {
-          email,
-          password,
-        }
+
+      const response = await apiPost<LoginResponse>(
+        ENDPOINTS.AUTH.LOGIN,
+        { email, password }
       );
 
-      const { user, token, expiresAt } = response.data.data;
+      const { user, token, expiresAt } = response.data;
+
+      // Asegurar que las preferencias del usuario tengan los valores por defecto necesarios
+      const defaultPreferences: UserPreferences = {
+        notifications: true,
+        newsletter: false,
+        theme: "light",
+        language: "es",
+        ...(user.preferences || {})
+      };
+
+      // Obtener otras propiedades del usuario excluyendo las que ya procesamos
+      const { id, name, email: userEmail, role, preferences, ...otherProps } = user;
+
+      // Convertir user a tipo User para resolver el error del linter
+      const userData: User = {
+        id: String(id),
+        name: name || '',
+        email: userEmail || '',
+        role: (role === "admin" ? "admin" : "user"),
+        preferences: defaultPreferences,
+        ...otherProps
+      };
 
       // Store complete user data and token expiry
-      storeLogin(user, token);
+      storeLogin(userData, token);
       setTokenExpiry(expiresAt);
 
-      // Configure axios
-      configureAxiosAuth(token);
+
 
       navigate("/");
       return { success: true };
     } catch (error: any) {
-      handleAuthError(error, "Error al iniciar sesión");
+
       return { success: false, error: error.response?.data?.message };
     }
   };
 
-  const configureAxiosAuth = (token: string) => {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-    // Setup axios interceptors for token expiration
-    setupAxiosInterceptors();
-  };
-
-  const handleAuthError = (error: any, defaultMessage: string) => {
-    const message = error.response?.data?.message || defaultMessage;
-    notification.error({
-      message: defaultMessage,
-      description: message,
-    });
-  };
 
   const handleRegister = async (data: RegisterData) => {
     try {
-      const response = await axios.post(ENDPOINTS.AUTH.REGISTER.url, data);
 
-      if (response.data.success) {
-        notification.success({
-          message: "Registro exitoso",
-          description:
-            "Tu cuenta ha sido creada correctamente. Por favor inicia sesión.",
-        });
+      const response = await apiPost(ENDPOINTS.AUTH.REGISTER, data);
+
+      if (response.success) {
+
         navigate("/login");
       }
 
-      return response.data;
+      return response;
     } catch (error: any) {
       const message =
         error.response?.data?.message || "Error durante el registro";
-      notification.error({
-        message: "Error al registrarse",
-        description: message,
-      });
+
       return { success: false, error: message };
     }
   };
 
-  const handleLogout = () => {
-    // Limpiar store
-    storeLogout();
+  const handleLogout = async () => {
+    try {
+      // Opcionalmente, notificar al backend del cierre de sesión
+      if (token) {
+        await apiPost(ENDPOINTS.AUTH.LOGOUT);
+      }
+    } catch (error) {
+      // Ignorar errores al cerrar sesión
+    } finally {
+      // Limpiar store
+      storeLogout();
 
-    // Limpiar header de axios
-    delete axios.defaults.headers.common["Authorization"];
+      // Redirigir
+      navigate("/login");
 
-    // Redirigir
-    navigate("/login");
 
-    notification.success({
-      message: "Sesión cerrada",
-      description: "Has cerrado sesión correctamente",
-    });
+    }
   };
 
-  const checkAuth = () => {
+  const checkAuth = async () => {
     if (!isAuthenticated || !token) {
       navigate("/login");
       return false;
     }
-    return true;
+
+    try {
+      // Verificar con el backend si la sesión sigue siendo válida
+      await apiGet(ENDPOINTS.AUTH.CHECK_SESSION);
+      return true;
+    } catch (error) {
+      // Si hay error, la sesión no es válida
+      handleLogout();
+      return false;
+    }
   };
 
-  // Configurar axios con el token guardado al inicializar
-  if (token) {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    setupAxiosInterceptors(); // Setup interceptors on hook initialization if token exists
-  }
+
 
   return {
     user,

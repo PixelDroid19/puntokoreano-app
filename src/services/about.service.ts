@@ -1,12 +1,12 @@
 // services/about.service.ts
-import axios from "axios";
-import ENDPOINTS from "@/api";
+
 import { PublicAboutSettings } from "@/types/about.types";
+import { apiGet, ENDPOINTS } from "@/api/apiClient";
 
 class AboutService {
   private static instance: AboutService;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): AboutService {
     if (!AboutService.instance) {
@@ -15,9 +15,11 @@ class AboutService {
     return AboutService.instance;
   }
 
+
   async getPublicAboutSettings(): Promise<PublicAboutSettings> {
-    const response = await axios.get(ENDPOINTS.SETTINGS.GET_PUBLIC_ABOUT.url);
-    return response.data.data;
+    const response = await apiGet(ENDPOINTS.SETTINGS.GET_PUBLIC_ABOUT);
+
+    return response?.data;
   }
 }
 

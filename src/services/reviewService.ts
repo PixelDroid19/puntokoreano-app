@@ -1,84 +1,131 @@
 // services/reviewService.ts
-import axios from "axios";
-import { ReviewFormData } from "../types/review.types";
-import ENDPOINTS from "@/api";
+import { apiGet, apiPost, ENDPOINTS } from "@/api/apiClient";
+import {
+  Review,
+  ReviewStats,
+  ReviewFormData,
+  ReportData
+} from "../types/review.types";
+
+
+interface CanReviewData {
+  canReview: boolean;
+  hasOrdered: boolean;
+  hasReviewed: boolean;
+  orderInfo?: {
+    orderId: string;
+    orderNumber: string;
+    orderStatus: string;
+  };
+  reason?: string;
+}
+
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface ReviewsData {
+  reviews: Review[];
+  stats: ReviewStats;
+}
 
 class ReviewService {
   private readonly endpoints = ENDPOINTS.REVIEWS;
 
-  async getProductReviews(productId: string) {
-    const response = await axios.request({
-      // Aquí está el problema: necesitas usar :productId, no productId
-      url: this.endpoints.GET_PRODUCT_REVIEWS.url.replace(
-        ":productId",
-        productId
-      ),
-      method: this.endpoints.GET_PRODUCT_REVIEWS.method,
-    });
-    return response.data;
+  /**
+   * Obtiene las reseñas de un producto
+   */
+  async getProductReviews(productId: string): Promise<ApiResponse<Review[]>> {
+    return await apiGet(
+      this.endpoints.GET_PRODUCT_REVIEWS,
+      { productId }
+    );
   }
 
-  async canUserReview(productId: string) {
-    const response = await axios.request({
-      url: this.endpoints.CHECK_CAN_REVIEW.url.replace(":productId", productId),
-      method: this.endpoints.CHECK_CAN_REVIEW.method,
-    });
-    return response.data;
+  /**
+   * Obtiene las estadísticas de reseñas de un producto
+   */
+  async getReviewStats(productId: string): Promise<ApiResponse<ReviewStats>> {
+    return await apiGet(
+      this.endpoints.GET_REVIEW_STATS,
+      { productId }
+    );
   }
 
-  async createReview(productId: string, reviewData: ReviewFormData) {
+  /**
+   * Verifica si un usuario puede reseñar un producto
+   */
+  async canUserReview(productId: string): Promise<ApiResponse<CanReviewData>> {
+    return await apiGet(
+      this.endpoints.CHECK_CAN_REVIEW,
+      { productId }
+    );
+  }
+
+  /**
+   * Obtiene reseñas y estadísticas de un producto en una sola llamada
+   */
+  async getProductReviewsData(productId: string): Promise<ApiResponse<ReviewsData>> {
     try {
-    /*   const formData = new FormData();
-      formData.append("rating", reviewData.rating.toString());
-      formData.append("title", reviewData.title);
-      formData.append("content", reviewData.content);
+      // Realizar ambas peticiones en paralelo
+      const [reviews, stats] = await Promise.all([
+        this.getProductReviews(productId),
+        this.getReviewStats(productId)
+      ]);
 
-      if (reviewData.images && reviewData.images.length > 0) {
-        reviewData.images.forEach((image) => {
-          formData.append(`images`, image);
-        });
-      } */
-
-      const response = await axios.request({
-        url: this.endpoints.CREATE_REVIEW.url.replace(":productId", productId),
-        method: this.endpoints.CREATE_REVIEW.method,
-        data: reviewData,
-        headers: {
-          "Content-Type": "application/json",	
+      // Combinar los resultados
+      return {
+        success: true,
+        data: {
+          reviews: reviews.data,
+          stats: stats.data,
         },
-      });
-
-      return response.data;
-    } catch (error: any) {
-      console.error("Error creating review:", error);
-      throw error.response?.data || error;
+      };
+    } catch (error) {
+      console.error("Error fetching product review data:", error);
+      throw error;
     }
   }
 
-  async getProductStats(productId: string) {
-    const response = await axios.request({
-      url: this.endpoints.GET_REVIEW_STATS.url.replace(":productId", productId),
-      method: this.endpoints.GET_REVIEW_STATS.method,
-    });
-    return response.data;
+  /**
+   * Crea una nueva reseña para un producto
+   */
+  async createReview(productId: string, reviewData: ReviewFormData): Promise<ApiResponse<Review>> {
+    try {
+      return await apiPost(
+        this.endpoints.CREATE_REVIEW,
+        reviewData,
+        { productId }
+      );
+    } catch (error: any) {
+      console.error("Error creating review:", error);
+      throw error;
+    }
   }
 
-  async voteReview(reviewId: string, vote: boolean) {
-    const response = await axios.request({
-      url: this.endpoints.VOTE_REVIEW.url.replace(":reviewId", reviewId),
-      method: this.endpoints.VOTE_REVIEW.method,
-      data: { vote },
-    });
-    return response.data;
+  /**
+   * Vota por una reseña (positivo o negativo)
+   */
+  async voteReview(reviewId: string, vote: "up" | "down"): Promise<ApiResponse<Review>> {
+    return await apiPost(
+      this.endpoints.VOTE_REVIEW,
+      { vote },
+      { reviewId }
+    );
   }
 
-  async reportReview(reviewId: string, reason: string) {
-    const response = await axios.request({
-      url: this.endpoints.REPORT_REVIEW.url.replace(":reviewId", reviewId),
-      method: this.endpoints.REPORT_REVIEW.method,
-      data: { reason },
-    });
-    return response.data;
+  /**
+   * Reporta una reseña inapropiada
+   */
+  async reportReview(reviewId: string, reportData: ReportData): Promise<ApiResponse<void>> {
+    return await apiPost(
+      this.endpoints.REPORT_REVIEW,
+      reportData,
+      { reviewId }
+    );
   }
 }
 

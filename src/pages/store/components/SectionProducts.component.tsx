@@ -7,8 +7,7 @@ import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Input } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
-import axios from "axios";
-import ENDPOINTS from "@/api";
+import { apiPost, ENDPOINTS } from "@/api/apiClient";
 import CardProducts from "./CardProducts";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -20,6 +19,7 @@ interface Props {
   search?: boolean;
 }
 
+// Definición de Product según los requisitos de CardProducts
 interface Product {
   id: string;
   name: string;
@@ -27,7 +27,7 @@ interface Product {
   group: string;
   subgroup: string;
   stock: number;
-  code: string;
+  code: number; // Cambiado a number según el error del linter
   shipping: string[];
   images: string[];
   image: string | null;
@@ -41,6 +41,7 @@ interface Product {
   createdAt: string;
   updatedAt: string;
   _id?: string;
+  compatible_vehicles: any[]; 
 }
 
 interface PaginationInfo {
@@ -54,11 +55,48 @@ interface ApiResponse {
   success: boolean;
   message: string;
   data: {
-    products: Product[];
+    products: any[]; //
     pagination: PaginationInfo;
   };
   filtersApplied?: any;
   sorting?: any;
+}
+
+
+interface VehicleFilters {
+  brand_id?: string;
+  family_id?: string;
+  model_id?: string;
+  line_id?: string;
+  transmission_id?: string;
+  fuel_id?: string;
+  [key: string]: string | undefined;
+}
+
+interface ProductFilters {
+  search?: string;
+  group?: string;
+  subgroup?: string;
+  active?: boolean;
+  stockStatus?: string;
+  hasDiscount?: boolean;
+  discountType?: string;
+  priceMin?: number;
+  priceMax?: number;
+  [key: string]: string | number | boolean | undefined;
+}
+
+interface RequestBody {
+  vehicleFilters: VehicleFilters;
+  productFilters: ProductFilters;
+  pagination: {
+    page: number;
+    limit: number;
+  };
+  sorting: {
+    sortBy: string;
+    sortOrder: string;
+  };
 }
 
 const SectionProducts = ({ inline, title, search = true }: Props) => {
@@ -78,7 +116,7 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
   // --- Recolección y Mapeo de Filtros ---
   const urlParams = Object.fromEntries(searchParams.entries());
 
-  const requestBody = {
+  const requestBody: RequestBody = {
     vehicleFilters: {
       brand_id: urlParams.brand || undefined,
       family_id: urlParams.family || undefined,
@@ -138,13 +176,12 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // --- Lógica de useQuery ---
+
   const { data, isLoading, error } = useQuery<ApiResponse>({
     queryKey: ["products", requestBody],
     queryFn: async () => {
-      const endpoint = ENDPOINTS.PRODUCTS.SEARCH;
-      const response = await axios.post(endpoint.url, requestBody);
-      return response.data;
+
+      return await apiPost<ApiResponse>(ENDPOINTS.PRODUCTS.SEARCH, requestBody);
     },
   });
 
@@ -157,10 +194,19 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
     );
   }
 
-  const products = data?.data?.products || [];
+
+  const formatProducts = (rawProducts: any[]): Product[] => {
+    return rawProducts.map(product => ({
+      ...product,
+      code: typeof product.code === 'string' ? parseInt(product.code, 10) || 0 : product.code,
+      compatible_vehicles: product.compatible_vehicles || []
+    }));
+  };
+
+  const rawProducts = data?.data?.products || [];
+  const products = formatProducts(rawProducts);
   const paginationInfo = data?.data?.pagination;
 
- 
   const hasActiveVehicleFilters =
     Object.keys(requestBody.vehicleFilters).length > 0;
 
@@ -197,8 +243,8 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
                 {requestBody.productFilters.search
                   ? `Resultados para "${requestBody.productFilters.search}"`
                   : hasActiveFilters
-                  ? "Productos Filtrados"
-                  : "Productos"}
+                    ? "Productos Filtrados"
+                    : "Productos"}
               </strong>
             )}
           </h2>
@@ -232,7 +278,7 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
             loop={
               products.length >
               (xl3 ? 3 : xl2 ? 3 : xl ? 3 : lg ? 3 : md ? 2 : sm ? 2 : 1)
-            } 
+            }
             modules={[Navigation]}
             slidesPerView={
               xl3 ? 3 : xl2 ? 3 : xl ? 3 : lg ? 3 : md ? 2 : sm ? 2 : 1
@@ -246,7 +292,7 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
               } as React.CSSProperties
             }
           >
-            {products.map((product: Product) => (
+            {products.map((product) => (
               <SwiperSlide key={product.id}>
                 <CardProducts inline product={product} />
               </SwiperSlide>
@@ -258,7 +304,7 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
       ) : (
         !isLoading && (
           <div className="flex justify-center flex-wrap gap-8 lg:justify-evenly">
-            {products.map((product: Product) => (
+            {products.map((product) => (
               <div key={product.id} data-aos="fade-up">
                 <CardProducts product={product} />
               </div>
@@ -280,9 +326,9 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
                   setSearchParams(newParams, { replace: true });
                 }}
                 className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-300"
-                aria-label="Página anterior" 
+                aria-label="Página anterior"
               >
-                <ArrowLeft /> 
+                <ArrowLeft />
               </button>
             )}
             {/* Números de Página */}
@@ -294,15 +340,14 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
                   newParams.set("page", (i + 1).toString());
                   setSearchParams(newParams, { replace: true });
                 }}
-                className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                  paginationInfo.page === i + 1
+                className={`px-4 py-2 rounded-lg transition-all duration-300 ${paginationInfo.page === i + 1
                     ? "bg-gradient-to-r from-[rgb(67,18,136)] to-[rgb(144,45,193)] text-white"
                     : "bg-gray-100 hover:bg-gray-200"
-                }`}
+                  }`}
                 aria-label={`Ir a página ${i + 1}`}
                 aria-current={
                   paginationInfo.page === i + 1 ? "page" : undefined
-                } 
+                }
               >
                 {i + 1}
               </button>

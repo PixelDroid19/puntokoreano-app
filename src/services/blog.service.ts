@@ -1,4 +1,4 @@
-import axios from "axios";
+import { apiGet, ENDPOINTS } from "@/api/apiClient";
 import {
   BlogFilters,
   BlogPostFromBackend,
@@ -7,7 +7,6 @@ import {
   BlogTag,
   BlogPagination,
 } from "../types/blog.types";
-import ENDPOINTS from "@/api";
 
 interface ApiResponseNested<TData> {
   status: "success" | "fail" | "error";
@@ -28,12 +27,10 @@ interface RefListApiResponse<TItem>
   results: number;
 }
 
-function replaceParamInUrl(
-  url: string,
-  paramName: string,
-  value: string
-): string {
-  return url.replace(`:${paramName}`, value);
+function buildUrlParams(params: Record<string, any> = {}): Record<string, any> {
+  return Object.fromEntries(
+    Object.entries(params).filter(([_, value]) => value !== undefined)
+  );
 }
 
 class BlogService {
@@ -41,9 +38,10 @@ class BlogService {
     filters: BlogFilters = {}
   ): Promise<BlogListResponse> {
     try {
-      const { data } = await axios.get<BlogListApiResponse>(
-        ENDPOINTS.BLOG.GET_PUBLISHED.url,
-        { params: filters }
+      const data = await apiGet<BlogListApiResponse>(
+        ENDPOINTS.BLOG.GET_PUBLISHED,
+        {},
+        buildUrlParams(filters)
       );
 
       if (data.status !== "success" || !data.data?.posts) {
@@ -63,15 +61,10 @@ class BlogService {
 
   static async getPostBySlug(slug: string): Promise<BlogPostFromBackend> {
     try {
-      const url = replaceParamInUrl(
-        ENDPOINTS.BLOG.GET_BY_SLUG.url,
-        "slug",
-        slug
+      const data = await apiGet<ApiResponseNested<{ post: BlogPostFromBackend }>>(
+        ENDPOINTS.BLOG.GET_BY_SLUG,
+        { slug }
       );
-
-      const { data } = await axios.get<
-        ApiResponseNested<{ post: BlogPostFromBackend }>
-      >(url);
 
       if (data.status !== "success" || !data.data?.post) {
         throw new Error(data.message || "Failed to fetch post by slug");
@@ -85,8 +78,8 @@ class BlogService {
 
   static async getPublicCategories(): Promise<BlogCategory[]> {
     try {
-      const { data } = await axios.get<RefListApiResponse<BlogCategory>>(
-        ENDPOINTS.BLOG.GET_CATEGORIES.url
+      const data = await apiGet<RefListApiResponse<BlogCategory>>(
+        ENDPOINTS.BLOG.GET_CATEGORIES
       );
 
       if (data.status !== "success" || !data.data?.categories) {
@@ -101,8 +94,8 @@ class BlogService {
 
   static async getPublicTags(): Promise<BlogTag[]> {
     try {
-      const { data } = await axios.get<RefListApiResponse<BlogTag>>(
-        ENDPOINTS.BLOG.GET_TAGS.url
+      const data = await apiGet<RefListApiResponse<BlogTag>>(
+        ENDPOINTS.BLOG.GET_TAGS
       );
 
       if (data.status !== "success" || !data.data?.tags) {
@@ -119,9 +112,10 @@ class BlogService {
     limit: number = 4
   ): Promise<BlogPostFromBackend[]> {
     try {
-      const { data } = await axios.get<RefListApiResponse<BlogPostFromBackend>>(
-        ENDPOINTS.BLOG.GET_FEATURED.url,
-        { params: { limit } }
+      const data = await apiGet<RefListApiResponse<BlogPostFromBackend>>(
+        ENDPOINTS.BLOG.GET_FEATURED,
+        {},
+        { limit }
       );
 
       if (data.status !== "success" || !data.data?.posts) {
@@ -139,9 +133,10 @@ class BlogService {
     limit: number = 3
   ): Promise<BlogPostFromBackend[]> {
     try {
-      const { data } = await axios.get<RefListApiResponse<BlogPostFromBackend>>(
-        ENDPOINTS.BLOG.GET_RELATED.url,
-        { params: { blogId, limit } }
+      const data = await apiGet<RefListApiResponse<BlogPostFromBackend>>(
+        ENDPOINTS.BLOG.GET_RELATED,
+        {},
+        { blogId, limit }
       );
 
       if (data.status !== "success" || !data.data?.posts) {

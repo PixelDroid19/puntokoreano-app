@@ -1,11 +1,10 @@
 // components/Filter.component.tsx
-import React, { useState, useEffect, useMemo } from "react"; // Importar React, useMemo
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Form, Select, Input, Spin } from "antd"; // Importar Spin para loading
+import { Form, Select, Input, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
-import axios from "axios";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import ENDPOINTS from "@/api/index.js"; // Asegúrate que la ruta sea correcta
+import { apiGet, ENDPOINTS } from "@/api/apiClient";
 
 // --- Interfaces ---
 interface FilterSelection {
@@ -68,14 +67,14 @@ interface FilterApiResponse {
 // --- Componente ---
 const FilterStore = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // Leer params iniciales si es necesario
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
   );
 
   // Estado para los IDs seleccionados en los dropdowns
   const [selectedFilters, setSelectedFilters] = useState<FilterSelection>({
-    brandId: searchParams.get("brand") || null, // Usar 'brand' como en tu UI original para URL params
+    brandId: searchParams.get("brand") || null,
     familyId: searchParams.get("family") || null,
     modelId: searchParams.get("model") || null,
     lineId: searchParams.get("line") || null,
@@ -89,19 +88,19 @@ const FilterStore = () => {
     isLoading: isLoadingOptions,
     error: optionsError,
   } = useQuery<FilterApiResponse>({
-    queryKey: ["vehicleFilterOptions"], // Key única para esta query
+    queryKey: ["vehicleFilterOptions"],
     queryFn: async () => {
-      const response = await axios.get(
-        ENDPOINTS.PRODUCTS.VEHICLE_FILTER_OPTIONS.url
+      const response = await apiGet(
+        ENDPOINTS.PRODUCTS.VEHICLE_FILTER_OPTIONS
       );
-      return response.data;
+
+      return response;
     },
-    staleTime: Infinity, // Cachear indefinidamente
+    staleTime: Infinity,
   });
 
-  const options = filterOptionsData?.data; // Acceso más corto a las opciones
+  const options = filterOptionsData?.data;
 
-  // --- Lógica de Filtros en Cascada (con useMemo para optimización) ---
 
   const brandOptions = useMemo(
     () => options?.brands.map((b) => ({ label: b.name, value: b.id })) || [],
@@ -117,14 +116,14 @@ const FilterStore = () => {
 
   const modelOptions = useMemo(() => {
     if (!selectedFilters.familyId || !options?.models) return [];
-    // También podrías filtrar por brandId si es necesario
+
     return options.models
       .filter(
         (m) =>
           m.familyId ===
-          selectedFilters.familyId /* && m.brandId === selectedFilters.brandId */
+          selectedFilters.familyId
       )
-      .map((m) => ({ label: m.name, value: m.id })); // 'name' ya incluye el año
+      .map((m) => ({ label: m.name, value: m.id }));
   }, [
     selectedFilters.familyId,
     /* selectedFilters.brandId, */ options?.models,
@@ -132,7 +131,7 @@ const FilterStore = () => {
 
   const lineOptions = useMemo(() => {
     if (!selectedFilters.modelId || !options?.lines) return [];
-    // También podrías filtrar por brandId si es necesario
+
     return options.lines
       .filter(
         (l) =>
@@ -153,7 +152,7 @@ const FilterStore = () => {
     [options?.fuels]
   );
 
-  // --- Manejador de Cambios ---
+ 
   // Resetea los filtros dependientes cuando cambia uno superior
   const handleFilterChange = (
     filterType: keyof FilterSelection,
@@ -209,8 +208,8 @@ const FilterStore = () => {
   // --- Renderizado ---
   return (
     <div className="">
-       {/* Imágenes de fondo */}
-       <div className="absolute inset-0 flex justify-between pointer-events-none">
+      {/* Imágenes de fondo */}
+      <div className="absolute inset-0 flex justify-between pointer-events-none">
         <div className="w-1/3 hidden 2xl:block relative">
           <img
             src="/images/part-diagram-1.png"

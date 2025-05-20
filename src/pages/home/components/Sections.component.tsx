@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Statistic, Spin } from "antd";
-import axios, { AxiosError } from "axios";
-import ENDPOINTS from "@/api";
+import { AxiosError } from "axios";
+import { apiGet, ENDPOINTS } from "@/api/apiClient";
 import "./styles/Sections.component.css";
 import AOS from "aos";
 import HighlightedServicesSection from "./highlighted-services";
@@ -110,30 +110,40 @@ const fallbackServices: HighlightedService[] = [
 ].sort((a, b) => a.order - b.order);
 
 const fetchAchievements = async (): Promise<Achievement[]> => {
-  const response = await axios.get<ApiResponse<Achievement>>(
-    ENDPOINTS.SETTINGS.GET_ACHIEVEMENTS.url
-  );
-  if (!response.data.success) {
-    console.warn("Fallo al cargar logros:", response.data.message);
-    throw new Error(response.data.message || "Failed to fetch achievements");
+  try {
+    const response = await apiGet<ApiResponse<Achievement>>(
+      ENDPOINTS.SETTINGS.GET_ACHIEVEMENTS
+    );
+    if (!response.success) {
+      console.warn("Fallo al cargar logros:", response.message);
+      throw new Error(response.message || "Failed to fetch achievements");
+    }
+    return response.data.sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (error) {
+    console.error("Error fetching achievements:", error);
+    throw error;
   }
-  return response.data.data.sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
 const fetchHighlightedServices = async (): Promise<HighlightedService[]> => {
-  const response = await axios.get<ApiResponse<HighlightedService>>(
-    ENDPOINTS.SETTINGS.GET_HIGHLIGHTED_SERVICES.url
-  );
-  if (!response.data.success) {
-    console.warn(
-      "Fallo al cargar servicios destacados:",
-      response.data.message
+  try {
+    const response = await apiGet<ApiResponse<HighlightedService>>(
+      ENDPOINTS.SETTINGS.GET_HIGHLIGHTED_SERVICES
     );
-    throw new Error(
-      response.data.message || "Failed to fetch highlighted services"
-    );
+    if (!response.success) {
+      console.warn(
+        "Fallo al cargar servicios destacados:",
+        response.message
+      );
+      throw new Error(
+        response.message || "Failed to fetch highlighted services"
+      );
+    }
+    return response.data.sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (error) {
+    console.error("Error fetching highlighted services:", error);
+    throw error;
   }
-  return response.data.data.sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
 const Sections = () => {

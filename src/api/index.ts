@@ -11,6 +11,7 @@ export interface Endpoints {
     REGISTER: ApiEndpoint;
     LOGOUT: ApiEndpoint;
     ENCRYPTION_KEY: ApiEndpoint;
+    VERIFY_EMAIL: ApiEndpoint;
   };
   PRODUCTS: {
     SEARCH: ApiEndpoint;
@@ -65,6 +66,8 @@ export interface Endpoints {
     GET_ORDER_DETAILS: ApiEndpoint;
     CANCEL_ORDER: ApiEndpoint;
     TRACK_ORDER: ApiEndpoint;
+    PROCESS_PAYMENT: ApiEndpoint;
+    PAYMENT_STATUS: ApiEndpoint;
   };
   PAYMENT: {
     WOMPI_NEQUI_PAYMENT: ApiEndpoint;
@@ -156,6 +159,10 @@ const ENDPOINTS: Endpoints = {
       url: `${BASE_URL}/auth/encryption-key`,
       method: "GET",
     },
+    VERIFY_EMAIL: {
+      url: `${BASE_URL}/auth/verify-email`,
+      method: "GET",
+    },
   },
   PAYMENT: {
     WOMPI_NEQUI_PAYMENT: {
@@ -236,6 +243,14 @@ const ENDPOINTS: Endpoints = {
       url: `${BASE_URL}/orders/:orderId/track`,
       method: "GET",
     },
+    PROCESS_PAYMENT: {
+      url: `${BASE_URL}/orders/payment/process`,
+      method: "POST",
+    },
+    PAYMENT_STATUS: {
+      url: `${BASE_URL}/orders/payment/status/:orderId`,
+      method: "GET",
+    },
   },
   USER: {
     GET_REVIEWS: {
@@ -313,15 +328,15 @@ const ENDPOINTS: Endpoints = {
   },
   PRODUCTS: {
     SEARCH: {
-      url: `${BASE_URL}/products/search`, // La ruta que definimos en el backend
-      method: "POST", // Cambiado a POST
+      url: `${BASE_URL}/products/search`,
+      method: "POST",
     },
     VEHICLE_FILTER_OPTIONS: {
-      url: `${BASE_URL}/products/vehicle-filter-options`, // GET para obtener las opciones de filtro
+      url: `${BASE_URL}/products/vehicle-filter-options`, 
       method: "GET",
     },
     PRODUCT_DETAIL: {
-      url: `${BASE_URL}/products/detail`, // Sin cambios, sigue siendo GET por ID
+      url: `${BASE_URL}/products/detail/:id`,
       method: "GET",
     },
   },

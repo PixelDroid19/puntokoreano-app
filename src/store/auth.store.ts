@@ -4,7 +4,6 @@ import axios from "axios";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-// Mejora de interfaces con tipos más específicos
 interface User {
   id: string;
   name: string;
@@ -18,7 +17,7 @@ interface User {
   preferences: {
     notifications: boolean;
     newsletter: boolean;
-    theme?: 'light' | 'dark'; // Agregado para soporte de temas
+    theme?: "light" | "dark"; // Agregado para soporte de temas
     language?: string; // Soporte multiidioma
   };
   verified?: boolean;
@@ -66,13 +65,24 @@ const initialState: Partial<AuthState> = {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      ...initialState as AuthState,
+      ...(initialState as AuthState),
 
       login: async (user: User, token: string, expiresAt?: number) => {
         try {
           // Configurar axios con el nuevo token
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          
+
+          // Si el usuario tiene un modo de desarrollo definido, configurarlo en el servicio
+          if (typeof user.isDevelopment === 'boolean') {
+            try {
+              // Importar dinámicamente para evitar dependencias circulares
+              const { wompiService } = await import('@/api/apiClient');
+              await wompiService.setUserMode({ isDevelopment: user.isDevelopment });
+            } catch (configError) {
+              console.warn('No se pudo configurar el modo de desarrollo:', configError);
+            }
+          }
+
           set({
             user,
             token,
@@ -82,10 +92,10 @@ export const useAuthStore = create<AuthState>()(
             loginAttempts: 0, // Reset intentos al login exitoso
           });
         } catch (error) {
-          set(state => ({
+          set((state) => ({
             ...state,
             loginAttempts: (state.loginAttempts || 0) + 1,
-            error: "Error en inicio de sesión"
+            error: "Error en inicio de sesión",
           }));
         }
       },
@@ -114,10 +124,10 @@ export const useAuthStore = create<AuthState>()(
 
           if (token) {
             axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-            set({ 
-              token, 
+            set({
+              token,
               tokenExpiry: expiresAt,
-              error: null 
+              error: null,
             });
           } else {
             throw new Error("No token received");
@@ -136,7 +146,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       updateUser: (userData: Partial<User>) => {
-        set(state => ({
+        set((state) => ({
           user: state.user ? { ...state.user, ...userData } : null,
         }));
       },
@@ -152,14 +162,16 @@ export const useAuthStore = create<AuthState>()(
       clearError: () => set({ error: null }),
 
       updatePreferences: (preferences: Partial<User["preferences"]>) => {
-        set(state => ({
-          user: state.user ? {
-            ...state.user,
-            preferences: {
-              ...state.user.preferences,
-              ...preferences,
-            },
-          } : null,
+        set((state) => ({
+          user: state.user
+            ? {
+                ...state.user,
+                preferences: {
+                  ...state.user.preferences,
+                  ...preferences,
+                },
+              }
+            : null,
         }));
       },
 
@@ -183,7 +195,8 @@ export const useAuthStore = create<AuthState>()(
 
 // Selectores mejorados
 export const selectUser = (state: AuthState) => state.user;
-export const selectIsAuthenticated = (state: AuthState) => state.isAuthenticated;
+export const selectIsAuthenticated = (state: AuthState) =>
+  state.isAuthenticated;
 export const selectToken = (state: AuthState) => state.token;
 export const selectIsAdmin = (state: AuthState) => state.user?.role === "admin";
 export const selectIsLoading = (state: AuthState) => state.isLoading;

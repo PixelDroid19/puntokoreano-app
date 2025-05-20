@@ -1,8 +1,6 @@
 import { faChevronRight, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { useQuery } from "@tanstack/react-query";
 import { Drawer } from "antd";
-// import axios from "axios";
 import { useState } from "react";
 import SubgroupModal from "./Subgroups.component";
 import ENDPOINTS from "@/api";

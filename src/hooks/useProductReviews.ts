@@ -1,11 +1,8 @@
 // hooks/useProductReviews.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import ENDPOINTS from "@/api";
 import {
   Review,
   ReviewStats,
-  ReviewVote,
   ReportData,
   ReviewFormData,
 } from "@/types/review.types";
@@ -42,7 +39,7 @@ export const useProductReviews = (productId: string) => {
   const queryClient = useQueryClient();
   const { isAuthenticated, token } = useAuth();
 
-  // Obtener reseñas y estadísticas
+  // Obtener reseñas y estadísticas usando el servicio
   const {
     data: reviewsData,
     isLoading,
@@ -50,28 +47,7 @@ export const useProductReviews = (productId: string) => {
   } = useQuery<ApiResponse<ReviewsData>>({
     queryKey: ["productReviews", productId],
     queryFn: async () => {
-      const [reviews, stats] = await Promise.all([
-        axios.get<ApiResponse<Review[]>>(
-          ENDPOINTS.REVIEWS.GET_PRODUCT_REVIEWS.url.replace(
-            ":productId",
-            productId
-          )
-        ),
-        axios.get<ApiResponse<ReviewStats>>(
-          ENDPOINTS.REVIEWS.GET_REVIEW_STATS.url.replace(
-            ":productId",
-            productId
-          )
-        ),
-      ]);
-
-      return {
-        success: true,
-        data: {
-          reviews: reviews.data.data,
-          stats: stats.data.data,
-        },
-      };
+      return await reviewService.getProductReviewsData(productId);
     },
     staleTime: 1000 * 60 * 5,
   });
@@ -81,7 +57,7 @@ export const useProductReviews = (productId: string) => {
     queryKey: ["canReview", productId],
     queryFn: async () => {
       try {
-        // Validar token antes de hacer la petición
+
         if (!token) {
           return {
             success: false,
@@ -94,27 +70,7 @@ export const useProductReviews = (productId: string) => {
           };
         }
 
-        const response = await axios.get<ApiResponse<CanReviewData>>(
-          ENDPOINTS.REVIEWS.CHECK_CAN_REVIEW.url.replace(
-            ":productId",
-            productId
-          ),
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        // Validar la respuesta
-        if (!response.data || !response.data.success) {
-          throw new Error(
-            response.data?.message || "Error checking review permission"
-          );
-        }
-
-        return response.data;
+        return await reviewService.canUserReview(productId);
       } catch (error) {
         console.error("Error checking can review status:", error);
         return {
@@ -130,9 +86,9 @@ export const useProductReviews = (productId: string) => {
       }
     },
     enabled: Boolean(productId) && isAuthenticated && Boolean(token),
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    retry: 2, // Intentar 2 veces en caso de fallo
-    retryDelay: 1000, // Esperar 1 segundo entre reintentos
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   // Extraer los valores con seguridad null
@@ -144,7 +100,7 @@ export const useProductReviews = (productId: string) => {
     reason: canReviewQuery.error ? String(canReviewQuery.error) : undefined,
   };
 
-  // Crear reseña
+  // Crear reseña usando el servicio
   const createReviewMutation = useMutation<
     ApiResponse<Review>,
     Error,
@@ -162,17 +118,14 @@ export const useProductReviews = (productId: string) => {
     },
   });
 
-  // Votar reseña
+  // Votar reseña usando el servicio
   const voteReviewMutation = useMutation<
     ApiResponse<Review>,
     Error,
-    ReviewVote
+    { reviewId: string; vote: "up" | "down" }
   >({
     mutationFn: ({ reviewId, vote }) =>
-      axios.post(
-        ENDPOINTS.REVIEWS.VOTE_REVIEW.url.replace(":reviewId", reviewId),
-        { vote }
-      ),
+      reviewService.voteReview(reviewId, vote),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["productReviews", productId],
@@ -180,17 +133,14 @@ export const useProductReviews = (productId: string) => {
     },
   });
 
-  // Reportar reseña
+  // Reportar reseña usando el servicio
   const reportReviewMutation = useMutation<
     ApiResponse<void>,
     Error,
-    ReportData
+    { reviewId: string; reason: string; details?: string }
   >({
-    mutationFn: ({ reviewId, reason, details }) =>
-      axios.post(
-        ENDPOINTS.REVIEWS.REPORT_REVIEW.url.replace(":reviewId", reviewId),
-        { reason, details }
-      ),
+    mutationFn: ({ reviewId, ...reportData }) =>
+      reviewService.reportReview(reviewId, reportData as ReportData),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["productReviews", productId],

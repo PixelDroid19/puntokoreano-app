@@ -1,9 +1,25 @@
 // src/pages/account/components/ProfileSection.tsx
 import { useState } from "react";
-import { Form, Input, Button, Card, Space, notification, Select } from "antd";
+import { Form, Input, Button, Card, Space, Select, notification } from "antd";
 import { useAuthStore } from "@/store/auth.store";
-import axios from "axios";
-import ENDPOINTS from "@/api";
+import { apiPatch, apiPost, ENDPOINTS } from "@/api/apiClient";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  phone?: string;
+  document_type?: string;
+  document_number?: string;
+  preferences?: {
+    notifications: boolean;
+    newsletter: boolean;
+    theme?: "light" | "dark";
+    language?: string;
+  };
+  [key: string]: any;
+}
 
 interface ProfileFormData {
   name: string;
@@ -19,6 +35,14 @@ interface PasswordFormData {
   confirmPassword: string;
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  errors?: string[];
+  code?: string;
+}
+
 const ProfileSection = () => {
   const { user, updateUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
@@ -28,31 +52,29 @@ const ProfileSection = () => {
   const handleProfileUpdate = async (values: ProfileFormData) => {
     setLoading(true);
     try {
-      const response = await axios.patch(
-        ENDPOINTS.USER.UPDATE_PROFILE.url,
+      const response = await apiPatch<ApiResponse<User>>(
+        ENDPOINTS.USER.UPDATE_PROFILE,
         values
       );
-      if (response.data.success) {
-        updateUser(response.data.data);
+      if (response.success) {
+        updateUser(response.data);
         notification.success({
           message: "Perfil actualizado",
-          description: "Tu información ha sido actualizada exitosamente",
+          description: "Tu información ha sido actualizada correctamente.",
         });
       }
     } catch (error: any) {
       console.error("Error al actualizar perfil:", error);
-      
+
       let errorMessage = "No se pudo actualizar el perfil";
-      if (error.response) {
-        if (error.response.data?.errors?.length > 0) {
-          errorMessage = error.response.data.errors.join(", ");
-        } else if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        }
+      if (error.response?.data?.errors?.length > 0) {
+        errorMessage = error.response.data.errors.join(", ");
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       }
-      
+
       notification.error({
-        message: "Error",
+        message: "Error al actualizar perfil",
         description: errorMessage,
       });
     } finally {
@@ -63,7 +85,7 @@ const ProfileSection = () => {
   const handlePasswordChange = async (values: PasswordFormData) => {
     if (values.newPassword !== values.confirmPassword) {
       notification.error({
-        message: "Error",
+        message: "Error en la contraseña",
         description: "Las contraseñas no coinciden",
       });
       return;
@@ -71,7 +93,7 @@ const ProfileSection = () => {
 
     if (values.newPassword.length < 8) {
       notification.error({
-        message: "Error",
+        message: "Error en la contraseña",
         description: "La contraseña debe tener al menos 8 caracteres",
       });
       return;
@@ -79,32 +101,35 @@ const ProfileSection = () => {
 
     setLoading(true);
     try {
-      await axios.post(ENDPOINTS.USER.CHANGE_PASSWORD.url, {
-        currentPassword: values.currentPassword,
-        newPassword: values.newPassword,
-      });
+      const response = await apiPost<ApiResponse<null>>(
+        ENDPOINTS.USER.CHANGE_PASSWORD,
+        {
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword,
+        }
+      );
 
-      notification.success({
-        message: "Contraseña actualizada",
-        description: "Tu contraseña ha sido actualizada exitosamente",
-      });
-      passwordForm.resetFields();
+      if (response.success) {
+        notification.success({
+          message: "Contraseña actualizada",
+          description: "Tu contraseña ha sido actualizada correctamente.",
+        });
+        passwordForm.resetFields();
+      }
     } catch (error: any) {
       console.error("Error al cambiar contraseña:", error);
-      
+
       let errorMessage = "No se pudo actualizar la contraseña";
-      if (error.response) {
-        if (error.response.data?.code === "INVALID_CURRENT_PASSWORD") {
-          errorMessage = "La contraseña actual es incorrecta";
-        } else if (error.response.data?.code === "WEAK_PASSWORD") {
-          errorMessage = "La nueva contraseña es demasiado débil";
-        } else if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        }
+      if (error.response?.data?.code === "INVALID_CURRENT_PASSWORD") {
+        errorMessage = "La contraseña actual es incorrecta";
+      } else if (error.response?.data?.code === "WEAK_PASSWORD") {
+        errorMessage = "La nueva contraseña es demasiado débil";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       }
-      
+
       notification.error({
-        message: "Error",
+        message: "Error al cambiar contraseña",
         description: errorMessage,
       });
     } finally {
@@ -119,18 +144,23 @@ const ProfileSection = () => {
           form={profileForm}
           layout="vertical"
           initialValues={{
-            name: user?.name || '',
-            email: user?.email || '',
-            phone: user?.phone || '',
-            document_type: user?.document_type || '',
-            document_number: user?.document_number || '',
+            name: user?.name || "",
+            email: user?.email || "",
+            phone: user?.phone || "",
+            document_type: user?.document_type || "",
+            document_number: user?.document_number || "",
           }}
           onFinish={handleProfileUpdate}
         >
           <Form.Item
             label="Nombre completo"
             name="name"
-            rules={[{ required: true, message: "Por favor ingresa tu nombre completo" }]}
+            rules={[
+              {
+                required: true,
+                message: "Por favor ingresa tu nombre completo",
+              },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -139,8 +169,14 @@ const ProfileSection = () => {
             label="Correo electrónico"
             name="email"
             rules={[
-              { required: true, message: "Por favor ingresa tu correo electrónico" },
-              { type: "email", message: "Por favor ingresa un correo electrónico válido" },
+              {
+                required: true,
+                message: "Por favor ingresa tu correo electrónico",
+              },
+              {
+                type: "email",
+                message: "Por favor ingresa un correo electrónico válido",
+              },
             ]}
           >
             <Input />
@@ -185,7 +221,12 @@ const ProfileSection = () => {
           <Form.Item
             label="Contraseña actual"
             name="currentPassword"
-            rules={[{ required: true, message: "Por favor ingresa tu contraseña actual" }]}
+            rules={[
+              {
+                required: true,
+                message: "Por favor ingresa tu contraseña actual",
+              },
+            ]}
           >
             <Input.Password />
           </Form.Item>
@@ -194,8 +235,14 @@ const ProfileSection = () => {
             label="Nueva contraseña"
             name="newPassword"
             rules={[
-              { required: true, message: "Por favor ingresa tu nueva contraseña" },
-              { min: 8, message: "La contraseña debe tener al menos 8 caracteres" },
+              {
+                required: true,
+                message: "Por favor ingresa tu nueva contraseña",
+              },
+              {
+                min: 8,
+                message: "La contraseña debe tener al menos 8 caracteres",
+              },
             ]}
           >
             <Input.Password />
@@ -205,8 +252,14 @@ const ProfileSection = () => {
             label="Confirmar nueva contraseña"
             name="confirmPassword"
             rules={[
-              { required: true, message: "Por favor confirma tu nueva contraseña" },
-              { min: 8, message: "La contraseña debe tener al menos 8 caracteres" },
+              {
+                required: true,
+                message: "Por favor confirma tu nueva contraseña",
+              },
+              {
+                min: 8,
+                message: "La contraseña debe tener al menos 8 caracteres",
+              },
             ]}
           >
             <Input.Password />

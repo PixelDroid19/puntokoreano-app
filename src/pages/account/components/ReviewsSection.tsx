@@ -1,10 +1,24 @@
 // src/pages/account/components/ReviewsSection.tsx
 import { useState, useEffect } from "react";
-import { List, Rate, Tag, Button, Empty, notification, Spin, Modal, Form, Input } from "antd";
-import { EditOutlined, DeleteOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  List,
+  Rate,
+  Tag,
+  Button,
+  Empty,
+  notification,
+  Spin,
+  Modal,
+  Form,
+  Input,
+} from "antd";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import ENDPOINTS from "@/api";
+import { apiGet, apiDelete, apiPatch, ENDPOINTS } from "@/api/apiClient";
 import { formatDistance } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -35,6 +49,19 @@ interface ReviewFormData {
 
 const { TextArea } = Input;
 
+const DELETE_REVIEW_ENDPOINT = {
+  url: `${
+    import.meta.env.VITE_API_REST_URL || "http://localhost:5000/api/v1"
+  }/reviews/:reviewId`,
+  method: "DELETE",
+};
+const UPDATE_REVIEW_ENDPOINT = {
+  url: `${
+    import.meta.env.VITE_API_REST_URL || "http://localhost:5000/api/v1"
+  }/reviews/:reviewId`,
+  method: "PATCH",
+};
+
 const ReviewsSection = () => {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -42,24 +69,28 @@ const ReviewsSection = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [currentReview, setCurrentReview] = useState<Review | null>(null);
   const [form] = Form.useForm<ReviewFormData>();
-  const [pagination, setPagination] = useState({ total: 0 })
-  
+  const [pagination, setPagination] = useState({ total: 0 });
+
   // Fetch user reviews
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(ENDPOINTS.USER.GET_REVIEWS.url);
-      if (response.data?.success) {
-        setReviews(response.data.data?.reviews || []);
-        setPagination(prev => ({
+      const response = await apiGet<{
+        success: boolean;
+        data: { reviews: Review[]; pagination?: { total: number } };
+      }>(ENDPOINTS.USER.GET_REVIEWS);
+      if (response.success) {
+        setReviews(response.data.reviews || []);
+        setPagination((prev) => ({
           ...prev,
-          total: response.data.data?.pagination?.total || 0
+          total: response.data.pagination?.total || 0,
         }));
       }
     } catch (error: any) {
       notification.error({
         message: "Error",
-        description: error.response?.data?.message || "No se pudieron cargar las reseñas"
+        description:
+          error.response?.data?.message || "No se pudieron cargar las reseñas",
       });
     } finally {
       setLoading(false);
@@ -82,10 +113,11 @@ const ReviewsSection = () => {
 
   const handleDeleteReview = async (reviewId: string) => {
     try {
-      const response = await axios.delete(
-        ENDPOINTS.REVIEWS.DELETE_REVIEW.url.replace(":reviewId", reviewId)
+      const response = await apiDelete<{ success: boolean }>(
+        DELETE_REVIEW_ENDPOINT,
+        { reviewId }
       );
-      if (response.data.success) {
+      if (response.success) {
         notification.success({
           message: "Reseña eliminada",
           description: "La reseña ha sido eliminada exitosamente",
@@ -104,11 +136,12 @@ const ReviewsSection = () => {
     if (!currentReview) return;
 
     try {
-      const response = await axios.patch(
-        ENDPOINTS.REVIEWS.UPDATE_REVIEW.url.replace(":reviewId", currentReview._id),
-        values
+      const response = await apiPatch<{ success: boolean }>(
+        UPDATE_REVIEW_ENDPOINT,
+        values,
+        { reviewId: currentReview._id }
       );
-      if (response.data.success) {
+      if (response.success) {
         notification.success({
           message: "Reseña actualizada",
           description: "La reseña ha sido actualizada exitosamente",
@@ -217,7 +250,10 @@ const ReviewsSection = () => {
                   )}
 
                   <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                    <span>{review.helpful_votes.positive} personas encontraron útil esta reseña</span>
+                    <span>
+                      {review.helpful_votes.positive} personas encontraron útil
+                      esta reseña
+                    </span>
                   </div>
                 </div>
               </div>
@@ -250,7 +286,9 @@ const ReviewsSection = () => {
             <Form.Item
               name="rating"
               label="Calificación"
-              rules={[{ required: true, message: "Por favor califica el producto" }]}
+              rules={[
+                { required: true, message: "Por favor califica el producto" },
+              ]}
             >
               <Rate className="text-[#E2060F]" />
             </Form.Item>
@@ -258,7 +296,12 @@ const ReviewsSection = () => {
             <Form.Item
               name="title"
               label="Título"
-              rules={[{ required: true, message: "Por favor ingresa un título para tu reseña" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Por favor ingresa un título para tu reseña",
+                },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -266,13 +309,18 @@ const ReviewsSection = () => {
             <Form.Item
               name="content"
               label="Comentario"
-              rules={[{ required: true, message: "Por favor ingresa tu comentario" }]}
+              rules={[
+                { required: true, message: "Por favor ingresa tu comentario" },
+              ]}
             >
               <TextArea rows={4} />
             </Form.Item>
 
             <Form.Item className="flex justify-end">
-              <Button onClick={() => setEditModalVisible(false)} style={{ marginRight: 8 }}>
+              <Button
+                onClick={() => setEditModalVisible(false)}
+                style={{ marginRight: 8 }}
+              >
                 Cancelar
               </Button>
               <Button

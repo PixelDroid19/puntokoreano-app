@@ -24,7 +24,6 @@ import {
   MessageOutlined,
 } from "@ant-design/icons";
 import { useBlogBySlug, useRelatedBlogs } from "@/hooks/useBlog.hooks";
-
 const { Title, Text, Paragraph } = Typography;
 
 const BlogDetailPage: React.FC = () => {

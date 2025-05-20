@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Table, Tag, Button, Select, Space, notification, Spin, Modal } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
-import axios from "axios";
-import ENDPOINTS from "@/api";
+import { apiGet, ENDPOINTS } from "@/api/apiClient";
 import { formatNumber } from "@/pages/store/utils/formatPrice";
 import { formatDistance } from "date-fns";
 import { es } from "date-fns/locale";
@@ -115,10 +114,14 @@ const OrdersSection = () => {
         params.status = status;
       }
 
-      const response = await axios.get(ENDPOINTS.USER.GET_ORDERS.url, { params });
-      if (response.data.success) {
+      const response = await apiGet<{ success: boolean; data: { orders: any[]; pagination?: { total: number } } }>(
+        ENDPOINTS.USER.GET_ORDERS,
+        undefined,
+        params
+      );
+      if (response.success) {
         // Map and normalize the data to handle potential API changes
-        const normalizedOrders = response.data.data.orders.map((order: any) => ({
+        const normalizedOrders = response.data.orders.map((order: any) => ({
           ...order,
           // Ensure createdAt exists (might be created_at in some responses)
           createdAt: order.createdAt || order.created_at,
@@ -128,7 +131,7 @@ const OrdersSection = () => {
         setPagination({
           ...pagination,
           current: page,
-          total: response.data.data.pagination?.total || 0,
+          total: response.data.pagination?.total || 0,
         });
       }
     } catch (error) {

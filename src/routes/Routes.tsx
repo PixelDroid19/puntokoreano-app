@@ -23,7 +23,8 @@ import Login from "../pages/auth/Login";
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import axios from "axios";
-import setupAxiosInterceptors from "@/utils/axiosInterceptor";
+// Importamos el interceptor (sólo importar - no lo inicializamos aún)
+import "@/utils/axiosInterceptor";
 
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -76,8 +77,8 @@ const Routes = () => {
   // Initialize auth from localStorage if available
   const { token } = useAuthStore();
   useEffect(() => {
-    // Setup axios interceptors for token expiration handling
-    setupAxiosInterceptors();
+    // No necesitamos inicializar el interceptor aquí, ya se hace en la importación
+    // setupAxiosInterceptors();
 
     if (token) {
       // Set axios default headers

@@ -1,4 +1,3 @@
-import axios from "axios";
 import Slider from "react-slick";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import ENDPOINTS from "@/api";
+import { apiGet } from "@/api/apiClient";
 
 type group = {
   name: string;
@@ -33,16 +33,14 @@ const GroupComponent = () => {
   const { data } = useQuery({
     queryKey: ["groups"],
     queryFn: () => {
-      return axios.get(ENDPOINTS.GROUPS.GET_ALL.url).then((resp) => {
-        return resp.data;
-      });
+      return apiGet(ENDPOINTS.GROUPS.GET_ALL);
     },
   });
 
   const handleGroupClick = (group: group) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("group", group.name);
-    newParams.set("page", "1"); // Reset page when changing group
+    newParams.set("page", "1"); 
     setSearchParams(newParams);
   };
 

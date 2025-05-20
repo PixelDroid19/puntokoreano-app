@@ -1,6 +1,6 @@
 // src/pages/auth/Login.tsx
 import { useAuth } from "@/hooks/useAuth";
-import { Button, Form, Input, notification } from "antd";
+import { Button, Form, Input } from "antd";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
@@ -16,18 +16,9 @@ const Login = () => {
   const onFinish = async (values: LoginFormData) => {
     setLoading(true);
     try {
-      const result = await login(values.email, values.password);
-      if (!result.success) {
-        notification.error({
-          message: "Error de inicio de sesión",
-          description: result.error,
-        });
-      }
+      await login(values.email, values.password);
     } catch (error) {
-      notification.error({
-        message: "Error",
-        description: "Ocurrió un error al intentar iniciar sesión",
-      });
+      console.error("Error al iniciar sesión:", error);
     } finally {
       setLoading(false);
     }

@@ -21,6 +21,7 @@ interface CartState {
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   calculateTotals: () => void;
+  getOrderItems: () => { product: string; quantity: number; price: number }[];
 }
 
 export const useCartStore = create<CartState>()(
@@ -115,6 +116,16 @@ export const useCartStore = create<CartState>()(
           shipping,
           total: subTotal + shipping,
         });
+      },
+      
+      // Convertir items del carrito al formato necesario para crear órdenes
+      getOrderItems: () => {
+        const { items } = get();
+        return items.map(item => ({
+          product: item.id,
+          quantity: item.quantity,
+          price: item.price
+        }));
       },
     }),
     {
