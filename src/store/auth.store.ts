@@ -72,17 +72,6 @@ export const useAuthStore = create<AuthState>()(
           // Configurar axios con el nuevo token
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-          // Si el usuario tiene un modo de desarrollo definido, configurarlo en el servicio
-          if (typeof user.isDevelopment === 'boolean') {
-            try {
-              // Importar dinámicamente para evitar dependencias circulares
-              const { wompiService } = await import('@/api/apiClient');
-              await wompiService.setUserMode({ isDevelopment: user.isDevelopment });
-            } catch (configError) {
-              console.warn('No se pudo configurar el modo de desarrollo:', configError);
-            }
-          }
-
           set({
             user,
             token,
