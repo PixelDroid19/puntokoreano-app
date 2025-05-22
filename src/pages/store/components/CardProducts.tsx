@@ -1,130 +1,144 @@
-import type React from "react"
-import { useNavigate } from "react-router-dom"
-import { Navigation, Pagination } from "swiper/modules"
-import { Swiper, SwiperSlide } from "swiper/react"
-import { notification } from "antd"
-import { useCartStore } from "@/store/cart.store"
-import { ShoppingCart, Car, ChevronDown, ChevronUp } from "lucide-react"
-import { useState, useRef, useEffect } from "react"
-import "./CardProducts.styles.css"
+import type React from "react";
+import { useNavigate } from "react-router-dom";
+import { Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { notification } from "antd";
+import { useCartStore } from "@/store/cart.store";
+import { ShoppingCart, Car, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import "./CardProducts.styles.css";
 
 interface Vehicle {
-  _id: string
+  _id: string;
   line_id: {
-    _id: string
-    name: string
+    _id: string;
+    name: string;
     model_id: {
-      _id: string
-      name: string
-      year: number
-    }
-  }
+      _id: string;
+      name: string;
+      year: number;
+    };
+  };
 }
 
 interface Product {
-  id: string
-  name: string
-  price: number
-  group: string
-  subgroup: string
-  stock: number
-  code: number
-  shipping: string[]
-  images: string[]
-  active: boolean
-  short_description?: string
-  compatible_vehicles: Vehicle[]
+  id: string;
+  name: string;
+  price: number;
+  group: string;
+  subgroup: string;
+  stock: number;
+  code: number;
+  shipping: string[];
+  images: string[];
+  thumb: string | null;
+  carousel: string[];
+  active: boolean;
+  short_description?: string;
+  compatible_vehicles: Vehicle[];
   discount?: {
-    isActive: boolean
-    percentage: number
-    type?: string
-  }
+    isActive: boolean;
+    percentage: number;
+    type?: string;
+  };
 }
 
 interface Props {
-  inline?: boolean
-  product: Product
+  inline?: boolean;
+  product: Product;
 }
 
 const CardProducts = ({ inline = false, product }: Props) => {
-  const navigate = useNavigate()
-  const { addItem } = useCartStore()
-  const [isHovering, setIsHovering] = useState(false)
-  const [scrollPosition, setScrollPosition] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const navigate = useNavigate();
+  const { addItem } = useCartStore();
+  const [isHovering, setIsHovering] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const hasCompatibleVehicles = product.compatible_vehicles.length > 0
+  const hasCompatibleVehicles = product.compatible_vehicles.length > 0;
 
   useEffect(() => {
     if (scrollRef.current) {
       if (isExpanded && hasCompatibleVehicles) {
-        setScrollPosition(0)
-        scrollRef.current.scrollTop = 0
+        setScrollPosition(0);
+        scrollRef.current.scrollTop = 0;
       }
     }
-  }, [isExpanded, hasCompatibleVehicles])
+  }, [isExpanded, hasCompatibleVehicles]);
 
   useEffect(() => {
     if (isHovering && hasCompatibleVehicles && scrollRef.current) {
       const highlight = () => {
-        const tags = scrollRef.current?.querySelectorAll(".vehicle-tag")
+        const tags = scrollRef.current?.querySelectorAll(".vehicle-tag");
         if (tags && tags.length > 0) {
-          const index = Math.floor((scrollPosition / 100) % tags.length)
+          const index = Math.floor((scrollPosition / 100) % tags.length);
           tags.forEach((tag, i) => {
-            tag.classList.toggle("highlight-tag", i === index)
-          })
+            tag.classList.toggle("highlight-tag", i === index);
+          });
         }
-      }
+      };
 
-      highlight()
+      highlight();
       const interval = setInterval(() => {
-        setScrollPosition((prev) => prev + 1)
-      }, 1000)
+        setScrollPosition((prev) => prev + 1);
+      }, 1000);
 
-      return () => clearInterval(interval)
+      return () => clearInterval(interval);
     }
-  }, [isHovering, scrollPosition, hasCompatibleVehicles])
+  }, [isHovering, scrollPosition, hasCompatibleVehicles]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
 
     if (product.stock === 0) {
       notification.warning({
         message: "Producto sin stock",
         description: "Este producto no está disponible actualmente",
-      })
-      return
+      });
+      return;
     }
 
     addItem({
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.images[0] || "/placeholder.svg",
+      image: product.thumb || product.images[0] || "/placeholder.svg",
       stock: product.stock,
-    })
+    });
 
     notification.success({
       message: "Producto agregado",
       description: "El producto fue agregado al carrito exitosamente",
-    })
-  }
+    });
+  };
 
   const discountedPrice = product.discount?.isActive
     ? Math.round(product.price * (1 - product.discount.percentage / 100))
-    : product.price
+    : product.price;
 
   const toggleExpand = (e: React.MouseEvent) => {
     if (hasCompatibleVehicles) {
-      e.stopPropagation()
-      setIsExpanded((prev) => !prev)
+      e.stopPropagation();
+      setIsExpanded((prev) => !prev);
     }
-  }
+  };
 
   const mainContentClick = () => {
-    navigate(`/store/product/${product.id}`)
-  }
+    navigate(`/store/product/${product.id}`);
+  };
+
+  const imagesToDisplay = () => {
+    if (product.thumb) {
+      return [product.thumb];
+    }
+
+    if (product.carousel && product.carousel.length > 0) {
+      return product.carousel;
+    }
+
+    return ["/placeholder.svg"];
+  };
 
   return (
     <div className="p-2 w-full sm:w-[300px] md:w-[320px] lg:w-[280px] xl:w-[300px]">
@@ -152,7 +166,11 @@ const CardProducts = ({ inline = false, product }: Props) => {
           onClick={mainContentClick}
         >
           {inline ? (
-            <img src={product.images[0] || "/placeholder.svg"} alt={product.name} className="product-card-image" />
+            <img
+              src={product.thumb || product.images[0] || "/placeholder.svg"}
+              alt={product.name}
+              className="product-card-image"
+            />
           ) : (
             <Swiper
               navigation
@@ -164,17 +182,15 @@ const CardProducts = ({ inline = false, product }: Props) => {
               }}
               className="h-full w-full product-swiper"
             >
-              {(product.images && product.images.length > 0 ? product.images : ["/placeholder.svg"]).map(
-                (image, idx) => (
-                  <SwiperSlide key={`${idx}-image-${product.id}`}>
-                    <img
-                      src={image || "/placeholder.svg"}
-                      alt={`${product.name} - imagen ${idx + 1}`}
-                      className="product-card-image"
-                    />
-                  </SwiperSlide>
-                ),
-              )}
+              {imagesToDisplay().map((image, idx) => (
+                <SwiperSlide key={`${idx}-image-${product.id}`}>
+                  <img
+                    src={image || "/placeholder.svg"}
+                    alt={`${product.name} - imagen ${idx + 1}`}
+                    className="product-card-image"
+                  />
+                </SwiperSlide>
+              ))}
             </Swiper>
           )}
         </div>
@@ -189,9 +205,14 @@ const CardProducts = ({ inline = false, product }: Props) => {
         {/* Content Area */}
         <div className="p-4 flex flex-col flex-grow">
           {/* Clickable Area for Title/Nav */}
-          <div className="cursor-pointer flex-grow flex flex-col" onClick={mainContentClick}>
+          <div
+            className="cursor-pointer flex-grow flex flex-col"
+            onClick={mainContentClick}
+          >
             {/* Product Name - Altura fija */}
-            <h3 className="font-bold text-lg line-clamp-2 min-h-[30px]">{product.name}</h3>
+            <h3 className="font-bold text-lg line-clamp-2 min-h-[30px]">
+              {product.name}
+            </h3>
 
             <div
               onClick={toggleExpand}
@@ -213,7 +234,11 @@ const CardProducts = ({ inline = false, product }: Props) => {
                     aria-expanded={isExpanded}
                     aria-controls={`applications-${product.id}`}
                   >
-                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
                   </button>
                 </>
               ) : (
@@ -233,12 +258,14 @@ const CardProducts = ({ inline = false, product }: Props) => {
                   ? "max-h-[120px] overflow-y-auto custom-scrollbar"
                   : "max-h-0 overflow-hidden"
               }`}
-              onMouseEnter={hasCompatibleVehicles ? () => setIsHovering(true) : undefined}
+              onMouseEnter={
+                hasCompatibleVehicles ? () => setIsHovering(true) : undefined
+              }
               onMouseLeave={
                 hasCompatibleVehicles
                   ? () => {
-                      setIsHovering(false)
-                      setScrollPosition(0)
+                      setIsHovering(false);
+                      setScrollPosition(0);
                     }
                   : undefined
               }
@@ -250,7 +277,8 @@ const CardProducts = ({ inline = false, product }: Props) => {
                       key={vehicle._id}
                       className="vehicle-tag inline-block px-2 py-1 text-xs text-white bg-[#302582] rounded-md whitespace-nowrap mb-1 transition-all duration-300"
                     >
-                      {vehicle.line_id.model_id.name} {vehicle.line_id.name} ({vehicle.line_id.model_id.year})
+                      {vehicle.line_id.model_id.name} {vehicle.line_id.name} (
+                      {vehicle.line_id.model_id.year})
                     </span>
                   ))}
                 </div>
@@ -263,16 +291,26 @@ const CardProducts = ({ inline = false, product }: Props) => {
                 <span className="text-sm text-gray-500">Precio</span>
                 {product.discount?.isActive ? (
                   <>
-                    <span className="text-sm text-gray-500 line-through">$ {product.price.toLocaleString()} COP</span>
-                    <span className="font-bold text-lg text-[#000000]">$ {discountedPrice.toLocaleString()} COP</span>
+                    <span className="text-sm text-gray-500 line-through">
+                      $ {product.price.toLocaleString()} COP
+                    </span>
+                    <span className="font-bold text-lg text-[#000000]">
+                      $ {discountedPrice.toLocaleString()} COP
+                    </span>
                   </>
                 ) : (
-                  <span className="font-bold text-lg text-[#000000]">$ {product.price.toLocaleString()} COP</span>
+                  <span className="font-bold text-lg text-[#000000]">
+                    $ {product.price.toLocaleString()} COP
+                  </span>
                 )}
               </div>
               <div className="flex flex-col items-end">
                 <span className="text-sm text-gray-500">Stock</span>
-                <span className={`font-medium ${product.stock === 0 ? "text-red-500" : "text-green-600"}`}>
+                <span
+                  className={`font-medium ${
+                    product.stock === 0 ? "text-red-500" : "text-green-600"
+                  }`}
+                >
                   {product.stock} unidades
                 </span>
               </div>
@@ -303,7 +341,7 @@ const CardProducts = ({ inline = false, product }: Props) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CardProducts
+export default CardProducts;

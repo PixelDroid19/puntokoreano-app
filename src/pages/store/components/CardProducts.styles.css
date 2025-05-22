@@ -31,8 +31,14 @@
 
 /* Estilos adicionales para la card */
 .product-card-image {
-  @apply w-full h-full object-contain transition-transform duration-300;
+  @apply w-full h-full transition-transform duration-300;
+  object-fit: cover;
+  object-position: center;
+  padding: 0;
+  max-height: 100%;
+  max-width: 100%;
 }
+
 .product-card-image:hover {
   @apply scale-105;
 }
@@ -79,4 +85,18 @@
   .products-swiper .swiper-button-prev:after {
     font-size: 14px;
   }
+}
+
+/* Ajustes específicos para la sección de imágenes */
+.product-swiper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-swiper .swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
