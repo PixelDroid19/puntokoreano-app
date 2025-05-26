@@ -12,7 +12,6 @@ interface FilterSelection {
   brandId: string | null;
   familyId: string | null;
   modelId: string | null;
-  lineId: string | null;
   transmissionId: string | null;
   fuelId: string | null;
 }
@@ -77,7 +76,6 @@ const FilterStore = () => {
     brandId: searchParams.get("brand") || null,
     familyId: searchParams.get("family") || null,
     modelId: searchParams.get("model") || null,
-    lineId: searchParams.get("line") || null,
     transmissionId: searchParams.get("transmission") || null,
     fuelId: searchParams.get("fuel") || null,
   });
@@ -126,20 +124,8 @@ const FilterStore = () => {
       .map((m) => ({ label: m.name, value: m.id }));
   }, [
     selectedFilters.familyId,
-    /* selectedFilters.brandId, */ options?.models,
+    options?.models,
   ]);
-
-  const lineOptions = useMemo(() => {
-    if (!selectedFilters.modelId || !options?.lines) return [];
-
-    return options.lines
-      .filter(
-        (l) =>
-          l.modelId ===
-          selectedFilters.modelId /* && l.brandId === selectedFilters.brandId */
-      )
-      .map((l) => ({ label: l.name, value: l.id }));
-  }, [selectedFilters.modelId, /* selectedFilters.brandId, */ options?.lines]);
 
   // Opciones para transmisión y combustible (no dependen de otros filtros en este ejemplo)
   const transmissionOptions = useMemo(
@@ -164,14 +150,9 @@ const FilterStore = () => {
     if (filterType === "brandId") {
       updates.familyId = null;
       updates.modelId = null;
-      updates.lineId = null;
     } else if (filterType === "familyId") {
       updates.modelId = null;
-      updates.lineId = null;
-    } else if (filterType === "modelId") {
-      updates.lineId = null;
     }
-    // Podrías añadir reseteo para transmission/fuel si dependieran de algo
 
     setSelectedFilters((prev) => ({ ...prev, ...updates }));
   };
@@ -188,8 +169,6 @@ const FilterStore = () => {
       searchParamsToSend.append("family", selectedFilters.familyId);
     if (selectedFilters.modelId)
       searchParamsToSend.append("model", selectedFilters.modelId);
-    if (selectedFilters.lineId)
-      searchParamsToSend.append("line", selectedFilters.lineId);
     if (selectedFilters.transmissionId)
       searchParamsToSend.append("transmission", selectedFilters.transmissionId);
     if (selectedFilters.fuelId)
@@ -347,32 +326,6 @@ const FilterStore = () => {
                 />
               </Form.Item>
 
-              {/* Línea (depende de Modelo) */}
-              <Form.Item label="Linea" required className="font-bold">
-                <Select
-                  showSearch
-                  value={selectedFilters.lineId}
-                  options={lineOptions}
-                  onChange={(value) => handleFilterChange("lineId", value)}
-                  disabled={
-                    !selectedFilters.modelId || lineOptions.length === 0
-                  }
-                  placeholder={
-                    !selectedFilters.modelId
-                      ? "Selecciona un modelo primero"
-                      : "Selecciona la línea"
-                  }
-                  className="w-full"
-                  filterOption={(input, option) =>
-                    (option?.label ?? "")
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                  allowClear
-                  onClear={() => handleFilterChange("lineId", null)}
-                />
-              </Form.Item>
-
               {/* Caja de velocidades (Transmisión) */}
               <Form.Item
                 label="Caja de velocidades"
@@ -386,7 +339,6 @@ const FilterStore = () => {
                   onChange={(value) =>
                     handleFilterChange("transmissionId", value)
                   }
-                  // disabled={!selectedFilters.lineId} // Quitar dependencia si no aplica
                   placeholder="Selecciona la caja"
                   className="w-full"
                   filterOption={(input, option) =>
@@ -410,7 +362,6 @@ const FilterStore = () => {
                   value={selectedFilters.fuelId}
                   options={fuelOptions}
                   onChange={(value) => handleFilterChange("fuelId", value)}
-                  // disabled={!selectedFilters.transmissionId} // Quitar dependencia si no aplica
                   placeholder="Selecciona el combustible"
                   className="w-full"
                   filterOption={(input, option) =>
