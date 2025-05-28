@@ -277,8 +277,8 @@ const CardProducts = ({ inline = false, product }: Props) => {
                       key={vehicle._id}
                       className="vehicle-tag inline-block px-2 py-1 text-xs text-white bg-[#302582] rounded-md whitespace-nowrap mb-1 transition-all duration-300"
                     >
-                      {vehicle.line_id.model_id.name} {vehicle.line_id.name} (
-                      {vehicle.line_id.model_id.year})
+                      {vehicle?.line_id?.model_id?.name} {vehicle?.line_id?.name} (
+                      {vehicle?.line_id?.model_id?.year})
                     </span>
                   ))}
                 </div>
