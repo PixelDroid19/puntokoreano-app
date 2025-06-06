@@ -1,32 +1,44 @@
 // src/pages/account/components/OrdersSection.tsx
 import { useState, useEffect } from "react";
-import { Table, Tag, Button, Select, Space, notification, Spin, Modal } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
-import { apiGet, ENDPOINTS } from "@/api/apiClient";
+import { List, Card, Button, Empty, notification, Spin, Tag, Divider, Modal, Timeline } from "antd";
+import { ShopOutlined, TruckOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { apiGet, apiPost, ENDPOINTS } from "@/api/apiClient";
 import { formatNumber } from "@/pages/store/utils/formatPrice";
 import { formatDistance } from "date-fns";
 import { es } from "date-fns/locale";
 
+interface OrderItem {
+  product: {
+    _id: string;
+    name: string;
+    images?: string[];
+    brand?: string;
+  } | null;
+  quantity: number;
+  price: number;
+  total: number;
+  _id: string;
+}
+
 interface Order {
   _id: string;
   order_number: string;
-  status: string;
-  total: number;
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "confirmed" | "completed";
+  items: OrderItem[];
+  total: number; // Cambiado de total_amount a total
   subtotal: number;
   tax: number;
   shipping_cost: number;
-  shipping_method: string;
-  estimated_delivery?: string;
-  items: OrderItem[];
   shipping_address: {
     name: string;
     address: string;
     city: string;
     state: string;
+    zip: string; // Cambiado de postal_code a zip
     country: string;
-    zip: string;
-    email: string;
-    phone: string;
+    email?: string;
+    phone?: string;
   };
   payment: {
     method: string;
@@ -35,43 +47,39 @@ interface Order {
     transaction_id: string;
     amount: number;
     currency: string;
-    payment_method_details: {
-      type: string;
-      installments: number;
-    };
-    processed_at: string;
   };
-  createdAt: string;
-  created_at?: string; // Added for backward compatibility
   tracking_number?: string;
-}
-
-interface OrderItem {
-  _id: string;
-  product: {
+  createdAt: string; // Cambiado de created_at a createdAt
+  updatedAt: string; // Cambiado de updated_at a updatedAt
+  estimated_delivery?: string;
+  shipping_method?: string;
+  status_history?: Array<{
+    status: string;
+    date: string;
+    comment: string;
     _id: string;
-    name: string;
-    price: number;
-    images: string[];
-  };
-  quantity: number;
-  price: number;
-  total: number;
+  }>;
 }
 
-const { Option } = Select;
+interface OrderTracking {
+  status: string;
+  description: string;
+  date: string;
+  location?: string;
+}
 
 const OrdersSection = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [trackingModalVisible, setTrackingModalVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [trackingInfo, setTrackingInfo] = useState<OrderTracking[]>([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
     total: 0,
   });
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   // Helper function to safely parse dates
   const safeParseDate = (dateString: string | undefined) => {
@@ -102,39 +110,35 @@ const OrdersSection = () => {
   };
 
   // Fetch user orders
-  const fetchOrders = async (page = 1, status: string | null = null) => {
+  const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
-      const params: Record<string, any> = {
-        page,
-        limit: pagination.pageSize,
-      };
-
-      if (status) {
-        params.status = status;
-      }
-
-      const response = await apiGet<{ success: boolean; data: { orders: any[]; pagination?: { total: number } } }>(
+      const response = await apiGet<{
+        success: boolean;
+        data: {
+          orders: Order[];
+          pagination: {
+            total: number;
+            pages: number;
+            page: number;
+            limit: number;
+          };
+        };
+      }>(
         ENDPOINTS.USER.GET_ORDERS,
-        undefined,
-        params
+        {},
+        { page, limit: pagination.pageSize }
       );
+
       if (response.success) {
-        // Map and normalize the data to handle potential API changes
-        const normalizedOrders = response.data.orders.map((order: any) => ({
-          ...order,
-          // Ensure createdAt exists (might be created_at in some responses)
-          createdAt: order.createdAt || order.created_at,
-        }));
-        
-        setOrders(normalizedOrders);
-        setPagination({
-          ...pagination,
+        setOrders(response.data.orders);
+        setPagination(prev => ({
+          ...prev,
           current: page,
-          total: response.data.pagination?.total || 0,
-        });
+          total: response.data.pagination.total,
+        }));
       }
-    } catch (error) {
+    } catch (error: any) {
       notification.error({
         message: "Error",
         description: "No se pudieron cargar los pedidos",
@@ -145,262 +149,408 @@ const OrdersSection = () => {
   };
 
   useEffect(() => {
-    fetchOrders(pagination.current, statusFilter);
+    fetchOrders();
   }, []);
 
-  const handleTableChange = (pagination: any) => {
-    fetchOrders(pagination.current, statusFilter);
+  const handlePageChange = (page: number) => {
+    fetchOrders(page);
   };
 
-  const handleStatusFilterChange = (value: string | null) => {
-    setStatusFilter(value);
-    fetchOrders(1, value);
-  };
+  const handleTrackOrder = async (order: Order) => {
+    if (!order.tracking_number) {
+      notification.warning({
+        message: "Sin número de seguimiento",
+        description: "Este pedido aún no tiene número de seguimiento asignado",
+      });
+      return;
+    }
 
-  const viewOrderDetails = (order: Order) => {
     setSelectedOrder(order);
-    setDetailModalVisible(true);
+    
+    try {
+      const response = await apiGet<{
+        success: boolean;
+        data: OrderTracking[];
+      }>(
+        ENDPOINTS.ORDERS.TRACK_ORDER,
+        { orderId: order._id }
+      );
+
+      if (response.success) {
+        setTrackingInfo(response.data);
+        setTrackingModalVisible(true);
+      }
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "No se pudo obtener la información de seguimiento",
+      });
+    }
   };
 
-  const getStatusTag = (status: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      pending: { color: "gold", text: "Pendiente" },
-      processing: { color: "blue", text: "Procesando" },
-      confirmed: { color: "cyan", text: "Confirmado" },
-      shipped: { color: "cyan", text: "Enviado" },
-      delivered: { color: "green", text: "Entregado" },
-      cancelled: { color: "red", text: "Cancelado" },
-      refunded: { color: "volcano", text: "Reembolsado" },
-    };
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      const response = await apiPost<{ success: boolean }>(
+        ENDPOINTS.ORDERS.CANCEL_ORDER,
+        {},
+        { orderId }
+      );
 
-    const statusInfo = statusMap[status?.toLowerCase()] || { color: "default", text: status || 'Desconocido' };
-    return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
+      if (response.success) {
+        notification.success({
+          message: "Pedido cancelado",
+          description: "El pedido ha sido cancelado exitosamente",
+        });
+        fetchOrders();
+      }
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "No se pudo cancelar el pedido",
+      });
+    }
   };
 
-  const columns = [
-    {
-      title: "Número de pedido",
-      dataIndex: "order_number",
-      key: "order_number",
-    },
-    {
-      title: "Fecha",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string, record: Order) => (
-        <span>
-          {formatDate(record.createdAt || record.created_at, 'distance')}
-        </span>
-      ),
-    },
-    {
-      title: "Estado",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => getStatusTag(status),
-    },
-    {
-      title: "Total",
-      dataIndex: "total",
-      key: "total",
-      render: (total: number) => (
-        <span>$ {formatNumber(total, "es-CO", "COP")} COP</span>
-      ),
-    },
-    {
-      title: "Acciones",
-      key: "actions",
-      render: (_: any, record: Order) => (
-        <Button
-          icon={<EyeOutlined />}
-          onClick={() => viewOrderDetails(record)}
-          type="primary"
-          className="bg-[#E2060F] hover:bg-[#001529]"
-        >
-          Ver detalles
-        </Button>
-      ),
-    },
-  ];
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "orange";
+      case "processing":
+        return "blue";
+      case "confirmed":
+        return "green";
+      case "completed":
+        return "green";
+      case "shipped":
+        return "purple";
+      case "delivered":
+        return "green";
+      case "cancelled":
+        return "red";
+      default:
+        return "default";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "Pendiente";
+      case "processing":
+        return "Procesando";
+      case "confirmed":
+        return "Confirmado";
+      case "completed":
+        return "Completado";
+      case "shipped":
+        return "Enviado";
+      case "delivered":
+        return "Entregado";
+      case "cancelled":
+        return "Cancelado";
+      default:
+        return status;
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <CloseCircleOutlined />;
+      case "processing":
+        return <ShopOutlined />;
+      case "confirmed":
+        return <CheckCircleOutlined />;
+      case "completed":
+        return <CheckCircleOutlined />;
+      case "shipped":
+        return <TruckOutlined />;
+      case "delivered":
+        return <CheckCircleOutlined />;
+      case "cancelled":
+        return <CloseCircleOutlined />;
+      default:
+        return <ShopOutlined />;
+    }
+  };
+
+  const navigateToProduct = (productId: string) => {
+    navigate(`/store/product/${productId}`);
+  };
+
+  // Manejar errores de carga de imagen
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    target.src = '/images/logo-2.png';
+  };
+
+  if (loading && orders.length === 0) {
+    return <Spin size="large" className="flex justify-center my-8" />;
+  }
 
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Mis pedidos</h2>
-        <Space>
-          <span>Filtrar por estado:</span>
-          <Select
-            allowClear
-            placeholder="Todos los estados"
-            style={{ width: 200 }}
-            onChange={handleStatusFilterChange}
-            value={statusFilter}
-          >
-            <Option value="pending">Pendiente</Option>
-            <Option value="processing">Procesando</Option>
-            <Option value="shipped">Enviado</Option>
-            <Option value="delivered">Entregado</Option>
-            <Option value="cancelled">Cancelado</Option>
-            <Option value="refunded">Reembolsado</Option>
-          </Select>
-        </Space>
+        <div className="text-gray-500">
+          {pagination.total} pedido{pagination.total !== 1 ? "s" : ""}
+        </div>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={orders}
-        rowKey="_id"
-        pagination={pagination}
-        onChange={handleTableChange}
-        loading={loading}
-        locale={{ emptyText: "No tienes pedidos" }}
-      />
+      {orders.length === 0 ? (
+        <Empty
+          description="No tienes pedidos realizados"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          className="my-8"
+        >
+          <Button 
+            type="primary" 
+            onClick={() => navigate("/store")}
+            className="bg-[#E2060F] hover:bg-[#001529]"
+          >
+            Comenzar a comprar
+          </Button>
+        </Empty>
+      ) : (
+        <List
+          loading={loading}
+          dataSource={orders}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            onChange: handlePageChange,
+            showSizeChanger: false,
+            showQuickJumper: false,
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} de ${total} pedidos`,
+          }}
+          renderItem={(order) => (
+            <List.Item>
+              <Card className="w-full">
+                {/* Header del pedido */}
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="font-semibold text-lg">
+                      Pedido #{order.order_number}
+                    </h4>
+                    <p className="text-gray-500 text-sm">
+                      Realizado el {new Date(order.createdAt).toLocaleDateString("es-CO")}
+                    </p>
+                    {order.tracking_number && (
+                      <p className="text-gray-500 text-sm">
+                        Seguimiento: {order.tracking_number}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <Tag
+                      icon={getStatusIcon(order.status)}
+                      color={getStatusColor(order.status)}
+                    >
+                      {getStatusText(order.status)}
+                    </Tag>
+                    <div className="text-lg font-bold text-[#E2060F]">
+                      $ {formatNumber(order.total, "es-CO", "COP")} COP
+                    </div>
+                  </div>
+                </div>
 
-      <Modal
-        title={`Detalles del pedido #${selectedOrder?.order_number || ''}`}
-        open={detailModalVisible}
-        onCancel={() => setDetailModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            Cerrar
-          </Button>,
-        ]}
-        width={800}
-      >
-        {selectedOrder ? (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Información del pedido</h3>
-                <p>
-                  <strong>Estado:</strong> {getStatusTag(selectedOrder.status)}
-                </p>
-                <p>
-                  <strong>Fecha:</strong>{" "}
-                  {formatDate(selectedOrder.createdAt || selectedOrder.created_at)}
-                </p>
-                <p>
-                  <strong>Subtotal:</strong> ${" "}
-                  {formatNumber(selectedOrder.subtotal, "es-CO", "COP")} COP
-                </p>
-                <p>
-                  <strong>Envío:</strong> ${" "}
-                  {formatNumber(selectedOrder.shipping_cost, "es-CO", "COP")} COP
-                </p>
-                <p>
-                  <strong>Impuestos:</strong> ${" "}
-                  {formatNumber(selectedOrder.tax, "es-CO", "COP")} COP
-                </p>
-                <p>
-                  <strong>Total:</strong> ${" "}
-                  {formatNumber(selectedOrder.total, "es-CO", "COP")} COP
-                </p>
-                {selectedOrder.tracking_number && (
-                  <p>
-                    <strong>Número de seguimiento:</strong>{" "}
-                    {selectedOrder.tracking_number}
-                  </p>
-                )}
-                {selectedOrder.estimated_delivery && (
-                  <p>
-                    <strong>Entrega estimada:</strong>{" "}
-                    {formatDate(selectedOrder.estimated_delivery)}
-                  </p>
-                )}
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Dirección de envío</h3>
-                <p><strong>Nombre:</strong> {selectedOrder.shipping_address?.name || 'No disponible'}</p>
-                <p><strong>Dirección:</strong> {selectedOrder.shipping_address?.address || 'No disponible'}</p>
-                <p>
-                  {selectedOrder.shipping_address?.city || 'Ciudad no disponible'},{" "}
-                  {selectedOrder.shipping_address?.state || 'Estado no disponible'}
-                </p>
-                <p>
-                  {selectedOrder.shipping_address?.country || 'País no disponible'},{" "}
-                  {selectedOrder.shipping_address?.zip || 'Código postal no disponible'}
-                </p>
-                <p><strong>Email:</strong> {selectedOrder.shipping_address?.email || 'No disponible'}</p>
-                <p><strong>Teléfono:</strong> {selectedOrder.shipping_address?.phone || 'No disponible'}</p>
-              </div>
-            </div>
+                <Divider />
 
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Productos</h3>
-              {selectedOrder.items && selectedOrder.items.length > 0 ? (
-                <Table
-                  dataSource={selectedOrder.items}
-                  rowKey="_id"
-                  pagination={false}
-                  columns={[
-                    {
-                      title: "Producto",
-                      dataIndex: ["product", "name"],
-                      key: "name",
-                      render: (name: string, record: OrderItem) => (
-                        <div className="flex items-center gap-2">
-                          {record.product?.images && record.product.images.length > 0 ? (
-                            <img
-                              src={record.product.images[0]}
-                              alt={name}
-                              className="w-12 h-12 object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 bg-gray-200 flex items-center justify-center">No img</div>
-                          )}
-                          <span>{name || 'Producto sin nombre'}</span>
+                {/* Items del pedido */}
+                <div className="space-y-3 mb-4">
+                  {order.items.slice(0, 2).map((item, index) => (
+                    <div key={item._id || index} className="flex items-center gap-3">
+                      <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+                        {item.product?.images?.[0] ? (
+                          <img
+                            src={item.product.images[0]}
+                            alt={item.product?.name || 'Producto'}
+                            className="w-16 h-16 object-cover rounded cursor-pointer"
+                            onError={handleImageError}
+                            onClick={() => item.product?._id && navigateToProduct(item.product._id)}
+                          />
+                        ) : (
+                          <img
+                            src="/images/logo-2.png"
+                            alt="Producto"
+                            className="w-12 h-12 object-contain opacity-50"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="font-medium">
+                          {item.product?.name || `Producto (${formatNumber(item.price, "es-CO", "COP")} COP)`}
+                        </h5>
+                        <div className="text-sm text-gray-500">
+                          Cantidad: {item.quantity} × ${formatNumber(item.price, "es-CO", "COP")} COP
                         </div>
-                      ),
-                    },
-                    {
-                      title: "Precio",
-                      dataIndex: "price",
-                      key: "price",
-                      render: (price: number) => (
-                        <span>$ {formatNumber(price, "es-CO", "COP")} COP</span>
-                      ),
-                    },
-                    {
-                      title: "Cantidad",
-                      dataIndex: "quantity",
-                      key: "quantity",
-                    },
-                    {
-                      title: "Subtotal",
-                      dataIndex: "total",
-                      key: "total",
-                      render: (total: number) => (
-                        <span>
-                          $ {formatNumber(total, "es-CO", "COP")} COP
-                        </span>
-                      ),
-                    },
-                  ]}
-                />
-              ) : (
-                <p>No hay productos disponibles</p>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Información de pago</h3>
-              {selectedOrder.payment ? (
-                <>
-                  <p><strong>Método:</strong> {selectedOrder.payment.method || 'No disponible'}</p>
-                  <p><strong>Estado:</strong> {selectedOrder.payment.status || 'No disponible'}</p>
-                  <p><strong>ID de transacción:</strong> {selectedOrder.payment.transaction_id}</p>
-                  <p><strong>Procesado el:</strong> {formatDate(selectedOrder.payment.processed_at)}</p>
-                  {selectedOrder.payment.payment_method_details.installments > 1 && (
-                    <p><strong>Cuotas:</strong> {selectedOrder.payment.payment_method_details.installments}</p>
+                        {!item.product && (
+                          <div className="text-xs text-orange-500 mt-1">
+                            ⚠️ Información del producto no disponible
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">
+                          $ {formatNumber(item.total, "es-CO", "COP")} COP
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {order.items.length > 2 && (
+                    <div className="text-center text-gray-500 text-sm">
+                      + {order.items.length - 2} producto{order.items.length - 2 !== 1 ? "s" : ""} más
+                    </div>
                   )}
-                </>
-              ) : (
-                <p>Información de pago no disponible</p>
-              )}
+                </div>
+
+                <Divider />
+
+                {/* Información de envío y pago */}
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  {/* Dirección de envío */}
+                  <div>
+                    <h6 className="font-semibold mb-2">Dirección de envío:</h6>
+                    <div className="text-sm text-gray-600">
+                      <p>{order.shipping_address.name}</p>
+                      <p>{order.shipping_address.address}</p>
+                      <p>
+                        {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}
+                      </p>
+                      <p>{order.shipping_address.country}</p>
+                      {order.shipping_address.phone && (
+                        <p className="mt-1">📞 {order.shipping_address.phone}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Información de pago */}
+                  <div>
+                    <h6 className="font-semibold mb-2">Información de pago:</h6>
+                    <div className="text-sm text-gray-600">
+                      <p>Método: {order.payment.method}</p>
+                      <p>Proveedor: {order.payment.provider.toUpperCase()}</p>
+                      <p>Estado: <span className={`font-medium ${order.payment.status === 'completed' ? 'text-green-600' : 'text-orange-600'}`}>
+                        {order.payment.status === 'completed' ? 'Completado' : order.payment.status}
+                      </span></p>
+                      <p>ID Transacción: {order.payment.transaction_id}</p>
+                      
+                      {/* Resumen de montos */}
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        <div className="flex justify-between">
+                          <span>Subtotal:</span>
+                          <span>$ {formatNumber(order.subtotal, "es-CO", "COP")} COP</span>
+                        </div>
+                        {order.tax > 0 && (
+                          <div className="flex justify-between">
+                            <span>Impuestos:</span>
+                            <span>$ {formatNumber(order.tax, "es-CO", "COP")} COP</span>
+                          </div>
+                        )}
+                        {order.shipping_cost > 0 && (
+                          <div className="flex justify-between">
+                            <span>Envío:</span>
+                            <span>$ {formatNumber(order.shipping_cost, "es-CO", "COP")} COP</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between font-semibold text-[#E2060F] border-t border-gray-200 pt-1 mt-1">
+                          <span>Total:</span>
+                          <span>$ {formatNumber(order.total, "es-CO", "COP")} COP</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acciones */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    {order.estimated_delivery && (
+                      <p className="text-sm text-gray-500">
+                        Entrega estimada: {new Date(order.estimated_delivery).toLocaleDateString("es-CO")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {order.tracking_number && (
+                      <Button
+                        type="primary"
+                        icon={<TruckOutlined />}
+                        onClick={() => handleTrackOrder(order)}
+                        style={{
+                          backgroundColor: '#2563eb',
+                          borderColor: '#2563eb',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#1d4ed8';
+                          e.currentTarget.style.borderColor = '#1d4ed8';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#2563eb';
+                          e.currentTarget.style.borderColor = '#2563eb';
+                        }}
+                      >
+                        Rastrear
+                      </Button>
+                    )}
+                    
+                    {(order.status === "pending" || order.status === "confirmed") && (
+                      <Button
+                        danger
+                        onClick={() => handleCancelOrder(order._id)}
+                      >
+                        Cancelar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </List.Item>
+          )}
+        />
+      )}
+
+      {/* Modal de seguimiento */}
+      <Modal
+        title={`Seguimiento del pedido #${selectedOrder?.order_number}`}
+        open={trackingModalVisible}
+        onCancel={() => setTrackingModalVisible(false)}
+        footer={null}
+        width={600}
+      >
+        {selectedOrder && (
+          <div>
+            <div className="mb-4">
+              <p><strong>Número de seguimiento:</strong> {selectedOrder.tracking_number}</p>
+              <p><strong>Estado actual:</strong> 
+                <Tag 
+                  color={getStatusColor(selectedOrder.status)} 
+                  className="ml-2"
+                >
+                  {getStatusText(selectedOrder.status)}
+                </Tag>
+              </p>
             </div>
+            
+            <Timeline
+              items={trackingInfo.map((tracking, index) => ({
+                dot: index === 0 ? <CheckCircleOutlined className="text-green-500" /> : undefined,
+                children: (
+                  <div>
+                    <div className="font-semibold">{tracking.status}</div>
+                    <div className="text-gray-600">{tracking.description}</div>
+                    <div className="text-sm text-gray-500">
+                      {new Date(tracking.date).toLocaleString("es-CO")}
+                      {tracking.location && ` - ${tracking.location}`}
+                    </div>
+                  </div>
+                ),
+              }))}
+            />
           </div>
-        ) : (
-          <Spin size="large" />
         )}
       </Modal>
     </div>

@@ -138,6 +138,28 @@ const AddressSection = () => {
     }
   };
 
+  const handleSetDefaultAddress = async (addressId: string) => {
+    try {
+      const response = await apiPut<{ success: boolean }>(
+        ENDPOINTS.USER.SET_DEFAULT_ADDRESS,
+        {},
+        { addressId }
+      );
+      if (response.success) {
+        notification.success({
+          message: "Dirección predeterminada",
+          description: "La dirección se ha establecido como predeterminada",
+        });
+        fetchAddresses();
+      }
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "No se pudo establecer como dirección predeterminada",
+      });
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-4">
@@ -164,6 +186,16 @@ const AddressSection = () => {
                 onClick={() => handleEditAddress(address)}
                 type="text"
               />,
+              !address.isDefault && (
+                <Button
+                  type="text"
+                  size="small"
+                  onClick={() => handleSetDefaultAddress(address.id)}
+                  className="text-[#E2060F]"
+                >
+                  Establecer predeterminada
+                </Button>
+              ),
               <Popconfirm
                 title="¿Estás seguro de eliminar esta dirección?"
                 onConfirm={() => handleDeleteAddress(address.id)}
@@ -173,7 +205,7 @@ const AddressSection = () => {
               >
                 <Button icon={<DeleteOutlined />} type="text" danger />
               </Popconfirm>,
-            ]}
+            ].filter(Boolean)}
           >
             <Card className="w-full">
               <div className="flex flex-col">

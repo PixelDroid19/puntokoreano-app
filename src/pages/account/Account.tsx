@@ -8,6 +8,8 @@ import AddressSection from "./components/AddressSection";
 import PaymentSection from "./components/PaymentSection";
 import OrdersSection from "./components/OrdersSection";
 import ReviewsSection from "./components/ReviewsSection";
+import PreferencesSection from "./components/PreferencesSection";
+import WishlistSection from "./components/WishlistSection";
 
 const { Title } = Typography;
 
@@ -32,20 +34,30 @@ const Account = () => {
       label: "Direcciones",
       children: <AddressSection />,
     },
-    {
+  /*   {
       key: "payment",
       label: "Métodos de pago",
       children: <PaymentSection />,
-    },
+    }, */
     {
       key: "orders",
       label: "Pedidos",
       children: <OrdersSection />,
     },
     {
+      key: "wishlist",
+      label: "Lista de deseos",
+      children: <WishlistSection />,
+    },
+    {
       key: "reviews",
       label: "Reseñas",
       children: <ReviewsSection />,
+    },
+    {
+      key: "preferences",
+      label: "Preferencias",
+      children: <PreferencesSection />,
     },
   ];
 

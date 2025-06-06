@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, List, Form, Input, Modal, Select, notification, Popconfirm } from "antd";
 import { PlusOutlined, DeleteOutlined, CreditCardOutlined } from "@ant-design/icons";
-import { apiDelete, apiGet, apiPost, ENDPOINTS } from "@/api/apiClient";
+import { apiDelete, apiGet, apiPost, apiPut, ENDPOINTS } from "@/api/apiClient";
 
 interface PaymentMethod {
   id: string;
@@ -79,6 +79,28 @@ const PaymentSection = () => {
     }
   };
 
+  const handleSetDefaultPaymentMethod = async (methodId: string) => {
+    try {
+      const response = await apiPut(
+        ENDPOINTS.USER.SET_DEFAULT_PAYMENT_METHOD,
+        {},
+        { methodId }
+      );
+      if (response.data.success) {
+        notification.success({
+          message: "Método de pago predeterminado",
+          description: "El método de pago se ha establecido como predeterminado",
+        });
+        fetchPaymentMethods();
+      }
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "No se pudo establecer como método de pago predeterminado",
+      });
+    }
+  };
+
   const handleSubmit = async (values: PaymentFormData) => {
     try {
       // Remove CVV from data sent to server for security
@@ -143,6 +165,16 @@ const PaymentSection = () => {
         renderItem={(method) => (
           <List.Item
             actions={[
+              !method.isDefault && (
+                <Button
+                  type="text"
+                  size="small"
+                  onClick={() => handleSetDefaultPaymentMethod(method.id)}
+                  className="text-[#E2060F]"
+                >
+                  Establecer predeterminado
+                </Button>
+              ),
               <Popconfirm
                 title="¿Estás seguro de eliminar este método de pago?"
                 onConfirm={() => handleDeletePaymentMethod(method.id)}
@@ -152,7 +184,7 @@ const PaymentSection = () => {
               >
                 <Button icon={<DeleteOutlined />} type="text" danger />
               </Popconfirm>,
-            ]}
+            ].filter(Boolean)}
           >
             <Card className="w-full">
               <div className="flex items-center gap-4">

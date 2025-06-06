@@ -1,6 +1,7 @@
 // src/pages/account/components/ProfileSection.tsx
 import { useState } from "react";
-import { Form, Input, Button, Card, Space, Select, notification } from "antd";
+import { Form, Input, Button, Card, Space, Select, notification, Alert } from "antd";
+import { MailOutlined, CheckCircleOutlined, WarningOutlined } from "@ant-design/icons";
 import { useAuthStore } from "@/store/auth.store";
 import { apiPatch, apiPost, ENDPOINTS } from "@/api/apiClient";
 
@@ -137,9 +138,40 @@ const ProfileSection = () => {
     }
   };
 
+  const handleResendEmailVerification = async () => {
+    try {
+      await apiPost(ENDPOINTS.USER.RESEND_EMAIL_VERIFICATION, {});
+      notification.success({
+        message: "Correo de verificación enviado",
+        description: "Revisa tu bandeja de entrada para verificar tu correo electrónico.",
+      });
+    } catch (error: any) {
+      notification.error({
+        message: "Error",
+        description: "No se pudo enviar el correo de verificación",
+      });
+    }
+  };
+
   return (
     <Space direction="vertical" size="large" className="w-full">
       <Card title="Información personal" className="w-full">
+        {!user?.verified && (
+          <Alert
+            message="Correo electrónico no verificado"
+            description="Para mayor seguridad y acceso completo a todas las funcionalidades, verifica tu correo electrónico."
+            type="warning"
+            showIcon
+            icon={<WarningOutlined />}
+            action={
+              <Button size="small" onClick={handleResendEmailVerification}>
+                Enviar verificación
+              </Button>
+            }
+            className="mb-4"
+          />
+        )}
+        
         <Form
           form={profileForm}
           layout="vertical"
