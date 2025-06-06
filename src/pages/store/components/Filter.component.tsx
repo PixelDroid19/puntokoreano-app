@@ -32,6 +32,8 @@ interface ModelOption {
   year: number;
   familyId: string | null;
   brandId: string | null;
+  engine_type: string;
+  years: number[];
 }
 interface LineOption {
   id: string;
@@ -88,9 +90,7 @@ const FilterStore = () => {
   } = useQuery<FilterApiResponse>({
     queryKey: ["vehicleFilterOptions"],
     queryFn: async () => {
-      const response = await apiGet(
-        ENDPOINTS.PRODUCTS.VEHICLE_FILTER_OPTIONS
-      );
+      const response = await apiGet(ENDPOINTS.PRODUCTS.VEHICLE_FILTER_OPTIONS);
 
       return response;
     },
@@ -98,7 +98,6 @@ const FilterStore = () => {
   });
 
   const options = filterOptionsData?.data;
-
 
   const brandOptions = useMemo(
     () => options?.brands.map((b) => ({ label: b.name, value: b.id })) || [],
@@ -116,16 +115,12 @@ const FilterStore = () => {
     if (!selectedFilters.familyId || !options?.models) return [];
 
     return options.models
-      .filter(
-        (m) =>
-          m.familyId ===
-          selectedFilters.familyId
-      )
-      .map((m) => ({ label: m.name, value: m.id }));
-  }, [
-    selectedFilters.familyId,
-    options?.models,
-  ]);
+      .filter((m) => m.familyId === selectedFilters.familyId)
+      .map((m) => ({
+        label: m.name || `(${m.years?.join(", ")})`,
+        value: m.id,
+      }));
+  }, [selectedFilters.familyId, options?.models]);
 
   // Opciones para transmisión y combustible (no dependen de otros filtros en este ejemplo)
   const transmissionOptions = useMemo(
@@ -138,7 +133,6 @@ const FilterStore = () => {
     [options?.fuels]
   );
 
- 
   // Resetea los filtros dependientes cuando cambia uno superior
   const handleFilterChange = (
     filterType: keyof FilterSelection,
