@@ -22,7 +22,7 @@ export interface SocialMission {
 export interface Location {
   address: string;
   mapUrl: string;
-  coordinates?: {
+  coordinates: {
     lat: number;
     lng: number;
   };
@@ -34,8 +34,8 @@ export interface AboutSettings {
   location: Location;
 }
 
-
 export interface PublicConsultant {
+  _id?: string;
   name: string;
   position: string;
   image: string;
@@ -44,6 +44,9 @@ export interface PublicConsultant {
   email?: string;
   qrCode?: string;
   description?: string;
+  headerImage?: string;
+  order?: number;
+  active?: boolean;
 }
 
 export interface PublicSocialMission {
@@ -64,4 +67,10 @@ export interface PublicAboutSettings {
   consultants: PublicConsultant[];
   socialMission: PublicSocialMission;
   location: PublicLocation;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
 }

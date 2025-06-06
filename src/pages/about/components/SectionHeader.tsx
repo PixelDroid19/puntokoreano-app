@@ -1,56 +1,92 @@
+import React, { memo, useMemo } from 'react';
+
 interface SectionHeaderProps {
   title: string;
 }
 
-const SectionHeader: React.FC<SectionHeaderProps> = ({ title, ...props }) => {
+// Componente de franja memoizado
+const ColorStripe = memo<{
+  background: string;
+  width: string;
+  marginRight?: string;
+  position: 'left' | 'right';
+}>(({ background, width, marginRight, position }) => {
+  const stripeStyles = useMemo(() => ({
+    background,
+    width,
+    transform: 'skew(-20deg)',
+    transformOrigin: position === 'left' ? 'top left' : 'top right',
+    ...(marginRight && { marginRight }),
+  }), [background, width, marginRight, position]);
+
+  const positionClasses = position === 'left' 
+    ? 'absolute top-0 left-0 h-full' 
+    : 'absolute top-0 right-0 h-full';
+
+  return (
+    <div 
+      className={positionClasses}
+      style={stripeStyles}
+    />
+  );
+});
+
+ColorStripe.displayName = "ColorStripe";
+
+// Componente principal memoizado
+const SectionHeader = memo<SectionHeaderProps>(({ title, ...props }) => {
+  // Memoizar las configuraciones de las franjas
+  const stripes = useMemo(() => [
+    {
+      id: 'left-orange',
+      background: '#F57615',
+      width: '4%',
+      position: 'left' as const,
+    },
+    {
+      id: 'right-purple',
+      background: '#722FA7',
+      width: '4%',
+      position: 'right' as const,
+      marginRight: '-2.1%',
+    },
+    {
+      id: 'right-pink',
+      background: '#EC0382',
+      width: '4%',
+      position: 'right' as const,
+      marginRight: '-6%',
+    },
+    {
+      id: 'right-yellow',
+      background: '#FAB21F',
+      width: '4%',
+      position: 'right' as const,
+      marginRight: '-9.5%',
+    },
+  ], []);
+
+  // Memoizar el estilo del contenedor principal
+  const containerStyles = useMemo(() => ({
+    background: '#922EC2',
+  }), []);
+
   return (
     <div className="w-full relative" {...props}>
-      <div className="w-full h-20 relative bg-[#922EC2]">
-        {/* Franja naranja izquierda */}
-        <div 
-          className="absolute top-0 left-0 h-full w-[4%]"
-          style={{
-            background: '#F57615',
-            transform: 'skew(-20deg)',
-            transformOrigin: 'top left',
-          }}
-        />
-        
-        {/* Franja rosa/roja */}
-        <div 
-          className="absolute top-0 right-0 h-full"
-          style={{
-            background: '#722FA7',
-            width: '4%',
-            transform: 'skew(-20deg)',
-            transformOrigin: 'top right',
-            marginRight: '-2.1%',
-          }}
-        />
-        
-        {/* Franja naranja derecha */}
-        <div 
-          className="absolute top-0 right-0 h-full"
-          style={{
-            background: '#EC0382',
-            width: '4%',
-            transform: 'skew(-20deg)',
-            transformOrigin: 'top right',
-            marginRight: '-6%',
-          }}
-        />
-
-         {/* Franja naranja derecha */}
-         <div 
-          className="absolute top-0 right-0 h-full"
-          style={{
-            background: '#FAB21F',
-            width: '4%',
-            transform: 'skew(-20deg)',
-            transformOrigin: 'top right',
-            marginRight: '-9.5%',
-          }}
-        />
+      <div 
+        className="w-full h-20 relative"
+        style={containerStyles}
+      >
+        {/* Renderizar franjas */}
+        {stripes.map((stripe) => (
+          <ColorStripe
+            key={stripe.id}
+            background={stripe.background}
+            width={stripe.width}
+            position={stripe.position}
+            marginRight={stripe.marginRight}
+          />
+        ))}
 
         {/* Contenedor del título */}
         <div className="max-w-[1320px] mx-auto h-full">
@@ -61,6 +97,8 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, ...props }) => {
       </div>
     </div>
   );
-};
+});
+
+SectionHeader.displayName = "SectionHeader";
 
 export default SectionHeader;

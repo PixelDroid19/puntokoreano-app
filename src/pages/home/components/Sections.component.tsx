@@ -1,147 +1,9 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Statistic, Spin } from "antd";
-import { AxiosError } from "axios";
-import { apiGet, ENDPOINTS } from "@/api/apiClient";
 import "./styles/Sections.component.css";
 import AOS from "aos";
 import HighlightedServicesSection from "./highlighted-services";
-
-interface Achievement {
-  icon_url: string;
-  value: string;
-  title: string;
-  active: boolean;
-  order: number;
-  _id: string;
-}
-
-interface StatData {
-  icon?: string;
-  value?: string;
-}
-
-interface HighlightedService {
-  title: string;
-  description: string;
-  image: string;
-  stats: StatData[];
-  _id: string;
-  identifier: string;
-  active: boolean;
-  order: number;
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T[];
-  message?: string;
-}
-
-const fallbackAchievements: Achievement[] = [
-  {
-    _id: "1",
-    value: "20+",
-    title: "Años de Experiencia",
-    icon_url: "/icons/experience.png",
-    active: true,
-    order: 1,
-  },
-  {
-    _id: "2",
-    value: "10k+",
-    title: "Clientes Satisfechos",
-    icon_url: "/icons/clients.png",
-    active: true,
-    order: 2,
-  },
-  {
-    _id: "3",
-    value: "5k+",
-    title: "Repuestos Disponibles",
-    icon_url: "/icons/parts.png",
-    active: true,
-    order: 3,
-  },
-  {
-    _id: "4",
-    value: "100%",
-    title: "Garantía de Calidad",
-    icon_url: "/icons/quality.png",
-    active: true,
-    order: 4,
-  },
-].sort((a, b) => a.order - b.order);
-
-const fallbackServices: HighlightedService[] = [
-  {
-    _id: "fb1",
-    identifier: "service-1741337764259",
-    title: "Descuentos de temporada",
-    description:
-      "Conoce algunos de los descuentos que tenemos en repuestos para tu vehículo.",
-    image: "https://via.placeholder.com/400x200/E2060F/FFFFFF?text=Descuentos",
-    stats: [],
-    active: true,
-    order: 0,
-  },
-  {
-    _id: "fb2",
-    identifier: "service-1741337935851",
-    title: "Comunidad PUNTO KOREANO",
-    description:
-      "Regístrate y sé parte de la familia PUNTO KOREANO. Recibe información exclusiva sobre descuentos y participa en nuestros eventos",
-    image: "https://via.placeholder.com/400x200/6D21A7/FFFFFF?text=Comunidad",
-    stats: [],
-    active: true,
-    order: 1,
-  },
-  {
-    _id: "fb3",
-    identifier: "service-1741338000661",
-    title: "Políticas, Términos y Condiciones",
-    description:
-      "En este espacio encontrarás toda la información legal que regula nuestras ventas, garantías y el tratamiento de datos.",
-    image: "https://via.placeholder.com/400x200/FAB21F/000000?text=Politicas",
-    stats: [],
-    active: true,
-    order: 2,
-  },
-].sort((a, b) => a.order - b.order);
-
-const fetchAchievements = async (): Promise<Achievement[]> => {
-  try {
-    const response = await apiGet<ApiResponse<Achievement>>(
-      ENDPOINTS.SETTINGS.GET_ACHIEVEMENTS
-    );
-    if (!response.success) {
-      console.warn("Fallo al cargar logros:", response.message);
-      throw new Error(response.message || "Failed to fetch achievements");
-    }
-    return response.data.sort((a, b) => (a.order || 0) - (b.order || 0));
-  } catch (error) {
-    console.error("Error fetching achievements:", error);
-    throw error;
-  }
-};
-
-const fetchHighlightedServices = async (): Promise<HighlightedService[]> => {
-  try {
-    const response = await apiGet<ApiResponse<HighlightedService>>(
-      ENDPOINTS.SETTINGS.GET_HIGHLIGHTED_SERVICES
-    );
-    if (!response.success) {
-      console.warn("Fallo al cargar servicios destacados:", response.message);
-      throw new Error(
-        response.message || "Failed to fetch highlighted services"
-      );
-    }
-    return response.data.sort((a, b) => (a.order || 0) - (b.order || 0));
-  } catch (error) {
-    console.error("Error fetching highlighted services:", error);
-    throw error;
-  }
-};
+import { useHomeData } from "@/hooks/useHomeData";
 
 const Sections = () => {
   useEffect(() => {
@@ -153,35 +15,18 @@ const Sections = () => {
     });
   }, []);
 
+  // Usar el hook optimizado en lugar de consultas individuales
   const {
-    data: achievements,
-    isLoading: isLoadingAchievements,
-    isError: isErrorAchievements,
-    error: errorAchievements,
-  } = useQuery<Achievement[], AxiosError>({
-    queryKey: ["achievements"],
-    queryFn: fetchAchievements,
-  });
+    achievements,
+    highlightedServices,
+    isLoading,
+    hasError,
+    error,
+    isErrorAchievements,
+    isErrorServices,
+  } = useHomeData();
 
-  const {
-    data: highlightedServices,
-    isLoading: isLoadingServices,
-    isError: isErrorServices,
-    error: errorServices,
-  } = useQuery<HighlightedService[], AxiosError>({
-    queryKey: ["highlightedServices"],
-    queryFn: fetchHighlightedServices,
-  });
-
-  const achievementsToRender = isErrorAchievements
-    ? fallbackAchievements
-    : achievements ?? [];
-  const highlightedServicesToRender = isErrorServices
-    ? fallbackServices
-    : highlightedServices ?? [];
-
-  const isLoading = isLoadingAchievements || isLoadingServices;
-
+  // Mostrar spinner solo durante la carga inicial
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -190,26 +35,22 @@ const Sections = () => {
     );
   }
 
-  if (isErrorAchievements && achievementsToRender.length === 0) {
-    console.error("Error fetching achievements:", errorAchievements?.message);
+  // Logging de errores para debugging
+  if (isErrorAchievements && achievements.length === 0) {
+    console.error("Error fetching achievements:", error?.message);
   }
-  if (isErrorServices && highlightedServicesToRender.length === 0) {
-    console.error(
-      "Error fetching highlighted services:",
-      errorServices?.message
-    );
+  if (isErrorServices && highlightedServices.length === 0) {
+    console.error("Error fetching highlighted services:", error?.message);
   }
 
+  // Mostrar error genérico solo si no hay datos de fallback
   const showGenericError =
-    (isErrorAchievements || isErrorServices) &&
-    achievementsToRender.length === 0 &&
-    highlightedServicesToRender.length === 0;
+    hasError && 
+    achievements.length === 0 && 
+    highlightedServices.length === 0;
 
   if (showGenericError) {
-    const errorMessage =
-      errorAchievements?.message ||
-      errorServices?.message ||
-      "Error al cargar los datos.";
+    const errorMessage = error?.message || "Error al cargar los datos.";
     return (
       <div className="text-center text-red-500 py-10">
         <p>{errorMessage}</p>
@@ -221,19 +62,21 @@ const Sections = () => {
   return (
     <div className="bg-gradient-to-b from-white to-gray-50 py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {highlightedServicesToRender.length > 0 && (
+        {/* Servicios destacados */}
+        {highlightedServices.length > 0 && (
           <HighlightedServicesSection
-            highlightedServices={highlightedServicesToRender}
+            highlightedServices={highlightedServices}
           />
         )}
 
-        {achievementsToRender.length > 0 && (
+        {/* Logros/Achievements */}
+        {achievements.length > 0 && (
           <div className="mt-20">
             <h3 className="text-2xl font-bold text-center mb-12 font-glegoo">
               liderándo el servicio automotriz
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              {achievementsToRender.map((achievement, index) => (
+              {achievements.map((achievement, index) => (
                 <div
                   key={achievement._id}
                   className="p-4 md:p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300 flex flex-col items-center"
@@ -262,6 +105,7 @@ const Sections = () => {
           </div>
         )}
 
+        {/* Sección de autorización */}
         <div
           className="mt-20 relative overflow-hidden rounded-2xl"
           data-aos="fade-up"

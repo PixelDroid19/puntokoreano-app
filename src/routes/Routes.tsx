@@ -33,46 +33,70 @@ import Account from "@/pages/account/Account";
 import BlogListPage from "@/pages/blog/BlogListPage";
 import BlogDetailPage from "@/pages/blog/BlogDetailPage";
 import AnimationProvider from "@/components/AnimationProvider";
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <>
-      {/* Public routes */}
-      <Route element={<PublicRoutes />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Route>
-
-      {/* Semi-public routes (don't require login but use MainLayout) */}
-      <Route element={<PublicRoutes />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/store/search" element={<FilterStore />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/store/product/:id" element={<ProductDetail />} />
-        <Route path="/blog" element={<BlogListPage />} />
-        <Route path="/blog/:slug" element={<BlogDetailPage />} />
-        <Route path="/store/cart" element={<Cart />} />
-        <Route path="/store/checkout" element={<Checkout />} />
-        <Route path="/store/finish-order" element={<ThanksOrder />} />
-      </Route>
-
-      {/* Protected routes (require login) */}
-      <Route element={<PrivateRoutes />}>
-        {/* Add any routes that should require authentication here */}
-        <Route path="/account" element={<Account />} />
-      </Route>
-      {/* Redirect */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </>
-  )
-);
+import { homeLoader, aboutLoader } from "@/utils/routeLoaders";
 
 const Routes = () => {
   const is576 = useMediaQuery({ query: "(min-width: 576px)" });
   const isXl = useMediaQuery({ query: "(min-width: 1280px)" });
   const isTabletOrMobile = useMediaQuery({ query: "(max-width: 1023px)" });
-  const queryClient = new QueryClient();
+  
+  // Configuración optimizada de React Query
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000, // 5 minutos - los datos se consideran frescos
+        gcTime: 30 * 60 * 1000, // 30 minutos - tiempo de limpieza de caché
+        refetchOnWindowFocus: false, // No refetch al volver a la ventana
+        refetchOnMount: false, // No refetch al montar si hay datos válidos
+        retry: 3, // Reintentos en caso de error
+        retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      },
+    },
+  });
+
+  // Crear router con loaders optimizados
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <>
+        {/* Public routes */}
+        <Route element={<PublicRoutes />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
+        {/* Semi-public routes (don't require login but use MainLayout) */}
+        <Route element={<PublicRoutes />}>
+          {/* Rutas optimizadas con prefetching */}
+          <Route 
+            path="/" 
+            element={<Home />} 
+            loader={homeLoader(queryClient)}
+          />
+          <Route 
+            path="/about" 
+            element={<About />} 
+            loader={aboutLoader(queryClient)}
+          />
+          <Route path="/store/search" element={<FilterStore />} />
+          <Route path="/store" element={<Store />} />
+          <Route path="/store/product/:id" element={<ProductDetail />} />
+          <Route path="/blog" element={<BlogListPage />} />
+          <Route path="/blog/:slug" element={<BlogDetailPage />} />
+          <Route path="/store/cart" element={<Cart />} />
+          <Route path="/store/checkout" element={<Checkout />} />
+          <Route path="/store/finish-order" element={<ThanksOrder />} />
+        </Route>
+
+        {/* Protected routes (require login) */}
+        <Route element={<PrivateRoutes />}>
+          {/* Add any routes that should require authentication here */}
+          <Route path="/account" element={<Account />} />
+        </Route>
+        {/* Redirect */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </>
+    )
+  );
 
   // Initialize auth from localStorage if available
   const { token } = useAuthStore();

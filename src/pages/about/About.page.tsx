@@ -1,30 +1,63 @@
 // components/About.tsx
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import { Parallax } from "react-parallax";
+import { Spin } from "antd";
 import ConsultantCard from "./components/ConsultantCard";
-import aboutService from "@/services/about.service";
-import { PublicAboutSettings } from "@/types/about.types";
+import { usePrefetchAboutData, useAboutData } from "@/hooks/useAboutData";
 import "./styles/About.page.css";
 import SectionHeader from "./components/SectionHeader";
 
 const About = () => {
   const isDesktop = useMediaQuery({ query: "(min-width: 1024px)" });
-  const [settings, setSettings] = useState<PublicAboutSettings | null>(null);
+  const { prefetchAboutData } = usePrefetchAboutData();
+  
+  // Usar hook optimizado en lugar de estado local
+  const {
+    settings,
+    consultants,
+    socialMission,
+    location,
+    isLoading,
+    isError,
+    error,
+    hasConsultants,
+    hasSocialMission,
+    hasLocation,
+  } = useAboutData();
 
+  // Prefetch de datos al montar el componente
   useEffect(() => {
-    const fetchSettings = async () => {
+    const initializeAboutData = async () => {
       try {
-        const data = await aboutService.getPublicAboutSettings();
-        setSettings(data);
+        await prefetchAboutData();
       } catch (error) {
-        console.error("Error fetching about settings:", error);
+        console.warn("Error en la inicialización de datos de About:", error);
       }
     };
-    fetchSettings();
-  }, []);
 
-  if (!settings) return null;
+    initializeAboutData();
+  }, [prefetchAboutData]);
+
+  // Mostrar spinner inicial solo si no hay datos en caché
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spin size="large" tip="Cargando información de la empresa..." />
+      </div>
+    );
+  }
+
+  // Mostrar error solo si es crítico y no hay datos de fallback
+  if (isError && !settings) {
+    console.error("Error loading about data:", error?.message);
+    return (
+      <div className="text-center text-red-500 py-10">
+        <p>Error al cargar la información de la empresa.</p>
+        <p>Por favor, intente recargar la página.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full">
@@ -38,45 +71,46 @@ const About = () => {
       </div>
 
       {/* Mission statement with parallax effect */}
-      <div className="relative">
-        <Parallax
-          bgImage={settings.socialMission.backgroundImage}
-          strength={500}
-          bgImageStyle={{ objectFit: "cover" }}
-          className="relative"
-        >
-          <div className="absolute inset-0 bg-black/60 z-10" />
-          <div className="relative z-20 px-4 py-16 lg:py-24">
-            <div className="max-w-[1320px] mx-auto text-center">
-              <h1 className="text-3xl text-white font-medium font-glegoo mb-8">
-                Objeto Social
-              </h1>
-              <p className="text-xl text-white max-w-3xl mx-auto">
-                {settings.socialMission.text}
-              </p>
+      {hasSocialMission && (
+        <div className="relative">
+          <Parallax
+            bgImage={socialMission.backgroundImage}
+            strength={500}
+            bgImageStyle={{ objectFit: "cover" }}
+            className="relative"
+          >
+            <div className="absolute inset-0 bg-black/60 z-10" />
+            <div className="relative z-20 px-4 py-16 lg:py-24">
+              <div className="max-w-[1320px] mx-auto text-center">
+                <h1 className="text-3xl text-white font-medium font-glegoo mb-8">
+                  Objeto Social
+                </h1>
+                <p className="text-xl text-white max-w-3xl mx-auto">
+                  {socialMission.text}
+                </p>
+              </div>
             </div>
-          </div>
-        </Parallax>
-      </div>
+          </Parallax>
+        </div>
+      )}
 
-      {/* Consultants section with decorative corners */}
-      <div className="max-w-[1320px] mx-auto px-4 mt-8">
-        <SectionHeader title="Nuestros asesores" />
+      {/* Consultants section */}
+      {hasConsultants && (
+        <div className="max-w-[1320px] mx-auto px-4 mt-8">
+          <SectionHeader title="Nuestros asesores" />
 
-        {/* Consultant cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-          {settings?.consultants
-            .filter((consultant) => consultant.active)
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-            .map((consultant) => (
+          {/* Consultant cards grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+            {consultants.map((consultant) => (
               <ConsultantCard
                 key={consultant._id || consultant.name}
                 consultant={consultant}
                 isDesktop={isDesktop}
               />
             ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Location section */}
       <div className="max-w-[1320px] mx-auto px-4 mb-20">
@@ -85,9 +119,9 @@ const About = () => {
         </div>
 
         <div className="map-container rounded-lg overflow-hidden shadow-lg">
-          {settings.location.mapUrl ? (
+          {hasLocation && location.mapUrl ? (
             <iframe
-              src={settings.location.mapUrl}
+              src={location.mapUrl}
               className="w-full h-[450px] border-0"
               loading="lazy"
               allowFullScreen
