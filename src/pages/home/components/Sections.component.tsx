@@ -131,10 +131,7 @@ const fetchHighlightedServices = async (): Promise<HighlightedService[]> => {
       ENDPOINTS.SETTINGS.GET_HIGHLIGHTED_SERVICES
     );
     if (!response.success) {
-      console.warn(
-        "Fallo al cargar servicios destacados:",
-        response.message
-      );
+      console.warn("Fallo al cargar servicios destacados:", response.message);
       throw new Error(
         response.message || "Failed to fetch highlighted services"
       );
@@ -239,15 +236,19 @@ const Sections = () => {
               {achievementsToRender.map((achievement, index) => (
                 <div
                   key={achievement._id}
-                  className="p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300 flex flex-col items-center"
+                  className="p-4 md:p-6 rounded-xl transform hover:-translate-y-2 transition-all duration-300 flex flex-col items-center"
                   data-aos="fade-up"
                   data-aos-delay={index * 100}
                 >
-                  <div className="bg-blue-50 text-blue-600 p-4 rounded-full inline-flex justify-center items-center mb-4">
+                  <div className="bg-blue-50 text-blue-600 p-1 md:p-2 lg:p-3 rounded-full inline-flex justify-center items-center mb-4 shadow-sm">
                     <img
                       src={achievement.icon_url}
                       alt={achievement.title}
-                      className="w-8 h-8 object-contain"
+                      className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 object-contain"
+                      loading="lazy"
+                      style={{
+                        filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                      }}
                     />
                   </div>
                   <Statistic
