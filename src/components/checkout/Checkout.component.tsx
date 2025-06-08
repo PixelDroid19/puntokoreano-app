@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import Contact from "./Contact.component";
 import Shipping from "./Shipping.component";
 import Orders from "./Order.component";
-import Billing from "./Billing.component";
+import Review from "./Billing.component";
 import { useCartStore } from "@/store/cart.store";
 import Payment from "./Payment.component";
 
@@ -53,7 +53,7 @@ const Checkout = () => {
       style: { width: 70 },
     },
     {
-      title: "Facturación",
+      title: "Revisión",
       icon: (
         <FontAwesomeIcon
           icon={faFileInvoice}
@@ -126,7 +126,7 @@ const Checkout = () => {
           />
         )}
         {current === 2 && (
-          <Billing
+          <Review
             setStatus={setStatus}
             setCurrent={setCurrent}
             // initialData={getCheckoutData("billing")}

@@ -17,7 +17,7 @@ interface FormData {
   name: string;
   lastName: string;
   email: string;
-  phone?: string;
+  phone: string;
 }
 
 const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
@@ -188,17 +188,18 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
 
       <Form.Item
         name="phone"
-        label="Número celular (opcional)"
+        label="Número celular"
         hasFeedback
         validateDebounce={1000}
         rules={[
+          { required: true, message: "El número celular es requerido" },
           {
-            min: 7,
-            message: "El número celular debe tener al menos 7 caracteres",
+            pattern: /^[0-9]{10}$/,
+            message: "Ingrese un número válido de 10 dígitos",
           },
         ]}
       >
-        <Input type="number" placeholder="3126734589" />
+        <Input type="number" placeholder="3126734589" maxLength={10} />
       </Form.Item>
 
       <section className="flex justify-between mt-6">

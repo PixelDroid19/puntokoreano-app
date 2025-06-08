@@ -78,6 +78,16 @@ const Shipping = ({ setStatus, setCurrent }) => {
         return;
       }
 
+      // Verificar que tenemos la información de contacto
+      if (!contactInfo?.phone) {
+        notification.error({
+          message: "Error",
+          description: "Información de contacto incompleta. Por favor, regrese al paso anterior.",
+          placement: "topRight",
+        });
+        return;
+      }
+
       const items = useCartStore.getState().items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -88,18 +98,18 @@ const Shipping = ({ setStatus, setCurrent }) => {
       // Formatear la dirección completa
       const formattedStreet = values.street.trim();
 
-      // Crear el objeto de dirección de envío con todos los campos necesarios
+      // Crear el objeto de dirección de envío con datos de contacto
       const shippingAddress = {
-        name: contactInfo?.name + " " + contactInfo?.lastName || "",
+        name: `${contactInfo.name} ${contactInfo.lastName}`,
         street: formattedStreet,
-        address: formattedStreet, // Campo duplicado para compatibilidad
-        address_line_1: formattedStreet, // Campo específico para Wompi
+        address: formattedStreet,
+        address_line_1: formattedStreet,
         city: values.city.trim(),
         state: values.state,
         country: "Colombia",
         zip: postalCode,
-        phone: (contactInfo?.phone || values.phone || "").replace(/\D/g, ""),
-        email: contactInfo?.email?.trim(),
+        phone: contactInfo.phone.replace(/\D/g, ""),
+        email: contactInfo.email.trim(),
         shipping_method: values.shippingMethod,
         type: "shipping",
       };
@@ -113,6 +123,7 @@ const Shipping = ({ setStatus, setCurrent }) => {
           state: values.state,
           country: "Colombia",
           zip: postalCode,
+          shippingMethod: values.shippingMethod,
         })
       );
 
@@ -122,7 +133,7 @@ const Shipping = ({ setStatus, setCurrent }) => {
         shipping_method: values.shippingMethod,
       };
 
-      console.log("Sending payload:", payload); // Para debugging
+      console.log("Sending payload:", payload);
 
       const response = await axios.post(
         ENDPOINTS.ORDERS.CALCULATE_SHIPPING.url,
@@ -149,11 +160,6 @@ const Shipping = ({ setStatus, setCurrent }) => {
       }
     } catch (error) {
       console.error("Error calculating shipping:", error);
-      console.error("Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
 
       const errorMsg =
         error.response?.data?.message ||
@@ -174,13 +180,10 @@ const Shipping = ({ setStatus, setCurrent }) => {
       layout="vertical"
       className="border rounded-lg p-4 mt-5 bg-white"
       initialValues={{
-        name: contactInfo ? `${contactInfo.name} ${contactInfo.lastName}` : "",
-        phone: contactInfo?.phone || "",
         country: "Colombia",
         ...JSON.parse(localStorage.getItem("checkoutShipping") || "{}"),
       }}
     >
-      {/* Rest of the JSX remains the same */}
       <h1 className="text-xl text-center font-bold mb-6">Datos de envío</h1>
 
       <Form.Item
@@ -197,22 +200,6 @@ const Shipping = ({ setStatus, setCurrent }) => {
           ))}
         </Select>
       </Form.Item>
-
-      {!contactInfo?.phone && (
-        <Form.Item
-          name="phone"
-          label="Teléfono"
-          rules={[
-            { required: true, message: "El teléfono es requerido" },
-            {
-              pattern: /^[0-9]{10}$/,
-              message: "Ingrese un número válido de 10 dígitos",
-            },
-          ]}
-        >
-          <Input placeholder="3001234567" maxLength={10} />
-        </Form.Item>
-      )}
 
       <Form.Item
         name="street"
@@ -305,7 +292,7 @@ const Shipping = ({ setStatus, setCurrent }) => {
             type="submit"
             className="flex items-center gap-2 bg-[#E2060F] text-white py-2 px-4 rounded-lg hover:bg-[#001529] transition-colors"
           >
-            Facturación <FontAwesomeIcon icon={faArrowRight} />
+            Revisión <FontAwesomeIcon icon={faArrowRight} />
           </button>
         </div>
       </div>

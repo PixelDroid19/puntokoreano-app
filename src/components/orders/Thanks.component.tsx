@@ -25,18 +25,20 @@ interface OrderDetails {
       id: string;
       name: string;
       code: string;
+      base_price: number;
       images: string[];
       imageGroup?: { images: { url: string }[] };
       useGroupImages?: boolean;
     };
     quantity: number;
-    price: number;
+    price_paid: number;
     total: number;
   }>;
   customer: {
+    id?: string;
     name: string;
     email: string;
-    phone: string;
+    phone?: string;
     type: string;
   };
   shipping_address: {
@@ -89,6 +91,8 @@ const ThanksOrder = () => {
         const data = await apiGet(ENDPOINTS.ORDERS.GET_ORDER, {
           id: orderId,
         });
+
+      
         setOrderDetails(data.data);
       } catch (error) {
         /*   toast({
@@ -111,6 +115,11 @@ const ThanksOrder = () => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const formatCustomerName = (name: string) => {
+    // Manejar casos donde el nombre puede contener "undefined"
+    return name.replace(/ undefined/g, '').trim();
   };
 
   if (loading) {
@@ -191,12 +200,16 @@ const ThanksOrder = () => {
                 {orderDetails.status === "cancelled" ||
                 orderDetails.status === "failed"
                   ? "Tu pago ha sido rechazado"
+                  : orderDetails.status === "confirmed"
+                  ? "Tu pedido ha sido confirmado"
                   : "Tu pedido ha sido recibido"}
               </h2>
               <p className="text-sm text-gray-500 mt-1">
                 {orderDetails.status === "cancelled" ||
                 orderDetails.status === "failed"
                   ? "Lo sentimos, pero tu pago ha sido rechazado. Por favor, intenta con otro método de pago o contacta a tu banco."
+                  : orderDetails.status === "confirmed"
+                  ? "Tu pago ha sido procesado exitosamente y tu pedido está confirmado. Recibirás un correo electrónico con la confirmación y detalles de seguimiento."
                   : `Recibirás un correo electrónico con la confirmación y detalles de seguimiento.`}
               </p>
             </div>
@@ -233,7 +246,7 @@ const ThanksOrder = () => {
               </h3>
               <div className="text-sm space-y-1.5">
                 <p className="font-medium">
-                  {orderDetails.shipping_address.name}
+                  {formatCustomerName(orderDetails.shipping_address.name)}
                 </p>
                 <p className="text-gray-600">
                   {orderDetails.shipping_address.address}

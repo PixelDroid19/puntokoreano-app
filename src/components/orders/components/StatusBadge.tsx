@@ -7,7 +7,7 @@ import {
   XCircle 
 } from "lucide-react";
 
-type StatusType = "pending" | "processing" | "delivered" | "cancelled" | "failed";
+type StatusType = "pending" | "processing" | "confirmed" | "delivered" | "cancelled" | "failed";
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -32,6 +32,14 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
           textColor: "text-blue-800",
           borderColor: "border-blue-200",
           label: "Procesando"
+        };
+      case "confirmed":
+        return {
+          icon: CheckCircle,
+          bgColor: "bg-green-100",
+          textColor: "text-green-800",
+          borderColor: "border-green-200",
+          label: "Confirmado"
         };
       case "delivered":
         return {

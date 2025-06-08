@@ -17,6 +17,7 @@ export interface Endpoints {
     SEARCH: ApiEndpoint;
     PRODUCT_DETAIL: ApiEndpoint;
     VEHICLE_FILTER_OPTIONS: ApiEndpoint;
+    VEHICLE_COMPATIBILITY: ApiEndpoint;
   };
   FILTERS: {
     GET_ALL: ApiEndpoint;
@@ -337,6 +338,10 @@ const ENDPOINTS: Endpoints = {
     },
     PRODUCT_DETAIL: {
       url: `${BASE_URL}/products/detail/:id`,
+      method: "GET",
+    },
+    VEHICLE_COMPATIBILITY: {
+      url: `${BASE_URL}/products/:id/vehicle-compatibility`,
       method: "GET",
     },
   },

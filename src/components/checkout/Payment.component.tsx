@@ -179,13 +179,43 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
 
   // Manejar el proceso de pago
   const handlePayment = async () => {
-    if (!items?.length || !shippingInfo || !isFormValid) {
+    if (!items?.length || !isFormValid) {
       notification.error({
         message: "Error",
         description: "Por favor complete toda la información requerida",
       });
       return;
     }
+
+    // Obtener datos de contacto y envío desde localStorage
+    const contactData = localStorage.getItem("checkoutContact");
+    const shippingData = localStorage.getItem("checkoutShipping");
+
+    if (!contactData || !shippingData) {
+      notification.error({
+        message: "Error",
+        description: "Información de contacto o envío incompleta. Por favor, complete todos los pasos.",
+      });
+      return;
+    }
+
+    const contactInfo = JSON.parse(contactData);
+    const shippingDetails = JSON.parse(shippingData);
+
+    // Construir shipping_address combinando datos de contacto y envío
+    const shipping_address = {
+      name: `${contactInfo.name} ${contactInfo.lastName}`,
+      street: shippingDetails.street,
+      address: shippingDetails.street,
+      address_line_1: shippingDetails.street,
+      city: shippingDetails.city,
+      state: shippingDetails.state,
+      zip: shippingDetails.zip,
+      country: shippingDetails.country || "Colombia",
+      phone: contactInfo.phone,
+      email: contactInfo.email,
+      shipping_method: shippingDetails.shippingMethod,
+    };
 
     const paymentData = preparePaymentData();
     if (!paymentData) {
@@ -207,8 +237,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
           quantity: item.quantity,
           price: item.price,
         })),
-        shipping_address: shippingInfo,
-        shipping_method: shippingInfo.shipping_method,
+        shipping_address,
+        shipping_method: shippingDetails.shippingMethod,
         payment: paymentData,
       };
 
@@ -225,12 +255,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
       setOrderId(order.id);
       clearCart();
 
+      // Limpiar datos del checkout después del éxito
+      localStorage.removeItem("checkoutContact");
+      localStorage.removeItem("checkoutShipping");
+
       // Manejar redirección según el método de pago
       if (payment.paymentUrl || payment.redirectUrl) {
         window.location.href = `/store/finish-order`;
-        //  window.location.href = payment.paymentUrl || payment.redirectUrl;
       } else {
-        // window.location.href = `/checkout/result?order=${order.order_number}`;
         window.location.href = `/store/finish-order`;
       }
 

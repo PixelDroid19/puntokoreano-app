@@ -23,3 +23,11 @@
 .thumbnail-swiper .swiper-slide-thumb-active {
   opacity: 1;
 }
+
+/* Estilos para lite-youtube en el carousel */
+lite-youtube {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}

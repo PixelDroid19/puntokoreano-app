@@ -1,0 +1,83 @@
+.vehicle-compatibility-tabs .ant-tabs-tab {
+  @apply px-4 py-2 rounded-lg transition-all duration-200;
+}
+
+.vehicle-compatibility-tabs .ant-tabs-tab:hover {
+  @apply bg-gray-50;
+}
+
+.vehicle-compatibility-tabs .ant-tabs-tab-active {
+  @apply bg-blue-50 border-blue-200;
+}
+
+.vehicle-compatibility-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  @apply text-blue-600 font-medium;
+}
+
+.vehicle-compatibility-tabs .ant-tabs-ink-bar {
+  @apply bg-blue-600;
+}
+
+.vehicle-compatibility-tabs .ant-tabs-content-holder {
+  @apply mt-4;
+}
+
+/* Estilos para las cards de grupos */
+.group-vehicle-card {
+  @apply border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200;
+}
+
+.group-vehicle-card:hover {
+  @apply border-blue-200 bg-blue-50;
+}
+
+.group-vehicle-card .group-header {
+  @apply flex items-center justify-between cursor-pointer;
+}
+
+.group-vehicle-card .group-title {
+  @apply font-semibold text-gray-800 mb-1;
+}
+
+.group-vehicle-card .group-subtitle {
+  @apply text-sm text-gray-500;
+}
+
+.group-vehicle-card .expand-icon {
+  @apply w-5 h-5 text-gray-400 transition-transform duration-200;
+}
+
+.group-vehicle-card .expand-icon.expanded {
+  @apply rotate-180;
+}
+
+/* Animaciones para el contenido expandible */
+.expandable-content {
+  @apply overflow-hidden transition-all duration-300 ease-in-out;
+}
+
+.expandable-content.collapsed {
+  @apply max-h-0;
+}
+
+.expandable-content.expanded {
+  @apply max-h-screen;
+}
+
+/* Estilos para el botón de cargar más */
+.load-more-button {
+  @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg;
+  @apply hover:from-blue-600 hover:to-blue-700 transition-all duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vehicle-compatibility-tabs .ant-tabs-tab {
+    @apply px-2 py-1 text-sm;
+  }
+  
+  .group-vehicle-card {
+    @apply p-3;
+  }
+} 

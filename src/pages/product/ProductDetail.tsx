@@ -38,23 +38,66 @@ interface CompatibleVehicleModel {
   year: number;
 }
 
-interface CompatibleVehicleLine {
-  _id: string;
-  name: string;
-  model_id: CompatibleVehicleModel;
-}
-
 interface CompatibleVehicle {
   _id: string;
-  line_id: CompatibleVehicleLine;
-  transmission_id: string;
-  fuel_id: string;
-  color: string;
-  price: number | null;
+  model: {
+    _id: string;
+    name: string;
+    year: number;
+    family: {
+      _id: string;
+      name: string;
+      brand: {
+        _id: string;
+        name: string;
+      };
+    };
+  };
+  transmission_id: {
+    _id: string;
+    name: string;
+  };
+  fuel_id: {
+    _id: string;
+    name: string;
+  };
+  color?: string;
+  price?: number | null;
   active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+  displayName?: string;
+  fullInfo?: {
+    brand?: string;
+    family?: string;
+    model?: string;
+    year?: number;
+    transmission?: string;
+    fuel?: string;
+    color?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+  __v?: number;
+}
+
+interface VehicleCompatibility {
+  directVehicles: number;
+  groupVehicles: number;
+  totalVehicles: number;
+  hasMoreVehicles: boolean;
+  groups: Array<{
+    _id: string;
+    name: string;
+    vehicleCount: number;
+    category: string;
+  }>;
+}
+
+interface ApplicabilityGroup {
+  _id: string;
+  name: string;
+  description?: string;
+  category: string;
+  estimatedVehicleCount: number;
 }
 
 interface RatingDistribution {
@@ -83,6 +126,8 @@ interface ProductData {
   group: string;
   subgroup: string;
   shipping: string[];
+  thumb: string;
+  carousel: string[];
   images: string[];
   active: boolean;
   discount: Discount | null;
@@ -92,6 +137,8 @@ interface ProductData {
   warranty: string;
   seo: Seo;
   compatible_vehicles: CompatibleVehicle[];
+  applicabilityGroups: ApplicabilityGroup[];
+  vehicleCompatibility: VehicleCompatibility;
   related_products: any[];
   createdAt: string;
   updatedAt: string;
@@ -134,7 +181,7 @@ const ProductDetail = () => {
         : Promise.reject("No id"),
     enabled: !!id,
   });
-
+  console.log(' productResponse?.data',  productResponse?.data);
   const product = productResponse?.data;
   const isProductInWishlist = product ? isInWishlist(product.id) : false;
 
@@ -188,7 +235,7 @@ const ProductDetail = () => {
       id: product.id,
       name: product.name,
       price: finalPriceForCart,
-      image: product.images[0],
+      image: product.thumb || product.images[0],
       stock: product.stock,
     });
     if (Number(count) > 1) {
@@ -215,7 +262,7 @@ const ProductDetail = () => {
         id: product.id,
         name: product.name,
         price: finalPriceForCart,
-        image: product.images[0],
+        image: product.thumb || product.images[0],
         stock: product.stock,
       });
       notification.success({
@@ -310,9 +357,21 @@ const ProductDetail = () => {
     },
     {
       key: "4",
-      label: "Aplicaciones",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Aplicaciones</span>
+          <span className="text-sm text-gray-500">
+            ({product?.vehicleCompatibility?.totalVehicles || 0} vehículos)
+          </span>
+        </div>
+      ),
       children: (
-        <Applies compatibleVehicles={product?.compatible_vehicles || []} />
+        <Applies 
+          productId={product?.id || ""}
+          compatibleVehicles={product?.compatible_vehicles || []} 
+          applicabilityGroups={product?.applicabilityGroups || []}
+          vehicleCompatibility={product?.vehicleCompatibility}
+        />
       ),
     },
   ];
@@ -343,7 +402,10 @@ const ProductDetail = () => {
       </div>
 
       <section className="mt-5 lg:flex lg:gap-8">
-        <ImagesView images={product.images} />
+        <ImagesView 
+          images={product.carousel?.length > 0 ? product.carousel : product.images} 
+          videoUrl={product.videoUrl}
+        />
         <div className="flex flex-col lg:flex-1 lg:py-2 space-y-4 mt-4 lg:mt-0">
           <div>
             <h1 className="font-bold text-xl mb-2 lg:text-2xl">
@@ -488,6 +550,13 @@ const ProductDetail = () => {
           </div>
 
           <div className="mt-auto pt-4">
+            {product.warranty && (
+              <div className="mb-4">
+                <p className="font-bold text-base mb-2">Garantía</p>
+                <p className="text-sm text-gray-600">{product.warranty}</p>
+              </div>
+            )}
+            
             <p className="font-bold text-base mb-2">Pago seguro garantizado</p>
             <Image
               className="max-w-[300px]"
@@ -499,7 +568,7 @@ const ProductDetail = () => {
         </div>
       </section>
 
-      <div className="w-full mt-10" ref={reviewsRef}>
+      <div className="w-full mt-4" ref={reviewsRef}>
         <Tabs
           defaultActiveKey={window.location.hash === "#reviews" ? "2" : "1"}
           items={tabs}

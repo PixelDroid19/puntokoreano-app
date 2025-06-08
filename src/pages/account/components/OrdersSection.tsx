@@ -281,7 +281,7 @@ const OrdersSection = () => {
   // Manejar errores de carga de imagen
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.target as HTMLImageElement;
-    target.src = '/images/logo-2.png';
+    target.src = 'https://placehold.co/64x64/f3f4f6/a3a3a3?text=No%20Image';
   };
 
   if (loading && orders.length === 0) {
@@ -373,7 +373,7 @@ const OrdersSection = () => {
                           />
                         ) : (
                           <img
-                            src="/images/logo-2.png"
+                            src="https://placehold.co/64x64/f3f4f6/a3a3a3?text=No%20Image"
                             alt="Producto"
                             className="w-12 h-12 object-contain opacity-50"
                           />

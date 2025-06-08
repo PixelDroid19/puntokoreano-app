@@ -31,6 +31,8 @@ interface Product {
   shipping: string[];
   images: string[];
   image: string | null;
+  thumb: string | null;
+  carousel: string[];
   active: boolean;
   short_description: string;
   discount: {
@@ -41,7 +43,8 @@ interface Product {
   createdAt: string;
   updatedAt: string;
   _id?: string;
-  compatible_vehicles: any[]; 
+  compatible_vehicles: any[];
+  vehicleCompatibility?: any;
 }
 
 interface PaginationInfo {
@@ -67,7 +70,6 @@ interface VehicleFilters {
   brand_id?: string;
   family_id?: string;
   model_id?: string;
-  line_id?: string;
   transmission_id?: string;
   fuel_id?: string;
   [key: string]: string | undefined;
@@ -121,7 +123,6 @@ const SectionProducts = ({ inline, title, search = true }: Props) => {
       brand_id: urlParams.brand || undefined,
       family_id: urlParams.family || undefined,
       model_id: urlParams.model || undefined,
-      line_id: urlParams.line || undefined,
       transmission_id: urlParams.transmission || undefined,
       fuel_id: urlParams.fuel || undefined,
     },

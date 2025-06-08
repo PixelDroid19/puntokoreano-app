@@ -4,21 +4,59 @@ import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { notification } from "antd";
 import { useCartStore } from "@/store/cart.store";
-import { ShoppingCart, Car, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingCart, Car, ChevronDown, ChevronUp, Users } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useVehicleCompatibility } from "@/hooks/useVehicleCompatibility";
 import "./CardProducts.styles.css";
 
 interface Vehicle {
   _id: string;
-  line_id: {
+  model: {
     _id: string;
     name: string;
-    model_id: {
+    year: number;
+    family: {
       _id: string;
       name: string;
-      year: number;
+      brand: {
+        _id: string;
+        name: string;
+      };
     };
   };
+  transmission_id?: {
+    _id: string;
+    name: string;
+  };
+  fuel_id?: {
+    _id: string;
+    name: string;
+  };
+  color?: string;
+  active: boolean;
+  displayName?: string;
+  fullInfo?: {
+    brand?: string;
+    family?: string;
+    model?: string;
+    year?: number;
+    transmission?: string;
+    fuel?: string;
+    color?: string;
+  };
+}
+
+interface VehicleCompatibility {
+  directVehicles: number;
+  groupVehicles: number;
+  totalVehicles: number;
+  hasMoreVehicles: boolean;
+  groups: Array<{
+    _id: string;
+    name: string;
+    vehicleCount: number;
+    category: string;
+  }>;
 }
 
 interface Product {
@@ -36,6 +74,7 @@ interface Product {
   active: boolean;
   short_description?: string;
   compatible_vehicles: Vehicle[];
+  vehicleCompatibility?: VehicleCompatibility;
   discount?: {
     isActive: boolean;
     percentage: number;
@@ -56,7 +95,17 @@ const CardProducts = ({ inline = false, product }: Props) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const hasCompatibleVehicles = product.compatible_vehicles.length > 0;
+  // Usar la nueva estrategia de compatibilidad
+  const totalVehicles = product.vehicleCompatibility?.totalVehicles || 0;
+  const hasCompatibleVehicles = totalVehicles > 0;
+  const hasMoreVehicles = product.vehicleCompatibility?.hasMoreVehicles || false;
+
+  // Solo cargar vehículos cuando se expande la card
+  const { vehicles } = useVehicleCompatibility({
+    productId: product.id,
+    enabled: isExpanded && hasCompatibleVehicles,
+    limit: 20 // Cargar más vehículos para la vista de card
+  });
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -225,7 +274,10 @@ const CardProducts = ({ inline = false, product }: Props) => {
                 <>
                   <div className="flex items-center gap-2">
                     <Car className="w-4 h-4" />
-                    <span>Aplicaciones:</span>
+                    <span className="text-xs">
+                      {totalVehicles} vehículos compatibles
+                      {hasMoreVehicles && " (+)"}
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -249,7 +301,7 @@ const CardProducts = ({ inline = false, product }: Props) => {
               )}
             </div>
 
-            {/* Aplicaciones mejoradas sin scrollbars feos */}
+            {/* Aplicaciones optimizadas con carga lazy */}
             <div
               id={`applications-${product.id}`}
               ref={scrollRef}
@@ -270,15 +322,39 @@ const CardProducts = ({ inline = false, product }: Props) => {
                   : undefined
               }
             >
-              {hasCompatibleVehicles && (
+              {hasCompatibleVehicles && isExpanded && (
                 <div className="flex flex-wrap gap-1 pt-1 pb-2">
-                  {product.compatible_vehicles.map((vehicle) => (
+                  {/* Mostrar resumen si hay muchos vehículos */}
+                  {product.vehicleCompatibility && totalVehicles > 20 && (
+                    <div className="w-full mb-2 p-2 bg-gray-50 rounded text-xs">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Users className="w-3 h-3" />
+                        <span className="font-medium">Compatibilidad:</span>
+                      </div>
+                      {product.vehicleCompatibility.directVehicles > 0 && (
+                        <div>• {product.vehicleCompatibility.directVehicles} vehículos directos</div>
+                      )}
+                      {product.vehicleCompatibility.groups.map(group => (
+                        <div key={group._id}>
+                          • {group.name}: {group.vehicleCount} vehículos
+                        </div>
+                      ))}
+                      <div className="text-gray-500 mt-1 italic">
+                        Ver detalle del producto para más información
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Mostrar vehículos individuales si no son demasiados */}
+                  {totalVehicles <= 20 && vehicles.map((vehicle) => (
                     <span
                       key={vehicle._id}
                       className="vehicle-tag inline-block px-2 py-1 text-xs text-white bg-[#302582] rounded-md whitespace-nowrap mb-1 transition-all duration-300"
                     >
-                      {vehicle?.line_id?.model_id?.name} {vehicle?.line_id?.name} (
-                      {vehicle?.line_id?.model_id?.year})
+                      {vehicle?.displayName || 
+                        `${vehicle?.model?.family?.name || ''} ${vehicle?.fuel_id?.name || ''} ${vehicle?.model?.year || ''}`.trim() ||
+                        'Vehículo Compatible'
+                      }
                     </span>
                   ))}
                 </div>
