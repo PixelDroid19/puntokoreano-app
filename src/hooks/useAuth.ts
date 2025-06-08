@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth.store";
 import ENDPOINTS from "@/api";
 import { apiGet, apiPost } from "@/api/apiClient";
+import { useEffect } from "react";
 
 interface RegisterData {
   name: string;
@@ -53,13 +54,25 @@ export const useAuth = () => {
     setTokenExpiry,
   } = useAuthStore();
 
+  // Efecto para manejar redirección cuando cambia el estado de autenticación
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (isAuthenticated && currentPath === '/login') {
+      console.log("🔄 Estado de autenticación cambió, redirigiendo desde login...");
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleLogin = async (email: string, password: string) => {
     try {
+      console.log("🔐 Iniciando proceso de login...");
 
       const response = await apiPost<LoginResponse>(
         ENDPOINTS.AUTH.LOGIN,
         { email, password }
       );
+
+      console.log("📡 Respuesta del servidor recibida:", response.success);
 
       const { user, token, expiresAt } = response.data;
 
@@ -89,9 +102,10 @@ export const useAuth = () => {
       storeLogin(userData, token);
       setTokenExpiry(expiresAt);
 
-
-
-      navigate("/");
+      console.log("✅ Login exitoso, datos guardados, redirigiendo a home...");
+      
+      // Usar replace para evitar que el usuario pueda volver atrás al login
+      navigate("/", { replace: true });
       return { success: true };
     } catch (error: any) {
 

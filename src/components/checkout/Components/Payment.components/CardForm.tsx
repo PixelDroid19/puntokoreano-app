@@ -1,4 +1,6 @@
+import React from "react";
 import { Form, Input, Select } from "antd";
+import { ValidationUtils, TextFormatters } from "@/utils/validations";
 
 interface CardFormProps {
   onValidChange: (isValid: boolean, paymentData?: any) => void;
@@ -7,28 +9,46 @@ interface CardFormProps {
 export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
   const [form] = Form.useForm();
 
-  // Formatters
-  const formatCardNumber = (value: string) => {
-    if (!value) return value;
-    const cleaned = value.replace(/\s/g, "");
-    const chunks = cleaned.match(/.{1,4}/g);
-    return chunks ? chunks.join(" ") : cleaned;
-  };
+  // Inicializar como inválido
+  React.useEffect(() => {
+    onValidChange(false);
+  }, []);
 
-  const formatExpiry = (value: string) => {
-    if (!value) return value;
-    const cleaned = value.replace(/\D/g, "");
-    if (cleaned.length >= 2) {
-      return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`;
-    }
-    return cleaned;
+  // Manejar cambios en el formulario
+  const handleValuesChange = async () => {
+    // Usar un pequeño delay para permitir que Ant Design termine de validar
+    setTimeout(async () => {
+      try {
+        const values = await form.validateFields();
+        
+        // Verificar que todos los campos requeridos están completos
+        if (values.cardNumber && values.expiry && values.cvv && values.cardHolder && values.installments) {
+          // Convertir datos al formato esperado
+          const [expMonth, expYear] = values.expiry.split('/');
+          const paymentData = {
+            number: values.cardNumber.replace(/\s/g, ""),
+            exp_month: expMonth,
+            exp_year: `20${expYear}`,
+            cvc: values.cvv,
+            card_holder: values.cardHolder.trim(),
+            installments: parseInt(values.installments) || 1,
+          };
+          
+          onValidChange(true, paymentData);
+        } else {
+          onValidChange(false);
+        }
+      } catch (error) {
+        onValidChange(false);
+      }
+    }, 100);
   };
 
   return (
     <Form
       form={form}
       layout="vertical"
-      onValuesChange={onValidChange}
+      onValuesChange={handleValuesChange}
       className="space-y-4"
     >
       <Form.Item
@@ -36,14 +56,23 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
         name="cardNumber"
         rules={[
           { required: true, message: "Ingrese el número de tarjeta" },
-          {
-            pattern: /^[0-9\s]{13,19}$/,
-            message: "Número de tarjeta inválido",
-          },
+                      {
+              validator: (_, value) => {
+                const error = ValidationUtils.validateCardNumber(value);
+                if (error) {
+                  return Promise.reject(error);
+                }
+                return Promise.resolve();
+              },
+            },
         ]}
-        getValueFromEvent={(e) => formatCardNumber(e.target.value)}
+        getValueFromEvent={(e) => TextFormatters.formatCardNumber(e.target.value)}
       >
-        <Input placeholder="4242 4242 4242 4242" maxLength={19} />
+        <Input 
+          placeholder="4242 4242 4242 4242" 
+          maxLength={23} // 19 dígitos + 4 espacios
+          autoComplete="cc-number"
+        />
       </Form.Item>
 
       <div className="flex gap-4">
@@ -53,13 +82,22 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
           rules={[
             { required: true, message: "Ingrese fecha de expiración" },
             {
-              pattern: /^(0[1-9]|1[0-2])\/([0-9]{2})$/,
-              message: "Formato inválido (MM/YY)",
+              validator: (_, value) => {
+                const error = ValidationUtils.validateExpiry(value);
+                if (error) {
+                  return Promise.reject(error);
+                }
+                return Promise.resolve();
+              },
             },
           ]}
-          getValueFromEvent={(e) => formatExpiry(e.target.value)}
+          getValueFromEvent={(e) => TextFormatters.formatExpiry(e.target.value)}
         >
-          <Input placeholder="MM/YY" maxLength={5} />
+          <Input 
+            placeholder="MM/YY" 
+            maxLength={5}
+            autoComplete="cc-exp"
+          />
         </Form.Item>
 
         <Form.Item
@@ -67,10 +105,27 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
           name="cvv"
           rules={[
             { required: true, message: "Ingrese el CVV" },
-            { pattern: /^[0-9]{3,4}$/, message: "CVV inválido" },
+            {
+              validator: (_, value) => {
+                const error = ValidationUtils.validateCVV(value);
+                if (error) {
+                  return Promise.reject(error);
+                }
+                return Promise.resolve();
+              },
+            },
           ]}
         >
-          <Input type="password" maxLength={4} />
+          <Input 
+            type="password" 
+            maxLength={4}
+            autoComplete="cc-csc"
+            onInput={(e) => {
+              // Solo permitir números
+              const target = e.target as HTMLInputElement;
+              target.value = target.value.replace(/\D/g, "");
+            }}
+          />
         </Form.Item>
       </div>
 
@@ -80,16 +135,33 @@ export const CardForm: React.FC<CardFormProps> = ({ onValidChange }) => {
         rules={[
           { required: true, message: "Ingrese el nombre del titular" },
           {
-            pattern: /^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]{3,50}$/,
-            message: "Nombre inválido",
+            validator: (_, value) => {
+              const error = ValidationUtils.validateCardHolder(value);
+              if (error) {
+                return Promise.reject(error);
+              }
+              return Promise.resolve();
+            },
           },
         ]}
-        getValueFromEvent={(e) => e.target.value.toUpperCase()}
+        getValueFromEvent={(e) => TextFormatters.formatCardHolder(e.target.value)}
+        extra="Ejemplo: JUAN CARLOS PEREZ GOMEZ"
       >
-        <Input placeholder="Como aparece en la tarjeta" />
+        <Input 
+          placeholder="Como aparece en la tarjeta" 
+          maxLength={50}
+          autoComplete="cc-name"
+        />
       </Form.Item>
 
-      <Form.Item label="Cuotas" name="installments" initialValue={1}>
+      <Form.Item 
+        label="Cuotas" 
+        name="installments" 
+        initialValue={1}
+        rules={[
+          { required: true, message: "Seleccione el número de cuotas" }
+        ]}
+      >
         <Select>
           {[...Array(36)].map((_, i) => (
             <Select.Option key={i + 1} value={String(i + 1)}>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Alert, Form, Modal, Radio, Space, Spin, notification } from "antd";
 import { Lock, CreditCard, Smartphone, Building } from "lucide-react";
 import { useCartStore } from "@/store/cart.store";
@@ -6,6 +6,7 @@ import { useCheckoutStore } from "@/store/checkout.store";
 import axios from "axios";
 import ENDPOINTS from "@/api";
 import { formatNumber } from "@/pages/store/utils/formatPrice";
+import { ErrorParser } from "@/utils/validations";
 import { CardForm } from "./Components/Payment.components/CardForm";
 import { NequiForm } from "./Components/Payment.components/NequiForm";
 import { PSEForm } from "./Components/Payment.components/PSEForm";
@@ -135,7 +136,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
 
   // Preparar datos para el backend
   const preparePaymentData = () => {
-    const data = formData[paymentMethod.toLowerCase()];
+    const methodKey = paymentMethod.toLowerCase() as keyof PaymentFormData;
+    const data = formData[methodKey];
     if (!data) return null;
 
     const baseData = {
@@ -146,31 +148,35 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
 
     switch (paymentMethod) {
       case "CARD":
+        const cardData = data as CardPaymentData;
         return {
           ...baseData,
-          card_data: { card_data: { ...data } },
-          installments: data.installments ?? 1,
+          card_data: { card_data: { ...cardData } },
+          installments: cardData.installments ?? 1,
         };
       case "PSE":
+        const pseData = data as PSEPaymentData;
         return {
           ...baseData,
-          bank_code: data.bankCode,
-          user_type: data.userType,
-          user_legal_id_type: data.documentType,
-          user_legal_id: data.documentNumber,
-          user_name: `${data.firstName} ${data.lastName}`,
-          user_email: data.email,
+          bank_code: pseData.bankCode,
+          user_type: pseData.userType,
+          user_legal_id_type: pseData.documentType,
+          user_legal_id: pseData.documentNumber,
+          user_name: `${pseData.firstName} ${pseData.lastName}`,
+          user_email: pseData.email,
         };
       case "NEQUI":
+        const nequiData = data as NequiPaymentData;
         return {
           ...baseData,
-          phone_number: data.phoneNumber,
+          phone_number: nequiData.phoneNumber,
         };
       case "DAVIPLATA":
+        const daviData = data as DaviPlataPaymentData;
         return {
           ...baseData,
-          user_legal_id_type: data.documentType,
-          user_legal_id: data.documentNumber,
+          user_legal_id_type: daviData.documentType,
+          user_legal_id: daviData.documentNumber,
         };
       default:
         return null;
@@ -179,10 +185,24 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
 
   // Manejar el proceso de pago
   const handlePayment = async () => {
-    if (!items?.length || !isFormValid) {
+    console.log("=== DEBUG VALIDATION ===");
+    console.log("items?.length:", items?.length);
+    console.log("isFormValid:", isFormValid);
+    console.log("formData:", formData);
+    console.log("paymentMethod:", paymentMethod);
+    
+    if (!items?.length) {
       notification.error({
         message: "Error",
-        description: "Por favor complete toda la información requerida",
+        description: "No hay productos en el carrito",
+      });
+      return;
+    }
+    
+    if (!isFormValid) {
+      notification.error({
+        message: "Error",
+        description: "Por favor complete correctamente todos los campos del formulario",
       });
       return;
     }
@@ -272,11 +292,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
       setStatus("error");
       setOrderStatus("failed");
 
+      // 🆕 Usar el analizador de errores
+      const { message, details } = ErrorParser.parseBackendError(error);
+
       notification.error({
-        message: "Error en el pago",
-        description:
-          error.response?.data?.message ||
-          "Error al procesar el pago. Por favor intente nuevamente.",
+        message,
+        description: details,
+        duration: 8, // Mostrar más tiempo para errores específicos
       });
     } finally {
       setLoading(false);
@@ -325,10 +347,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
                     value={method.id}
                     disabled={!method.enabled}
                   >
-                    <Space>
-                      <method.icon size={20} />
-                      {method.name}
-                    </Space>
+                                      <Space>
+                    {React.createElement(method.icon, { size: 20 })}
+                    {method.name}
+                  </Space>
                   </Radio>
                 ))}
               </Space>

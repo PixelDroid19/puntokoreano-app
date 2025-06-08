@@ -206,20 +206,52 @@ const Shipping = ({ setStatus, setCurrent }) => {
         label="Dirección"
         rules={[
           { required: true, message: "La dirección es requerida" },
-          { min: 4, message: "La dirección debe tener al menos 4 caracteres" },
           {
             validator: (_, value) => {
-              if (value && value.trim().length < 4) {
-                return Promise.reject(
-                  "La dirección no puede contener solo espacios"
-                );
+              if (!value) return Promise.resolve();
+              
+              const cleaned = value.trim();
+              
+              // Verificar longitud mínima
+              if (cleaned.length < 8) {
+                return Promise.reject("La dirección debe tener al menos 8 caracteres");
               }
+              
+              // Verificar longitud máxima
+              if (cleaned.length > 100) {
+                return Promise.reject("La dirección no puede exceder 100 caracteres");
+              }
+              
+              // Verificar que contenga al menos una letra y un número
+              if (!/[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]/.test(cleaned)) {
+                return Promise.reject("La dirección debe contener letras");
+              }
+              
+              if (!/\d/.test(cleaned)) {
+                return Promise.reject("La dirección debe contener al menos un número");
+              }
+              
+              // Verificar que no contenga caracteres peligrosos
+              if (/[<>'"{}\\]/.test(cleaned)) {
+                return Promise.reject("La dirección contiene caracteres no válidos");
+              }
+              
               return Promise.resolve();
             },
           },
         ]}
+        getValueFromEvent={(e) => 
+          e.target.value
+            .replace(/[<>'"{}\\]/g, "")
+            .slice(0, 100)
+        }
+        extra="Ejemplo: Calle 123 #45-67 Apto 8B"
       >
-        <Input placeholder="DG 1 BIS #23-56 sur torre 1 apto 506" />
+        <Input 
+          placeholder="Calle 123 #45-67 Apto 8B" 
+          maxLength={100}
+          autoComplete="street-address"
+        />
       </Form.Item>
 
       <Form.Item
@@ -227,10 +259,48 @@ const Shipping = ({ setStatus, setCurrent }) => {
         label="Ciudad"
         rules={[
           { required: true, message: "La ciudad es requerida" },
-          { min: 3, message: "La ciudad debe tener al menos 3 caracteres" },
+          {
+            validator: (_, value) => {
+              if (!value) return Promise.resolve();
+              
+              const cleaned = value.trim();
+              
+              // Verificar longitud mínima
+              if (cleaned.length < 3) {
+                return Promise.reject("La ciudad debe tener al menos 3 caracteres");
+              }
+              
+              // Verificar longitud máxima
+              if (cleaned.length > 50) {
+                return Promise.reject("La ciudad no puede exceder 50 caracteres");
+              }
+              
+              // Verificar que solo contenga letras, espacios y algunos caracteres especiales
+              if (!/^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s\-\.]+$/.test(cleaned)) {
+                return Promise.reject("La ciudad solo puede contener letras, espacios, guiones y puntos");
+              }
+              
+              // Verificar que no sea solo espacios o caracteres especiales
+              if (!/[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]/.test(cleaned)) {
+                return Promise.reject("La ciudad debe contener al menos una letra");
+              }
+              
+              return Promise.resolve();
+            },
+          },
         ]}
+        getValueFromEvent={(e) => 
+          e.target.value
+            .replace(/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s\-\.]/g, "")
+            .replace(/\s+/g, " ")
+            .slice(0, 50)
+        }
       >
-        <Input placeholder="Bogotá" />
+        <Input 
+          placeholder="Bogotá" 
+          maxLength={50}
+          autoComplete="address-level2"
+        />
       </Form.Item>
 
       <Form.Item

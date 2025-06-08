@@ -1,6 +1,6 @@
 // src/pages/auth/Login.tsx
 import { useAuth } from "@/hooks/useAuth";
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, message } from "antd";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
@@ -16,9 +16,19 @@ const Login = () => {
   const onFinish = async (values: LoginFormData) => {
     setLoading(true);
     try {
-      await login(values.email, values.password);
-    } catch (error) {
+      const result = await login(values.email, values.password);
+      if (result.success) {
+        // El login fue exitoso, la redirección ya se maneja en useAuth
+
+        console.log("Login exitoso, redirigiendo...");
+      } else {
+        // Mostrar error si el login falló
+        console.error("Error en login:", result.error);
+        message.error(result.error || "Error al iniciar sesión");
+      }
+    } catch (error: any) {
       console.error("Error al iniciar sesión:", error);
+      message.error("Error de conexión. Intenta nuevamente.");
     } finally {
       setLoading(false);
     }

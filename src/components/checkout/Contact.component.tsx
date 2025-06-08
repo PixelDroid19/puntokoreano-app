@@ -31,7 +31,7 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
         // Prellenar y guardar datos del usuario autenticado
         const userData = {
           name: user.name,
-          lastName: user.lastName,
+          lastName: (user as any).lastName || (user as any).last_name || "",
           email: user.email,
           phone: user.phone || "",
           userId: user.id,
@@ -90,7 +90,7 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="font-medium text-lg">Comprando como:</p>
             <p className="text-gray-700">
-              {user.name} {user.lastName}
+              {user.name} {(user as any).lastName || (user as any).last_name || ""}
             </p>
             <p className="text-gray-600">{user.email}</p>
             {user.phone && <p className="text-gray-600">{user.phone}</p>}
@@ -147,14 +147,45 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
         hasFeedback
         validateDebounce={1000}
         rules={[
+          { required: true, message: "El nombre es requerido" },
           {
-            required: true,
-            min: 2,
-            message: "El nombre debe tener al menos 2 caracteres",
+            validator: (_, value) => {
+              if (!value) return Promise.resolve();
+              
+              const cleaned = value.trim();
+              
+              // Verificar longitud mínima
+              if (cleaned.length < 2) {
+                return Promise.reject("El nombre debe tener al menos 2 caracteres");
+              }
+              
+              // Verificar longitud máxima
+              if (cleaned.length > 30) {
+                return Promise.reject("El nombre no puede exceder 30 caracteres");
+              }
+              
+              // Verificar que solo contenga letras y espacios
+              if (!/^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]+$/.test(cleaned)) {
+                return Promise.reject("El nombre solo puede contener letras");
+              }
+              
+              // Verificar que no sea solo espacios
+              if (!/[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]/.test(cleaned)) {
+                return Promise.reject("El nombre no puede estar vacío");
+              }
+              
+              return Promise.resolve();
+            },
           },
         ]}
+        getValueFromEvent={(e) => 
+          e.target.value
+            .replace(/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]/g, "")
+            .replace(/\s+/g, " ")
+            .slice(0, 30)
+        }
       >
-        <Input placeholder="Joe" />
+        <Input placeholder="Juan Carlos" maxLength={30} />
       </Form.Item>
 
       <Form.Item
@@ -163,14 +194,45 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
         hasFeedback
         validateDebounce={1000}
         rules={[
+          { required: true, message: "El apellido es requerido" },
           {
-            required: true,
-            min: 2,
-            message: "El apellido debe tener al menos 2 caracteres",
+            validator: (_, value) => {
+              if (!value) return Promise.resolve();
+              
+              const cleaned = value.trim();
+              
+              // Verificar longitud mínima
+              if (cleaned.length < 2) {
+                return Promise.reject("El apellido debe tener al menos 2 caracteres");
+              }
+              
+              // Verificar longitud máxima
+              if (cleaned.length > 30) {
+                return Promise.reject("El apellido no puede exceder 30 caracteres");
+              }
+              
+              // Verificar que solo contenga letras y espacios
+              if (!/^[A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]+$/.test(cleaned)) {
+                return Promise.reject("El apellido solo puede contener letras");
+              }
+              
+              // Verificar que no sea solo espacios
+              if (!/[A-Za-zÁÉÍÓÚáéíóúÜüÑñ]/.test(cleaned)) {
+                return Promise.reject("El apellido no puede estar vacío");
+              }
+              
+              return Promise.resolve();
+            },
           },
         ]}
+        getValueFromEvent={(e) => 
+          e.target.value
+            .replace(/[^A-Za-zÁÉÍÓÚáéíóúÜüÑñ\s]/g, "")
+            .replace(/\s+/g, " ")
+            .slice(0, 30)
+        }
       >
-        <Input placeholder="Doe" />
+        <Input placeholder="Pérez García" maxLength={30} />
       </Form.Item>
 
       <Form.Item
@@ -181,9 +243,37 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
         rules={[
           { required: true, message: "El correo electrónico es requerido" },
           { type: "email", message: "Ingresa un correo electrónico válido" },
+          {
+            validator: (_, value) => {
+              if (!value) return Promise.resolve();
+              
+              // Verificar longitud máxima
+              if (value.length > 100) {
+                return Promise.reject("El correo no puede exceder 100 caracteres");
+              }
+              
+              // Verificar que no contenga caracteres especiales peligrosos
+              if (/[<>'"{}\\]/.test(value)) {
+                return Promise.reject("El correo contiene caracteres no válidos");
+              }
+              
+              return Promise.resolve();
+            },
+          },
         ]}
+        getValueFromEvent={(e) => 
+          e.target.value
+            .replace(/[<>'"{}\\]/g, "")
+            .slice(0, 100)
+            .toLowerCase()
+        }
       >
-        <Input placeholder="joedoe@gmail.com" />
+        <Input 
+          placeholder="juan.perez@gmail.com" 
+          maxLength={100}
+          type="email"
+          autoComplete="email"
+        />
       </Form.Item>
 
       <Form.Item
@@ -194,12 +284,41 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
         rules={[
           { required: true, message: "El número celular es requerido" },
           {
-            pattern: /^[0-9]{10}$/,
-            message: "Ingrese un número válido de 10 dígitos",
+            validator: (_, value) => {
+              if (!value) return Promise.resolve();
+              
+              const cleaned = value.replace(/\D/g, "");
+              
+              // Verificar longitud exacta
+              if (cleaned.length !== 10) {
+                return Promise.reject("El número debe tener exactamente 10 dígitos");
+              }
+              
+              // Verificar que comience con 3 (celulares en Colombia)
+              if (!cleaned.startsWith("3")) {
+                return Promise.reject("El número celular debe comenzar con 3");
+              }
+              
+              return Promise.resolve();
+            },
           },
         ]}
+        getValueFromEvent={(e) => 
+          e.target.value
+            .replace(/\D/g, "")
+            .slice(0, 10)
+        }
       >
-        <Input type="number" placeholder="3126734589" maxLength={10} />
+        <Input 
+          placeholder="3126734589" 
+          maxLength={10}
+          autoComplete="tel"
+          onInput={(e) => {
+            // Solo permitir números
+            const target = e.target as HTMLInputElement;
+            target.value = target.value.replace(/\D/g, "");
+          }}
+        />
       </Form.Item>
 
       <section className="flex justify-between mt-6">
