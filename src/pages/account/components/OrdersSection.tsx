@@ -66,6 +66,7 @@ interface OrderTracking {
   description: string;
   date: string;
   location?: string;
+  isEstimated?: boolean;
 }
 
 const OrdersSection = () => {
@@ -157,33 +158,56 @@ const OrdersSection = () => {
   };
 
   const handleTrackOrder = async (order: Order) => {
-    if (!order.tracking_number) {
-      notification.warning({
-        message: "Sin número de seguimiento",
-        description: "Este pedido aún no tiene número de seguimiento asignado",
-      });
-      return;
-    }
-
     setSelectedOrder(order);
     
     try {
       const response = await apiGet<{
         success: boolean;
-        data: OrderTracking[];
+        data: OrderTracking[] | {
+          hasTracking: boolean;
+          message?: string;
+          statusHistory?: Array<{
+            status: string;
+            date: string;
+            comment: string;
+          }>;
+        };
       }>(
         ENDPOINTS.ORDERS.TRACK_ORDER,
         { orderId: order._id }
       );
 
       if (response.success) {
-        setTrackingInfo(response.data);
-        setTrackingModalVisible(true);
+        // Si la respuesta es un array, es información de tracking
+        if (Array.isArray(response.data)) {
+          setTrackingInfo(response.data);
+          setTrackingModalVisible(true);
+        } else if (response.data.hasTracking === false) {
+          // No tiene tracking number, mostrar información básica del historial
+          const statusHistory = response.data.statusHistory || [];
+          const trackingFromHistory: OrderTracking[] = statusHistory.map((history) => ({
+            status: history.status,
+            description: history.comment || `Estado: ${history.status}`,
+            date: history.date,
+            location: "Centro de distribución"
+          }));
+          
+          setTrackingInfo(trackingFromHistory);
+          setTrackingModalVisible(true);
+          
+          if (response.data.message) {
+            notification.info({
+              message: "Información de seguimiento",
+              description: response.data.message,
+            });
+          }
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error al obtener tracking:", error);
       notification.error({
         message: "Error",
-        description: "No se pudo obtener la información de seguimiento",
+        description: error.response?.data?.message || "No se pudo obtener la información de seguimiento",
       });
     }
   };
@@ -475,27 +499,25 @@ const OrdersSection = () => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    {order.tracking_number && (
-                      <Button
-                        type="primary"
-                        icon={<TruckOutlined />}
-                        onClick={() => handleTrackOrder(order)}
-                        style={{
-                          backgroundColor: '#2563eb',
-                          borderColor: '#2563eb',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#1d4ed8';
-                          e.currentTarget.style.borderColor = '#1d4ed8';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#2563eb';
-                          e.currentTarget.style.borderColor = '#2563eb';
-                        }}
-                      >
-                        Rastrear
-                      </Button>
-                    )}
+                    <Button
+                      type="primary"
+                      icon={<TruckOutlined />}
+                      onClick={() => handleTrackOrder(order)}
+                      style={{
+                        backgroundColor: '#2563eb',
+                        borderColor: '#2563eb',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#1d4ed8';
+                        e.currentTarget.style.borderColor = '#1d4ed8';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#2563eb';
+                        e.currentTarget.style.borderColor = '#2563eb';
+                      }}
+                    >
+                      {order.tracking_number ? 'Rastrear' : 'Ver Estado'}
+                    </Button>
                     
                     {(order.status === "pending" || order.status === "confirmed") && (
                       <Button
@@ -515,7 +537,7 @@ const OrdersSection = () => {
 
       {/* Modal de seguimiento */}
       <Modal
-        title={`Seguimiento del pedido #${selectedOrder?.order_number}`}
+        title={`${selectedOrder?.tracking_number ? 'Seguimiento' : 'Estado'} del pedido #${selectedOrder?.order_number}`}
         open={trackingModalVisible}
         onCancel={() => setTrackingModalVisible(false)}
         footer={null}
@@ -524,7 +546,15 @@ const OrdersSection = () => {
         {selectedOrder && (
           <div>
             <div className="mb-4">
-              <p><strong>Número de seguimiento:</strong> {selectedOrder.tracking_number}</p>
+              {selectedOrder.tracking_number ? (
+                <p><strong>Número de seguimiento:</strong> {selectedOrder.tracking_number}</p>
+              ) : (
+                <div className="bg-blue-50 p-3 rounded-lg mb-3">
+                  <p className="text-blue-700 text-sm">
+                    Este pedido aún no tiene número de seguimiento asignado. A continuación se muestra el historial de estados:
+                  </p>
+                </div>
+              )}
               <p><strong>Estado actual:</strong> 
                 <Tag 
                   color={getStatusColor(selectedOrder.status)} 
@@ -535,21 +565,32 @@ const OrdersSection = () => {
               </p>
             </div>
             
-            <Timeline
-              items={trackingInfo.map((tracking, index) => ({
-                dot: index === 0 ? <CheckCircleOutlined className="text-green-500" /> : undefined,
-                children: (
-                  <div>
-                    <div className="font-semibold">{tracking.status}</div>
-                    <div className="text-gray-600">{tracking.description}</div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(tracking.date).toLocaleString("es-CO")}
-                      {tracking.location && ` - ${tracking.location}`}
+            {trackingInfo.length > 0 ? (
+              <Timeline
+                items={trackingInfo.map((tracking, index) => ({
+                  dot: index === 0 ? <CheckCircleOutlined className="text-green-500" /> : undefined,
+                  children: (
+                    <div>
+                      <div className="font-semibold">
+                        {getStatusText(tracking.status)}
+                        {tracking.status === 'estimated' && (
+                          <span className="text-blue-500 text-sm ml-2">(Estimado)</span>
+                        )}
+                      </div>
+                      <div className="text-gray-600">{tracking.description}</div>
+                      <div className="text-sm text-gray-500">
+                        {new Date(tracking.date).toLocaleString("es-CO")}
+                        {tracking.location && ` - ${tracking.location}`}
+                      </div>
                     </div>
-                  </div>
-                ),
-              }))}
-            />
+                  ),
+                }))}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No hay información de seguimiento disponible</p>
+              </div>
+            )}
           </div>
         )}
       </Modal>

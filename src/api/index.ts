@@ -12,6 +12,7 @@ export interface Endpoints {
     LOGOUT: ApiEndpoint;
     ENCRYPTION_KEY: ApiEndpoint;
     VERIFY_EMAIL: ApiEndpoint;
+    RESEND_EMAIL_VERIFICATION: ApiEndpoint;
   };
   PRODUCTS: {
     SEARCH: ApiEndpoint;
@@ -63,12 +64,16 @@ export interface Endpoints {
     CREATE: ApiEndpoint;
     GET_ORDER: ApiEndpoint;
     CALCULATE_SHIPPING: ApiEndpoint;
+    CALCULATE_SHIPPING_COST: ApiEndpoint;
+    VERIFY_STOCK: ApiEndpoint;
+    SHIPPING_CONFIG: ApiEndpoint;
     GET_USER_ORDERS: ApiEndpoint;
     GET_ORDER_DETAILS: ApiEndpoint;
     CANCEL_ORDER: ApiEndpoint;
     TRACK_ORDER: ApiEndpoint;
     PROCESS_PAYMENT: ApiEndpoint;
     PAYMENT_STATUS: ApiEndpoint;
+    CALCULATE_PROCESSING_FEES: ApiEndpoint;
   };
   PAYMENT: {
     WOMPI_NEQUI_PAYMENT: ApiEndpoint;
@@ -108,6 +113,8 @@ export interface Endpoints {
     ADD_TO_WISHLIST: ApiEndpoint;
     REMOVE_FROM_WISHLIST: ApiEndpoint;
     GET_USER_REVIEWS: ApiEndpoint;
+    RESEND_EMAIL_VERIFICATION: ApiEndpoint;
+    UPDATE_PREFERENCES: ApiEndpoint;
   };
 }
 
@@ -163,6 +170,10 @@ const ENDPOINTS: Endpoints = {
     VERIFY_EMAIL: {
       url: `${BASE_URL}/auth/verify-email`,
       method: "GET",
+    },
+    RESEND_EMAIL_VERIFICATION: {
+      url: `${BASE_URL}/auth/resend-verification`,
+      method: "POST",
     },
   },
   PAYMENT: {
@@ -228,6 +239,18 @@ const ENDPOINTS: Endpoints = {
       url: `${BASE_URL}/orders/calculate-shipping`,
       method: "POST",
     },
+    CALCULATE_SHIPPING_COST: {
+      url: `${BASE_URL}/orders/calculate-shipping-cost`,
+      method: "POST",
+    },
+    VERIFY_STOCK: {
+      url: `${BASE_URL}/orders/verify-stock`,
+      method: "POST",
+    },
+    SHIPPING_CONFIG: {
+      url: `${BASE_URL}/orders/shipping-config`,
+      method: "GET",
+    },
     GET_USER_ORDERS: {
       url: `${BASE_URL}/orders/user`,
       method: "GET",
@@ -241,11 +264,15 @@ const ENDPOINTS: Endpoints = {
       method: "POST",
     },
     TRACK_ORDER: {
-      url: `${BASE_URL}/orders/:orderId/track`,
+      url: `${BASE_URL}/user/orders/:orderId/track`,
       method: "GET",
     },
     PROCESS_PAYMENT: {
       url: `${BASE_URL}/orders/payment/process`,
+      method: "POST",
+    },
+    CALCULATE_PROCESSING_FEES: {
+      url: `${BASE_URL}/orders/calculate-processing-fees`,
       method: "POST",
     },
     PAYMENT_STATUS: {
@@ -325,6 +352,14 @@ const ENDPOINTS: Endpoints = {
     GET_USER_REVIEWS: {
       url: `${BASE_URL}/user/reviews`,
       method: "GET",
+    },
+    RESEND_EMAIL_VERIFICATION: {
+      url: `${BASE_URL}/auth/resend-verification`,
+      method: "POST",
+    },
+    UPDATE_PREFERENCES: {
+      url: `${BASE_URL}/user/preferences`,
+      method: "PATCH",
     },
   },
   PRODUCTS: {

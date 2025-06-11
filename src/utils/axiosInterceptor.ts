@@ -94,6 +94,11 @@ const validateToken = async (): Promise<boolean> => {
   }
 };
 
+// Función para emitir eventos de verificación de email
+const emitEmailVerificationRequired = () => {
+  window.dispatchEvent(new CustomEvent('emailVerificationRequired'));
+};
+
 // Configurar interceptores
 const setupAxiosInterceptors = () => {
   axiosInstance.interceptors.request.use(
@@ -154,6 +159,13 @@ const setupAxiosInterceptors = () => {
         tokenValidationCache.lastChecked = 0;
         
         return Promise.reject(error);
+      }
+
+      // Verificar si es un error de verificación de email
+      if (responseData?.code === 'EMAIL_VERIFICATION_REQUIRED' && 
+          responseData?.needsVerification) {
+        console.log("Email verification required - emitting event");
+        emitEmailVerificationRequired();
       }
 
       // Solo procesar si hay datos en la respuesta y un mensaje

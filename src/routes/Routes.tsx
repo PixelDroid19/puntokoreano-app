@@ -34,6 +34,7 @@ import BlogListPage from "@/pages/blog/BlogListPage";
 import BlogDetailPage from "@/pages/blog/BlogDetailPage";
 import AnimationProvider from "@/components/AnimationProvider";
 import { homeLoader, aboutLoader } from "@/utils/routeLoaders";
+import EmailVerification from "@/pages/auth/EmailVerification";
 
 const Routes = () => {
   const is576 = useMediaQuery({ query: "(min-width: 576px)" });
@@ -62,6 +63,7 @@ const Routes = () => {
         <Route element={<PublicRoutes />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
         </Route>
 
         {/* Semi-public routes (don't require login but use MainLayout) */}

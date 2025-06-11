@@ -2,53 +2,105 @@ import { useCartStore } from "@/store/cart.store";
 import { useCheckoutStore } from "@/store/checkout.store";
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Form, Input, Select, notification } from "antd";
+import { Form, Input, Select, notification, Spin } from "antd";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import ENDPOINTS from "@/api";
 
 const { Option } = Select;
 
-// Colombia department/postal code mapping
-const COLOMBIA_POSTAL_CODES = {
-  "Bogotá D.C.": "110111",
-  Antioquia: "050001",
-  "Valle del Cauca": "760001",
-  Cundinamarca: "250001",
-  Atlántico: "080001",
-  Santander: "680001",
-  Amazonas: "910001",
-  Vaupés: "970001",
-  Guainía: "940001",
-  Vichada: "990001",
-} as const;
+// 🆕 Interfaces para la configuración dinámica
+interface ShippingMethod {
+  value: string;
+  label: string;
+  description: string;
+  baseCost: number;
+  deliveryTime: { min: number; max: number };
+}
 
-const SHIPPING_METHODS = [
-  { value: "express", label: "Envío exprés", description: "1-2 días hábiles" },
-  {
-    value: "standard",
-    label: "Envío estándar",
-    description: "3-5 días hábiles",
-  },
-  {
-    value: "pickup",
-    label: "Recogida en tienda",
-    description: "Sin costo adicional",
-  },
-];
+interface ShippingConfig {
+  departments: string[];
+  methods: ShippingMethod[];
+  freeShipping: {
+    threshold: number;
+    eligibleLocations: string[];
+    eligibleMethods: string[];
+  };
+}
 
-const Shipping = ({ setStatus, setCurrent }) => {
+interface ShippingProps {
+  setStatus: (status: "wait" | "process" | "finish" | "error" | undefined) => void;
+  setCurrent: (current: number) => void;
+}
+
+const Shipping: React.FC<ShippingProps> = ({ setStatus, setCurrent }) => {
   const { setShippingInfo, shippingInfo } = useCheckoutStore();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  
+  // 🆕 Estado para configuración de envíos
+  const [shippingConfig, setShippingConfig] = useState<ShippingConfig | null>(null);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+
+  // 🆕 Cargar configuración de envíos al montar el componente
+  useEffect(() => {
+    const loadShippingConfig = async () => {
+      try {
+        setLoadingConfig(true);
+        const response = await axios.get(ENDPOINTS.ORDERS.SHIPPING_CONFIG.url);
+        
+        if (response.data.success) {
+          setShippingConfig(response.data.data);
+        } else {
+          throw new Error(response.data.message || "Error cargando configuración");
+        }
+      } catch (error) {
+        console.error("Error cargando configuración de envíos:", error);
+        notification.error({
+          message: "Error de configuración",
+          description: "No se pudo cargar la configuración de envíos. Usando valores por defecto.",
+          placement: "topRight",
+        });
+        
+        // Fallback a configuración básica
+        setShippingConfig({
+          departments: ["Bogotá D.C.", "Antioquia", "Valle del Cauca", "Cundinamarca"],
+          methods: [
+            { value: "standard", label: "Envío estándar", description: "3-5 días hábiles", baseCost: 15000, deliveryTime: {min: 3, max: 5} },
+            { value: "express", label: "Envío exprés", description: "1-2 días hábiles", baseCost: 25000, deliveryTime: {min: 1, max: 2} },
+          ],
+          freeShipping: { threshold: 300000, eligibleLocations: [], eligibleMethods: [] }
+        });
+      } finally {
+        setLoadingConfig(false);
+      }
+    };
+
+    loadShippingConfig();
+  }, []);
 
   // Get saved contact info
   const contactData = localStorage.getItem("checkoutContact");
   const contactInfo = contactData ? JSON.parse(contactData) : null;
 
+  // 🆕 Mapeo básico de códigos postales (fallback)
+  const POSTAL_CODE_MAP: Record<string, string> = {
+    "Bogotá D.C.": "110111",
+    "Antioquia": "050001", 
+    "Valle del Cauca": "760001",
+    "Cundinamarca": "250001",
+    "Atlántico": "080001",
+    "Santander": "680001",
+    "Amazonas": "910001",
+    "Vaupés": "970001",
+    "Guainía": "940001",
+    "Vichada": "990001",
+  };
+
   // Handle state/zip code relationship
-  const handleStateChange = (state: keyof typeof COLOMBIA_POSTAL_CODES) => {
-    const postalCode = COLOMBIA_POSTAL_CODES[state];
+  const handleStateChange = (state: string) => {
+    const postalCode = POSTAL_CODE_MAP[state] || "110111";
     form.setFieldsValue({
       zip: postalCode,
       state: state,
@@ -65,10 +117,10 @@ const Shipping = ({ setStatus, setCurrent }) => {
     );
   };
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: any) => {
     try {
       // Verificar que tenemos el código postal correcto para el departamento
-      const postalCode = COLOMBIA_POSTAL_CODES[values.state];
+      const postalCode = POSTAL_CODE_MAP[values.state] || "110111";
       if (!postalCode) {
         notification.error({
           message: "Error",
@@ -89,9 +141,7 @@ const Shipping = ({ setStatus, setCurrent }) => {
       }
 
       const items = useCartStore.getState().items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
+        product: item.id,
         quantity: item.quantity,
       }));
 
@@ -133,21 +183,32 @@ const Shipping = ({ setStatus, setCurrent }) => {
         shipping_method: values.shippingMethod,
       };
 
-      console.log("Sending payload:", payload);
 
       const response = await axios.post(
-        ENDPOINTS.ORDERS.CALCULATE_SHIPPING.url,
+        ENDPOINTS.ORDERS.CALCULATE_SHIPPING_COST.url,
         payload
       );
 
       if (response.data.success) {
+        const shippingData = response.data.data;
+        
         setShippingInfo({
           ...shippingInfo,
           ...shippingAddress,
           shipping_method: values.shippingMethod,
-          shipping_cost: response.data.data.shipping_cost,
-          estimated_delivery: response.data.data.estimated_delivery,
+          shipping_cost: shippingData.cost,
+          estimated_delivery: shippingData.estimatedDays,
+          is_free_shipping: shippingData.freeShipping,
+          shipping_details: shippingData.details,
         });
+
+        if (shippingData.freeShipping) {
+          notification.success({
+            message: "¡Envío gratis!",
+            description: "Tu pedido califica para envío gratuito",
+            placement: "topRight",
+          });
+        }
 
         setCurrent(2);
       } else {
@@ -158,19 +219,48 @@ const Shipping = ({ setStatus, setCurrent }) => {
           placement: "topRight",
         });
       }
-    } catch (error) {
-      console.error("Error calculating shipping:", error);
-
+    } catch (error: any) {
+      
       const errorMsg =
-        error.response?.data?.message ||
+        error.response?.data?.error ||
         "No se pudo calcular el costo de envío";
       notification.error({
-        message: "Error",
+        message:  error.response?.data?.message ,
         description: errorMsg,
         placement: "topRight",
       });
     }
   };
+
+  // 🆕 Mostrar loading mientras se carga la configuración
+  if (loadingConfig) {
+    return (
+      <div className="border rounded-lg p-4 mt-5 bg-white">
+        <div className="flex justify-center items-center py-8">
+          <Spin size="large" />
+          <span className="ml-3">Cargando configuración de envíos...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 🆕 Si no hay configuración, mostrar error
+  if (!shippingConfig) {
+    return (
+      <div className="border rounded-lg p-4 mt-5 bg-white">
+        <div className="text-center py-8">
+          <h2 className="text-lg font-semibold text-red-600 mb-2">Error de configuración</h2>
+          <p className="text-gray-600 mb-4">No se pudo cargar la configuración de envíos</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-[#E2060F] text-white px-4 py-2 rounded-lg hover:bg-[#001529] transition-colors"
+          >
+            Recargar página
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Form
@@ -193,7 +283,7 @@ const Shipping = ({ setStatus, setCurrent }) => {
         rules={[{ required: true, message: "Selecciona un método de envío" }]}
       >
         <Select>
-          {SHIPPING_METHODS.map((method) => (
+          {shippingConfig?.methods.map((method) => (
             <Option key={method.value} value={method.value}>
               {method.label} - {method.description}
             </Option>
@@ -312,7 +402,7 @@ const Shipping = ({ setStatus, setCurrent }) => {
           placeholder="Selecciona el departamento"
           onChange={handleStateChange}
         >
-          {Object.keys(COLOMBIA_POSTAL_CODES).map((state) => (
+          {shippingConfig?.departments.map((state) => (
             <Option key={state} value={state}>
               {state}
             </Option>

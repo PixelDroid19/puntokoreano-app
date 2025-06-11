@@ -24,6 +24,19 @@ const ReviewsProduct = () => {
   const [filterType, setFilterType] = useState<string | null>("all"); // Estado para el tipo de filtro
   const [sortType, setSortType] = useState<string>("recent"); // Estado para el tipo de ordenamiento
   
+  // Debug logging
+  useEffect(() => {
+    console.log("Reviews.component debug:", {
+      productId,
+      canReview,
+      isCheckingPermission,
+      checkPermissionError: checkPermissionError?.message,
+      hasOrdered,
+      hasReviewed,
+      reviewRestrictionReason,
+    });
+  }, [productId, canReview, isCheckingPermission, checkPermissionError, hasOrdered, hasReviewed, reviewRestrictionReason]);
+
   if (!productId) {
     return null;
   }
@@ -184,8 +197,8 @@ const ReviewsProduct = () => {
         {/* Menos margen superior */}
         <ReviewsList
           productId={productId}
-          filterType={filterType}
-          sortType={sortType}
+          // filterType={filterType}
+          // sortType={sortType}
         />{" "}
         {/* Pasa filterType y sortType */}
       </section>

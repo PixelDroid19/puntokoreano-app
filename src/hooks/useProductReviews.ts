@@ -39,6 +39,13 @@ export const useProductReviews = (productId: string) => {
   const queryClient = useQueryClient();
   const { isAuthenticated, token } = useAuth();
 
+  // Debug logging
+  console.log("useProductReviews initialized:", {
+    productId,
+    isAuthenticated,
+    hasToken: !!token,
+  });
+
   // Obtener reseñas y estadísticas usando el servicio
   const {
     data: reviewsData,
@@ -47,9 +54,11 @@ export const useProductReviews = (productId: string) => {
   } = useQuery<ApiResponse<ReviewsData>>({
     queryKey: ["productReviews", productId],
     queryFn: async () => {
+      console.log("Fetching reviews for product:", productId);
       return await reviewService.getProductReviewsData(productId);
     },
     staleTime: 1000 * 60 * 5,
+    enabled: !!productId,
   });
 
   // Verificar si el usuario puede escribir reseña
@@ -57,10 +66,12 @@ export const useProductReviews = (productId: string) => {
     queryKey: ["canReview", productId],
     queryFn: async () => {
       try {
+        console.log("Checking can review for:", { productId, isAuthenticated, hasToken: !!token });
 
         if (!token) {
+          console.log("No token available, returning cannot review");
           return {
-            success: false,
+            success: true,
             data: {
               canReview: false,
               hasOrdered: false,
@@ -70,7 +81,10 @@ export const useProductReviews = (productId: string) => {
           };
         }
 
-        return await reviewService.canUserReview(productId);
+        console.log("Making API call to check review eligibility");
+        const result = await reviewService.canUserReview(productId);
+        console.log("API response for canUserReview:", result);
+        return result;
       } catch (error) {
         console.error("Error checking can review status:", error);
         return {
@@ -85,10 +99,21 @@ export const useProductReviews = (productId: string) => {
         };
       }
     },
-    enabled: Boolean(productId) && isAuthenticated && Boolean(token),
+    enabled: Boolean(productId && isAuthenticated),
     staleTime: 1000 * 60 * 5,
-    retry: 2,
+    retry: (failureCount, error) => {
+      console.log(`Retry attempt ${failureCount} for canReview query:`, error);
+      return failureCount < 2;
+    },
     retryDelay: 1000,
+  });
+
+  // Debug logging para la respuesta de canReviewQuery
+  console.log("canReviewQuery state:", {
+    isLoading: canReviewQuery.isLoading,
+    error: canReviewQuery.error?.message,
+    data: canReviewQuery.data,
+    isEnabled: Boolean(productId && isAuthenticated),
   });
 
   // Extraer los valores con seguridad null
@@ -106,15 +131,21 @@ export const useProductReviews = (productId: string) => {
     Error,
     ReviewFormData
   >({
-    mutationFn: (reviewData) =>
-      reviewService.createReview(productId, reviewData),
-    onSuccess: () => {
+    mutationFn: (reviewData) => {
+      console.log("Creating review with data:", reviewData);
+      return reviewService.createReview(productId, reviewData);
+    },
+    onSuccess: (data) => {
+      console.log("Review created successfully:", data);
       queryClient.invalidateQueries({
         queryKey: ["productReviews", productId],
       });
       queryClient.invalidateQueries({
         queryKey: ["canReview", productId],
       });
+    },
+    onError: (error) => {
+      console.error("Error creating review:", error);
     },
   });
 
@@ -148,7 +179,7 @@ export const useProductReviews = (productId: string) => {
     },
   });
 
-  return {
+  const finalResult = {
     reviews: reviewsData?.data.reviews || [],
     stats: reviewsData?.data.stats || {
       avgRating: 0,
@@ -179,4 +210,15 @@ export const useProductReviews = (productId: string) => {
     isReporting: reportReviewMutation.isPending,
     reportError: reportReviewMutation.error,
   };
+
+  // Debug final result
+  console.log("useProductReviews final result:", {
+    canReview: finalResult.canReview,
+    hasOrdered: finalResult.hasOrdered,
+    hasReviewed: finalResult.hasReviewed,
+    reviewRestrictionReason: finalResult.reviewRestrictionReason,
+    isCheckingPermission: finalResult.isCheckingPermission,
+  });
+
+  return finalResult;
 };

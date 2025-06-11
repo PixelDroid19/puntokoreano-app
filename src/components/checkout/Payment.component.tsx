@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Alert, Form, Modal, Radio, Space, Spin, notification } from "antd";
-import { Lock, CreditCard, Smartphone, Building } from "lucide-react";
+import { Alert, Form, Modal, Radio, Space, Spin, notification, Divider } from "antd";
+import { Lock, CreditCard, Smartphone, Building, ShoppingCart, Truck, CreditCard as CreditCardIcon, AlertTriangle } from "lucide-react";
 import { useCartStore } from "@/store/cart.store";
 import { useCheckoutStore } from "@/store/checkout.store";
 import axios from "axios";
@@ -23,7 +23,7 @@ export type PaymentMethodType =
 interface PaymentMethod {
   id: PaymentMethodType;
   name: string;
-  icon: React.FC;
+  icon: JSX.Element;
   enabled: boolean;
 }
 
@@ -71,28 +71,195 @@ type PaymentFormData = {
   daviplata?: DaviPlataPaymentData;
 };
 
+// 🆕 Interface para el cálculo de costos
+interface CostCalculation {
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  processingFee: number;
+  installmentFee: number;
+  total: number;
+  available: boolean;
+  unavailableItems: Array<{
+    id: string;
+    name: string;
+    requested: number;
+    available: number;
+  }>;
+}
+
 const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("CARD");
   const [formData, setFormData] = useState<PaymentFormData>({});
   const [isFormValid, setIsFormValid] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [costCalculation, setCostCalculation] = useState<CostCalculation | null>(null);
+  const [calculatingCosts, setCalculatingCosts] = useState(false);
+  const [stockVerified, setStockVerified] = useState(false);
 
   const { items, total, clearCart } = useCartStore();
   const { shippingInfo, setOrderId, setOrderStatus } = useCheckoutStore();
 
-  const getPaymentMethodIcon = (methodId: PaymentMethodType): React.FC => {
+  const getPaymentMethodIcon = (methodId: PaymentMethodType): JSX.Element => {
+    const iconStyle = { width: '20px', height: '20px' };
     switch (methodId) {
       case "CARD":
-        return CreditCard;
+        return <CreditCard style={iconStyle} />;
       case "PSE":
       case "BANCOLOMBIA_TRANSFER":
-        return Building;
+        return <Building style={iconStyle} />;
       case "NEQUI":
       case "DAVIPLATA":
-        return Smartphone;
+        return <Smartphone style={iconStyle} />;
       default:
-        return CreditCard;
+        return <CreditCard style={iconStyle} />;
+    }
+  };
+
+  // 🆕 Calcular costos completos
+  const calculateTotalCosts = async () => {
+    if (!items?.length) return;
+
+    setCalculatingCosts(true);
+    try {
+      // Obtener datos de envío
+      const shippingData = localStorage.getItem("checkoutShipping");
+      const contactData = localStorage.getItem("checkoutContact");
+      
+      if (!shippingData || !contactData) {
+        notification.warning({
+          message: "Información incompleta",
+          description: "Complete la información de contacto y envío primero",
+        });
+        setCurrent(0);
+        return;
+      }
+
+      const shipping = JSON.parse(shippingData);
+      const contact = JSON.parse(contactData);
+
+      // 1. Verificar disponibilidad de stock
+      const stockResponse = await axios.post(ENDPOINTS.ORDERS.VERIFY_STOCK.url, {
+        items: items.map(item => ({
+          product: item.id,
+          quantity: item.quantity
+        }))
+      });
+
+      const stockAvailable = stockResponse.data.success;
+      const unavailableItems = stockAvailable ? [] : stockResponse.data.data?.insufficientStock || [];
+
+      // 2. Calcular costo de envío (o usar el ya calculado)
+      let shippingCost = 0;
+      let backendSubtotal = 0; // 🚨 SEGURIDAD: Subtotal verificado del backend
+        
+      // 🆕 Priorizar el costo calculado en el paso anterior
+      if (shipping.calculatedShipping?.cost !== undefined) {
+        shippingCost = shipping.calculatedShipping.cost;
+        // 🚨 SEGURIDAD: Si tenemos datos calculados, usar el subtotal del backend
+        backendSubtotal = shipping.calculatedShipping.orderSubtotal || 0;
+        console.log(`✅ Usando costo de envío y subtotal pre-calculados: $${shippingCost}, subtotal: $${backendSubtotal}`);
+      } else {
+        // Fallback: calcular nuevamente si no existe
+        const shippingCostResponse = await axios.post(ENDPOINTS.ORDERS.CALCULATE_SHIPPING_COST.url, {
+          shipping_address: {
+            city: shipping.city,
+            state: shipping.state,
+            country: shipping.country || "Colombia"
+          },
+          shipping_method: shipping.shippingMethod,
+          items: items.map(item => ({
+            product: item.id, // 🚨 SEGURIDAD: Solo enviar ID
+            quantity: item.quantity
+            // 🚨 NO ENVIAR: price, weight - El backend los obtiene de la DB
+          }))
+        });
+
+        if (shippingCostResponse.data.success) {
+          shippingCost = shippingCostResponse.data.data.cost;
+          backendSubtotal = shippingCostResponse.data.data.orderSubtotal; // 🚨 SEGURIDAD: Usar subtotal del backend
+          console.log(`📦 Costo de envío y subtotal calculados del backend: $${shippingCost}, subtotal: $${backendSubtotal}`);
+        } else {
+          // Si falla, redirigir al usuario para recalcular
+          notification.error({
+            message: "Error de cálculo",
+            description: "Error al calcular costos. Verifique su información de envío.",
+          });
+          setCurrent(1); // Volver al paso de envío
+          return;
+        }
+      }
+
+      // 🚨 SEGURIDAD: Usar subtotal del backend, NO del frontend
+      const subtotal = backendSubtotal;
+      const tax = subtotal * 0.19; // IVA del 19%
+      
+      // 🆕 Obtener cuotas de procesamiento del backend (ya calculadas)
+      let processingFee = 0;
+      let installmentFee = 0;
+      
+      try {
+        // 🆕 Solicitar al backend que calcule las cuotas según configuración
+        const feesResponse = await axios.post(ENDPOINTS.ORDERS.CALCULATE_PROCESSING_FEES.url, {
+          payment_method_type: paymentMethod,
+          subtotal,
+          installments: formData.card?.installments || 1,
+        });
+
+        if (feesResponse.data.success) {
+          processingFee = feesResponse.data.data.processingFee || 0;
+          installmentFee = feesResponse.data.data.installmentFee || 0;
+          console.log(`💳 Cuotas obtenidas del backend: procesamiento=$${processingFee}, cuotas=$${installmentFee}`);
+        } else {
+          console.warn('No se pudieron obtener cuotas del backend, usando fallback');
+          // 🆕 Fallback: usar las cuotas por defecto solo si falla la API
+          if (paymentMethod === "CARD") {
+            processingFee = subtotal * 0.029; // 2.9% fallback
+            const installments = formData.card?.installments || 1;
+            if (installments > 1) {
+              installmentFee = subtotal * 0.015 * (installments - 1); // 1.5% fallback
+            }
+          } else if (paymentMethod === "PSE") {
+            processingFee = Math.min(subtotal * 0.025, 3000); // 2.5% máximo $3,000 fallback
+          }
+        }
+      } catch (feesError) {
+        console.warn('Error obteniendo cuotas del backend:', feesError);
+        // Fallback a cálculo local si la API no está disponible
+        if (paymentMethod === "CARD") {
+          processingFee = subtotal * 0.029;
+          const installments = formData.card?.installments || 1;
+          if (installments > 1) {
+            installmentFee = subtotal * 0.015 * (installments - 1);
+          }
+        } else if (paymentMethod === "PSE") {
+          processingFee = Math.min(subtotal * 0.025, 3000);
+        }
+      }
+
+      const totalCost = subtotal + shippingCost + tax + processingFee + installmentFee;
+
+      setCostCalculation({
+        subtotal,
+        shipping: shippingCost,
+        tax,
+        processingFee,
+        installmentFee,
+        total: totalCost,
+        available: stockAvailable,
+        unavailableItems
+      });
+
+      setStockVerified(true);
+
+    } catch (error: any) {
+      notification.error({
+        message: "Error de cálculo",
+        description: error?.response?.data?.message || error?.message || "Error desconocido",
+      });
+    } finally {
+      setCalculatingCosts(false);
     }
   };
 
@@ -105,7 +272,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
           const methods = data.data.methods.map((method: any) => ({
             ...method,
             icon: getPaymentMethodIcon(method.id as PaymentMethodType),
-            enabled: true, // Puedes manejar la habilitación según la configuración
+            enabled: true,
           }));
           setPaymentMethods(methods);
         }
@@ -121,6 +288,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
     fetchPaymentMethods();
   }, []);
 
+  // Calcular costos cuando cambie el método de pago o los datos del formulario
+  useEffect(() => {
+    if (paymentMethod && items?.length) {
+      calculateTotalCosts();
+    }
+  }, [paymentMethod, formData, items]);
+
   // Manejar la validación del formulario
   const handleFormValidation = (isValid: boolean, data: any) => {
     setIsFormValid(isValid);
@@ -129,10 +303,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
       [paymentMethod.toLowerCase()]: data,
     }));
   };
-
-  useEffect(() => {
-    console.log("formData", formData);
-  }, [formData]);
 
   // Preparar datos para el backend
   const preparePaymentData = () => {
@@ -185,12 +355,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
 
   // Manejar el proceso de pago
   const handlePayment = async () => {
-    console.log("=== DEBUG VALIDATION ===");
-    console.log("items?.length:", items?.length);
-    console.log("isFormValid:", isFormValid);
-    console.log("formData:", formData);
-    console.log("paymentMethod:", paymentMethod);
-    
+    // Verificaciones previas
     if (!items?.length) {
       notification.error({
         message: "Error",
@@ -203,6 +368,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
       notification.error({
         message: "Error",
         description: "Por favor complete correctamente todos los campos del formulario",
+      });
+      return;
+    }
+
+    if (!stockVerified || !costCalculation) {
+      notification.error({
+        message: "Error",
+        description: "Verificando disponibilidad y costos...",
+      });
+      await calculateTotalCosts();
+      return;
+    }
+
+    if (!costCalculation.available) {
+      notification.error({
+        message: "Productos no disponibles",
+        description: `Algunos productos ya no están disponibles: ${costCalculation.unavailableItems.map(item => item.name).join(", ")}`,
       });
       return;
     }
@@ -222,7 +404,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
     const contactInfo = JSON.parse(contactData);
     const shippingDetails = JSON.parse(shippingData);
 
-    // Construir shipping_address combinando datos de contacto y envío
+    // Construir shipping_address con el costo calculado
     const shipping_address = {
       name: `${contactInfo.name} ${contactInfo.lastName}`,
       street: shippingDetails.street,
@@ -235,6 +417,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
       phone: contactInfo.phone,
       email: contactInfo.email,
       shipping_method: shippingDetails.shippingMethod,
+      shipping_cost: costCalculation.shipping, // 🆕 Incluir costo calculado
     };
 
     const paymentData = preparePaymentData();
@@ -253,13 +436,15 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
     try {
       const orderData = {
         items: items.map((item) => ({
-          product: item.id,
+          product: item.id, // 🚨 SEGURIDAD: Solo enviar ID
           quantity: item.quantity,
-          price: item.price,
+          // 🚨 NO ENVIAR: price - El backend lo obtiene de la DB
         })),
         shipping_address,
         shipping_method: shippingDetails.shippingMethod,
         payment: paymentData,
+        // 🆕 Incluir cálculos para verificación en backend
+        calculated_costs: costCalculation,
       };
 
       const { data: response } = await axios.post(
@@ -292,13 +477,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
       setStatus("error");
       setOrderStatus("failed");
 
-      // 🆕 Usar el analizador de errores
       const { message, details } = ErrorParser.parseBackendError(error);
 
       notification.error({
         message,
         description: details,
-        duration: 8, // Mostrar más tiempo para errores específicos
+        duration: 8,
       });
     } finally {
       setLoading(false);
@@ -322,6 +506,110 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
     }
   };
 
+  // 🆕 Renderizar desglose de costos
+  const renderCostBreakdown = () => {
+    if (calculatingCosts) {
+      return (
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-center space-x-2">
+            <Spin size="small" />
+            <span>Calculando costos...</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (!costCalculation) {
+      return (
+        <div className="mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+          <div className="flex items-center space-x-2 text-yellow-700">
+            <AlertTriangle className="w-5 h-5" />
+            <span>Complete la información anterior para ver el total</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (!costCalculation.available) {
+      return (
+        <div className="mt-8 p-4 bg-red-50 rounded-lg border border-red-200">
+          <div className="flex items-center space-x-2 text-red-700 mb-3">
+            <AlertTriangle className="w-5 h-5" />
+            <span className="font-medium">Productos no disponibles</span>
+          </div>
+          {costCalculation.unavailableItems.map((item) => (
+            <div key={item.id} className="text-sm text-red-600">
+              • {(item as any).message || `${item.name}: Solicitado ${item.requested}, Disponible ${item.available}`}
+            </div>
+          ))}
+          <div className="mt-3 text-sm text-gray-600">
+            <p>💡 Puedes:</p>
+            <ul className="list-disc list-inside ml-2">
+              <li>Reducir las cantidades</li>
+              <li>Eliminar productos agotados del carrito</li>
+              <li>Continuar con productos disponibles</li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                 <h3 className="text-lg font-medium mb-4 flex items-center">
+           <ShoppingCart className="mr-2 w-5 h-5" />
+           Resumen del Pedido
+         </h3>
+        
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span>Subtotal productos</span>
+            <span>$ {formatNumber(costCalculation.subtotal, "es-CO", "COP")} COP</span>
+          </div>
+          
+                     <div className="flex justify-between">
+             <span className="flex items-center">
+               <Truck className="mr-1 w-4 h-4" />
+               Envío
+             </span>
+             <span>$ {formatNumber(costCalculation.shipping, "es-CO", "COP")} COP</span>
+           </div>
+           
+           <div className="flex justify-between">
+             <span>IVA (19%)</span>
+             <span>$ {formatNumber(costCalculation.tax, "es-CO", "COP")} COP</span>
+           </div>
+           
+           {costCalculation.processingFee > 0 && (
+             <div className="flex justify-between">
+               <span className="flex items-center">
+                 <CreditCardIcon className="mr-1 w-4 h-4" />
+                 Cuota procesamiento
+               </span>
+               <span>$ {formatNumber(costCalculation.processingFee, "es-CO", "COP")} COP</span>
+             </div>
+           )}
+          
+          {costCalculation.installmentFee > 0 && (
+            <div className="flex justify-between">
+              <span>Cuota por cuotas</span>
+              <span>$ {formatNumber(costCalculation.installmentFee, "es-CO", "COP")} COP</span>
+            </div>
+          )}
+          
+          <Divider className="my-2" />
+          
+          <div className="flex justify-between text-lg font-semibold">
+            <span>Total a Pagar</span>
+            <span className="text-green-600">
+              $ {formatNumber(costCalculation.total, "es-CO", "COP")} COP
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="space-y-6 bg-white p-6 rounded-lg shadow">
@@ -338,6 +626,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
                 setPaymentMethod(e.target.value);
                 setIsFormValid(false);
                 setFormData({});
+                setStockVerified(false);
               }}
             >
               <Space direction="vertical">
@@ -347,10 +636,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
                     value={method.id}
                     disabled={!method.enabled}
                   >
-                                      <Space>
-                    {React.createElement(method.icon, { size: 20 })}
-                    {method.name}
-                  </Space>
+                    <Space>
+                      {method.icon}
+                      {method.name}
+                    </Space>
                   </Radio>
                 ))}
               </Space>
@@ -367,13 +656,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
           showIcon
         />
 
-        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium mb-4">Resumen del Pedido</h3>
-          <div className="flex justify-between text-lg font-semibold">
-            <span>Total</span>
-            <span>$ {formatNumber(total, "es-CO", "COP")} COP</span>
-          </div>
-        </div>
+        {/* 🆕 Desglose de costos dinámico */}
+        {renderCostBreakdown()}
 
         <div className="flex justify-between items-center mt-8">
           <button
@@ -385,10 +669,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
 
           <button
             onClick={handlePayment}
-            disabled={loading}
+            disabled={loading || !stockVerified || !costCalculation?.available}
             className="px-6 py-2 bg-[#E2060F] text-white rounded hover:bg-[#001529] disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {loading ? "Procesando..." : "Proceder al Pago"}
+            {loading ? "Procesando..." : 
+             !stockVerified ? "Verificando..." :
+             !costCalculation?.available ? "Productos no disponibles" :
+             "Proceder al Pago"}
           </button>
         </div>
       </div>
