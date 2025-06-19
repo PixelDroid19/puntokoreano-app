@@ -43,7 +43,6 @@ interface CompatibleVehicleCardProps {
 }
 
 const CompatibleVehicleCard: FC<CompatibleVehicleCardProps> = ({ vehicle }) => {
-  console.log('vehicle', vehicle);
   
   // Verificar si tenemos información completa del vehículo
   const hasCompleteInfo = vehicle.model && vehicle.model.family;
@@ -70,7 +69,7 @@ const CompatibleVehicleCard: FC<CompatibleVehicleCardProps> = ({ vehicle }) => {
         <div className="w-full h-32 bg-gray-100 rounded flex items-center justify-center mb-3">
           <Car className="w-12 h-12 text-gray-400" />
         </div>
-
+    
         {hasCompleteInfo ? (
           // Mostrar información completa cuando está disponible
           <>
@@ -99,7 +98,7 @@ const CompatibleVehicleCard: FC<CompatibleVehicleCardProps> = ({ vehicle }) => {
                 {getDisplayName()}
               </h3>
               <p className="text-sm text-gray-500">
-                ID: {vehicle._id.slice(-8)}
+                ID: {vehicle._id}
               </p>
             </div>
           </>
@@ -136,17 +135,6 @@ const CompatibleVehicleCard: FC<CompatibleVehicleCardProps> = ({ vehicle }) => {
               </span>
             </div>
           )}
-        </div>
-
-        {/* Estado del vehículo */}
-        <div className="pt-2">
-          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-            vehicle.active 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-red-100 text-red-700'
-          }`}>
-            {vehicle.active ? 'Activo' : 'Inactivo'}
-          </span>
         </div>
       </div>
     </div>
