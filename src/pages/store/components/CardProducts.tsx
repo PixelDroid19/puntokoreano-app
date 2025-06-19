@@ -104,7 +104,7 @@ const CardProducts = ({ inline = false, product }: Props) => {
   const { vehicles } = useVehicleCompatibility({
     productId: product.id,
     enabled: isExpanded && hasCompatibleVehicles,
-    limit: 20 // Cargar más vehículos para la vista de card
+    limit: 50 // Cargar más vehículos para la vista de card
   });
 
   useEffect(() => {
@@ -324,29 +324,8 @@ const CardProducts = ({ inline = false, product }: Props) => {
             >
               {hasCompatibleVehicles && isExpanded && (
                 <div className="flex flex-wrap gap-1 pt-1 pb-2">
-                  {/* Mostrar resumen si hay muchos vehículos */}
-                  {product.vehicleCompatibility && totalVehicles > 20 && (
-                    <div className="w-full mb-2 p-2 bg-gray-50 rounded text-xs">
-                      <div className="flex items-center gap-1 mb-1">
-                        <Users className="w-3 h-3" />
-                        <span className="font-medium">Compatibilidad:</span>
-                      </div>
-                      {product.vehicleCompatibility.directVehicles > 0 && (
-                        <div>• {product.vehicleCompatibility.directVehicles} vehículos directos</div>
-                      )}
-                      {product.vehicleCompatibility.groups.map(group => (
-                        <div key={group._id}>
-                          • {group.name}: {group.vehicleCount} vehículos
-                        </div>
-                      ))}
-                      <div className="text-gray-500 mt-1 italic">
-                        Ver detalle del producto para más información
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Mostrar vehículos individuales si no son demasiados */}
-                  {totalVehicles <= 20 && vehicles.map((vehicle) => (
+                  {/* Mostrar siempre los vehículos individuales cargados */}
+                  {vehicles.map((vehicle) => (
                     <span
                       key={vehicle._id}
                       className="vehicle-tag inline-block px-2 py-1 text-xs text-white bg-[#302582] rounded-md whitespace-nowrap mb-1 transition-all duration-300"
@@ -357,6 +336,13 @@ const CardProducts = ({ inline = false, product }: Props) => {
                       }
                     </span>
                   ))}
+                  
+                  {/* Mostrar indicador si hay más vehículos disponibles */}
+                  {vehicles.length < totalVehicles && (
+                    <span className="inline-block px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-md whitespace-nowrap mb-1">
+                      + {totalVehicles - vehicles.length} más...
+                    </span>
+                  )}
                 </div>
               )}
             </div>
