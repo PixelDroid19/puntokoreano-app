@@ -375,7 +375,7 @@ const OrdersSection = () => {
                       {getStatusText(order.status)}
                     </Tag>
                     <div className="text-lg font-bold text-[#E2060F]">
-                      $ {formatNumber(order.total, "es-CO", "COP")} COP
+                      {formatNumber(order.total, "es-CO", "COP")} COP
                     </div>
                   </div>
                 </div>
@@ -418,7 +418,7 @@ const OrdersSection = () => {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">
-                          $ {formatNumber(item.total, "es-CO", "COP")} COP
+                          {formatNumber(item.total, "es-CO", "COP")} COP
                         </div>
                       </div>
                     </div>
@@ -466,23 +466,23 @@ const OrdersSection = () => {
                       <div className="mt-2 pt-2 border-t border-gray-200">
                         <div className="flex justify-between">
                           <span>Subtotal:</span>
-                          <span>$ {formatNumber(order.subtotal, "es-CO", "COP")} COP</span>
+                          <span>{formatNumber(order.subtotal, "es-CO", "COP")} COP</span>
                         </div>
                         {order.tax > 0 && (
                           <div className="flex justify-between">
                             <span>Impuestos:</span>
-                            <span>$ {formatNumber(order.tax, "es-CO", "COP")} COP</span>
+                            <span>{formatNumber(order.tax, "es-CO", "COP")} COP</span>
                           </div>
                         )}
                         {order.shipping_cost > 0 && (
                           <div className="flex justify-between">
                             <span>Envío:</span>
-                            <span>$ {formatNumber(order.shipping_cost, "es-CO", "COP")} COP</span>
+                            <span>{formatNumber(order.shipping_cost, "es-CO", "COP")} COP</span>
                           </div>
                         )}
                         <div className="flex justify-between font-semibold text-[#E2060F] border-t border-gray-200 pt-1 mt-1">
                           <span>Total:</span>
-                          <span>$ {formatNumber(order.total, "es-CO", "COP")} COP</span>
+                          <span>{formatNumber(order.total, "es-CO", "COP")} COP</span>
                         </div>
                       </div>
                     </div>

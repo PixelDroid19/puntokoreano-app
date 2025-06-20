@@ -188,7 +188,7 @@ const WishlistSection = () => {
                         </span>
                       </div>
                       <div className="text-lg font-bold text-[#E2060F]">
-                        $ {formatNumber(item.product.price, "es-CO", "COP")} COP
+                        {formatNumber(item.product.price, "es-CO", "COP")} COP
                       </div>
                       <div className="text-xs text-gray-500">
                         Agregado: {new Date(item.added_at).toLocaleDateString("es-CO")}

@@ -223,7 +223,7 @@ const Review: React.FC<Props> = ({ setStatus, setCurrent }) => {
                 {shippingCost.freeShipping ? (
                   <span className="text-green-600 font-medium">¡Envío gratis!</span>
                 ) : (
-                  <span>$ {formatNumber(shippingCost.cost, "es-CO", "COP")} COP</span>
+                  <span>{formatNumber(shippingCost.cost, "es-CO", "COP")} COP</span>
                 )}
               </Descriptions.Item>
               <Descriptions.Item label="Entrega estimada">
@@ -244,7 +244,7 @@ const Review: React.FC<Props> = ({ setStatus, setCurrent }) => {
                   <div className="text-xs text-gray-500">
                     {shippingCost.details.threshold && (
                       <p>
-                        💡 Envío gratis desde $ {formatNumber(shippingCost.details.threshold, "es-CO", "COP")} COP
+                        💡 Envío gratis desde {formatNumber(shippingCost.details.threshold, "es-CO", "COP")} COP
                       </p>
                     )}
                   </div>

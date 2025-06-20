@@ -62,7 +62,7 @@ const Orders = () => {
           </figure>
           <div>
             <h2 className="font-semibold text-lg">{item.name}</h2>
-            <p>$ {formatNumber(item?.price, "es-CO", "COP")} COP</p>
+            <p>{formatNumber(item?.price, "es-CO", "COP")} COP</p>
           </div>
         </div>
       ))}
@@ -73,7 +73,7 @@ const Orders = () => {
       <div className="space-y-3">
         <div className="flex justify-between text-base">
           <span className="text-gray-600">Subtotal productos</span>
-          <span>$ {formatNumber(subTotal, "es-CO", "COP")} COP</span>
+          <span>{formatNumber(subTotal, "es-CO", "COP")} COP</span>
         </div>
 
         <div className="flex justify-between text-base">
@@ -81,7 +81,7 @@ const Orders = () => {
             <Calculator className="mr-1 w-4 h-4" />
             IVA (19%)
           </span>
-          <span>$ {formatNumber(tax, "es-CO", "COP")} COP</span>
+          <span>{formatNumber(tax, "es-CO", "COP")} COP</span>
         </div>
 
         <div className="flex justify-between text-base">
@@ -100,10 +100,10 @@ const Orders = () => {
         {shippingConfig?.freeShipping?.available && !qualifiesForFreeShipping && freeShippingThreshold > 0 && (
           <div className="bg-blue-50 p-3 rounded-lg">
             <div className="text-sm text-blue-700 mb-1">
-              Envío gratis desde $ {formatNumber(freeShippingThreshold, "es-CO", "COP")} COP
+              Envío gratis desde {formatNumber(freeShippingThreshold, "es-CO", "COP")} COP
             </div>
             <div className="text-xs text-blue-600">
-              Te faltan $ {formatNumber(freeShippingThreshold - (subTotal + tax), "es-CO", "COP")} COP
+              Te faltan {formatNumber(freeShippingThreshold - (subTotal + tax), "es-CO", "COP")} COP
             </div>
           </div>
         )}
@@ -113,7 +113,7 @@ const Orders = () => {
         <div className="flex justify-between text-lg font-semibold">
           <span>Total {qualifiesForFreeShipping ? "(con envío gratis)" : "(sin envío)"}</span>
           <span className="text-[#E2060F]">
-            $ {formatNumber(subTotal + tax + (qualifiesForFreeShipping ? 0 : 0), "es-CO", "COP")} COP
+            {formatNumber(subTotal + tax + (qualifiesForFreeShipping ? 0 : 0), "es-CO", "COP")} COP
           </span>
       </div>
 

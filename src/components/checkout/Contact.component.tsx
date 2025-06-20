@@ -103,7 +103,7 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
               <span className="text-xs text-gray-500">x{item.quantity}</span>
             </div>
             <span className="text-sm font-medium">
-              $ {formatNumber(item.price * item.quantity, "es-CO", "COP")}
+              {formatNumber(item.price * item.quantity, "es-CO", "COP")}
             </span>
           </div>
         ))}
@@ -114,7 +114,7 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
       <div className="space-y-2">
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>$ {formatNumber(total, "es-CO", "COP")} COP</span>
+          <span>{formatNumber(total, "es-CO", "COP")} COP</span>
         </div>
         <div className="flex justify-between text-sm text-gray-500">
           <span>Envío</span>
@@ -123,7 +123,7 @@ const Contact: React.FC<Props> = ({ setStatus, setCurrent }) => {
         <Divider className="my-2" />
         <div className="flex justify-between font-medium text-lg">
           <span>Total estimado</span>
-          <span className="text-green-600">$ {formatNumber(total, "es-CO", "COP")} COP +envío</span>
+          <span className="text-green-600">{formatNumber(total, "es-CO", "COP")} COP +envío</span>
         </div>
       </div>
     </Card>

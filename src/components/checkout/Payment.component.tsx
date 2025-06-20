@@ -564,7 +564,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
         <div className="space-y-3">
           <div className="flex justify-between">
             <span>Subtotal productos</span>
-            <span>$ {formatNumber(costCalculation.subtotal, "es-CO", "COP")} COP</span>
+            <span>{formatNumber(costCalculation.subtotal, "es-CO", "COP")} COP</span>
           </div>
           
                      <div className="flex justify-between">
@@ -572,12 +572,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
                <Truck className="mr-1 w-4 h-4" />
                Envío
              </span>
-             <span>$ {formatNumber(costCalculation.shipping, "es-CO", "COP")} COP</span>
+             <span>{formatNumber(costCalculation.shipping, "es-CO", "COP")} COP</span>
            </div>
            
            <div className="flex justify-between">
              <span>IVA (19%)</span>
-             <span>$ {formatNumber(costCalculation.tax, "es-CO", "COP")} COP</span>
+             <span>{formatNumber(costCalculation.tax, "es-CO", "COP")} COP</span>
            </div>
            
            {costCalculation.processingFee > 0 && (
@@ -586,14 +586,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
                  <CreditCardIcon className="mr-1 w-4 h-4" />
                  Cuota procesamiento
                </span>
-               <span>$ {formatNumber(costCalculation.processingFee, "es-CO", "COP")} COP</span>
+               <span>{formatNumber(costCalculation.processingFee, "es-CO", "COP")} COP</span>
              </div>
            )}
           
           {costCalculation.installmentFee > 0 && (
             <div className="flex justify-between">
               <span>Cuota por cuotas</span>
-              <span>$ {formatNumber(costCalculation.installmentFee, "es-CO", "COP")} COP</span>
+              <span>{formatNumber(costCalculation.installmentFee, "es-CO", "COP")} COP</span>
             </div>
           )}
           
@@ -602,7 +602,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ setStatus, setCurrent }) => {
           <div className="flex justify-between text-lg font-semibold">
             <span>Total a Pagar</span>
             <span className="text-green-600">
-              $ {formatNumber(costCalculation.total, "es-CO", "COP")} COP
+              {formatNumber(costCalculation.total, "es-CO", "COP")} COP
             </span>
           </div>
         </div>

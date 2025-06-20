@@ -55,7 +55,7 @@ const WishlistModal = ({ open, setOpen }: Props) => {
           </figure>
           <div className="flex flex-col gap-1">
             <h3 className="text-base font-semibold">{item.name}</h3>
-            <p>$ {formatNumber(item?.price, "es-CO", "COP")} COP</p>
+            <p>{formatNumber(item?.price, "es-CO", "COP")} COP</p>
             <div className="flex gap-2">
               <button
                 onClick={() => handleAddToCart(item)}

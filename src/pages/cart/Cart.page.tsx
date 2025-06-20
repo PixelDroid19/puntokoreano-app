@@ -54,7 +54,7 @@ const Cart = () => {
     {
       title: "Precio",
       dataIndex: "price",
-      render: (price: number) => <p>$ {formatNumber(price, "es-CO", "COP")} COP</p>,
+      render: (price: number) => <p>{formatNumber(price, "es-CO", "COP")} COP</p>,
     },
     {
       title: "Cantidad",
@@ -141,7 +141,7 @@ const Cart = () => {
                           SubTotal:
                         </p>
                         <p className="font-medium text-base">
-                          $ {formatNumber(subTotal, "es-CO", "COP")} COP
+                          {formatNumber(subTotal, "es-CO", "COP")} COP
                         </p>
                       </div>
                     </Table.Summary.Cell>
@@ -153,7 +153,7 @@ const Cart = () => {
                           Total:
                         </p>
                         <p className="font-medium text-base">
-                          $ {formatNumber(total, "es-CO", "COP")} COP
+                          {formatNumber(total, "es-CO", "COP")} COP
                         </p>
                       </div>
                     </Table.Summary.Cell>
