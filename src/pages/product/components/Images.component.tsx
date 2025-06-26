@@ -37,9 +37,9 @@ const ImagesView = ({ images, videoUrl }: ImagesViewProps) => {
   }
 
   return (
-    <div className="relative max-w-2xl">
-      <div className="bg-white" style={{ height: "378.264px" }}>
-        {/* Swiper principal */}
+    <div className="relative">
+      <div className="bg-white">
+        {/* Swiper principal - Dimensiones exactas 600x600px */}
         <Swiper
           loop={allMedia.length > 1}
           navigation={allMedia.length > 1}
@@ -47,25 +47,24 @@ const ImagesView = ({ images, videoUrl }: ImagesViewProps) => {
           modules={[FreeMode, Navigation, Thumbs]}
           thumbs={{ swiper: thumbsSwiper }}
           onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
-          className="h-[310px]" 
+          className="product-detail-swiper" 
+          style={{ width: "600px", height: "600px" }}
         >
           {allMedia.map((media, idx) => (
             <SwiperSlide key={`${media}-${idx}`}>
-              <div className="h-full flex justify-center items-center ">
+              <div className="product-image-detail-container">
                 {media === 'VIDEO_PLACEHOLDER' && videoId ? (
                   <lite-youtube
                     videoid={videoId}
                     videotitle="Video del producto"
-                   
                     posterquality="maxresdefault"
-                    className="w-full h-full"
+                    className="product-detail-video"
                   />
                 ) : media !== 'VIDEO_PLACEHOLDER' ? (
-                  <Image
+                  <img
                     src={media}
                     alt={`Imagen ${idx + 1}`}
-                    className="object-contain max-h-full w-auto"
-                    preview={false}
+                    className="product-detail-image"
                   />
                 ) : null}
               </div>
@@ -74,23 +73,23 @@ const ImagesView = ({ images, videoUrl }: ImagesViewProps) => {
         </Swiper>
 
         {/* Swiper de miniaturas */}
-        <div className="px-4">
+        <div className="px-4 mt-4">
           <Swiper
             ref={swiperElRef}
             onSwiper={setThumbsSwiper}
             loop={allMedia.length > 1}
-            spaceBetween={6}
+            spaceBetween={8}
             slidesPerView={'auto'}
             freeMode={true}
             watchSlidesProgress={true}
             modules={[FreeMode, Navigation, Thumbs]}
-            className="thumbnail-swiper h-[60px]" // Altura ajustada para miniaturas
+            className="thumbnail-swiper h-[70px]"
           >
             {allMedia.map((media, idx) => (
-              <SwiperSlide key={`${media}-${idx}-2`} className="!w-[50px] pt-1">
+              <SwiperSlide key={`${media}-${idx}-2`} className="!w-[60px] pt-1">
                 <div
                   className={`
-                    w-[50px] h-[50px] border-2 rounded-md overflow-hidden cursor-pointer shadow-sm
+                    w-[60px] h-[60px] border-2 rounded-md overflow-hidden cursor-pointer shadow-sm
                     ${
                       activeIndex === idx
                         ? "border-[#E2060F] shadow-md"
@@ -101,17 +100,15 @@ const ImagesView = ({ images, videoUrl }: ImagesViewProps) => {
                 >
                   {media === 'VIDEO_PLACEHOLDER' ? (
                     <div className="w-full h-full bg-gradient-to-br from-red-500 to-red-700 flex flex-col items-center justify-center text-white">
-                      {/* Ícono de play */}
                       <div className="flex items-center justify-center mb-0.5">
                         <svg 
                           viewBox="0 0 24 24" 
                           fill="currentColor" 
-                          className="w-3 h-3"
+                          className="w-4 h-4"
                         >
                           <path d="M8 5v14l11-7z"/>
                         </svg>
                       </div>
-                      {/* Texto "Ver" */}
                       <span className="text-[10px] font-medium leading-none">Ver</span>
                     </div>
                   ) : (

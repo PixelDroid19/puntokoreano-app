@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { Typography, Divider } from "antd";
-import { Box, Hammer } from "lucide-react";
+import { Box, Hammer, Car } from "lucide-react";
+import Applies from "./Applies.component";
 
 const { Title, Text } = Typography;
 
@@ -31,22 +32,52 @@ interface CompatibleVehicle {
   active: boolean;
 }
 
+interface ApplicabilityGroup {
+  _id: string;
+  name: string;
+  description?: string;
+  category: string;
+  estimatedVehicleCount: number;
+}
+
+interface VehicleCompatibility {
+  directVehicles: number;
+  groupVehicles: number;
+  totalVehicles: number;
+  hasMoreVehicles: boolean;
+  groups: Array<{
+    _id: string;
+    name: string;
+    vehicleCount: number;
+    category: string;
+  }>;
+}
+
 interface DescriptionProductProps {
   name: string | undefined;
   long_description: string;
-  short_description: string;
   group?: string;
   subgroup?: string;
   compatibleVehicles?: CompatibleVehicle[];
+  productId?: string;
+  compatibleVehicleIds?: string[];
+  applicabilityGroups?: ApplicabilityGroup[];
+  vehicleCompatibility?: VehicleCompatibility;
 }
 
 const DescriptionProduct: FC<DescriptionProductProps> = ({
   name,
   long_description,
-  short_description,
   group,
   subgroup,
+  productId,
+  compatibleVehicleIds,
+  applicabilityGroups,
+  vehicleCompatibility,
 }) => {
+  const totalVehicles = vehicleCompatibility?.totalVehicles || 0;
+  const hasCompatibleVehicles = totalVehicles > 0;
+
   return (
     <div className="flex flex-col gap-4 mb-4 bg-white p-6 rounded-xl shadow-sm">
       <div className="space-y-4">
@@ -76,21 +107,23 @@ const DescriptionProduct: FC<DescriptionProductProps> = ({
             </div>
           )}
 
-          {short_description && (
+          {/* Aplicaciones Compatibles */}
+          {hasCompatibleVehicles && productId && (
             <div className="mt-6">
-              <Title level={4} className="!mb-1">
-                Características Principales
+              <Title level={4} className="flex items-center gap-2 !mb-1">
+                <Car className="w-5 h-5" />
+                Aplicaciones Compatibles
+                <span className="text-sm text-gray-500 font-normal">
+                  ({totalVehicles} vehículos)
+                </span>
               </Title>
               <Divider className="!mt-2 !mb-4" />
-              <ul className="list-disc ml-5 space-y-2 text-gray-700">
-                {short_description
-                  .split("\n")
-                  .map((line) => line.trim())
-                  .filter(Boolean)
-                  .map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))}
-              </ul>
+              <Applies 
+                productId={productId}
+                compatibleVehicles={compatibleVehicleIds || []} 
+                applicabilityGroups={applicabilityGroups || []}
+                vehicleCompatibility={vehicleCompatibility}
+              />
             </div>
           )}
         </div>

@@ -32,12 +32,6 @@ interface Discount {
   endDate?: string;
 }
 
-interface CompatibleVehicleModel {
-  _id: string;
-  name: string;
-  year: number;
-}
-
 interface CompatibleVehicle {
   _id: string;
   model: {
@@ -128,7 +122,6 @@ interface ProductData {
   shipping: string[];
   thumb: string;
   carousel: string[];
-  images: string[];
   active: boolean;
   discount: Discount | null;
   specifications: any[];
@@ -235,7 +228,7 @@ const ProductDetail = () => {
       id: product.id,
       name: product.name,
       price: finalPriceForCart,
-      image: product.thumb || product.images[0],
+      image: product.thumb || (product.carousel && product.carousel[0]) || "/placeholder.svg",
       stock: product.stock,
     });
     if (Number(count) > 1) {
@@ -262,7 +255,7 @@ const ProductDetail = () => {
         id: product.id,
         name: product.name,
         price: finalPriceForCart,
-        image: product.thumb || product.images[0],
+        image: product.thumb || (product.carousel && product.carousel[0]) || "/placeholder.svg",
         stock: product.stock,
       });
       notification.success({
@@ -330,9 +323,12 @@ const ProductDetail = () => {
         <DescriptionProduct
           name={product?.name}
           long_description={product?.long_description || ""}
-          short_description={product?.short_description || ""}
           group={product?.group}
           subgroup={product?.subgroup}
+          productId={product?.id}
+          compatibleVehicleIds={product?.compatible_vehicles?.map(v => v._id) || []}
+          applicabilityGroups={product?.applicabilityGroups || []}
+          vehicleCompatibility={product?.vehicleCompatibility}
         />
       ),
     },
@@ -353,25 +349,6 @@ const ProductDetail = () => {
       label: "Artículos relacionados",
       children: (
         <ArticleRelation related_products={product?.related_products || []} />
-      ),
-    },
-    {
-      key: "4",
-      label: (
-        <div className="flex items-center gap-2">
-          <span>Aplicaciones</span>
-          <span className="text-sm text-gray-500">
-            ({product?.vehicleCompatibility?.totalVehicles || 0} vehículos)
-          </span>
-        </div>
-      ),
-      children: (
-        <Applies 
-          productId={product?.id || ""}
-          compatibleVehicles={product?.compatible_vehicles || []} 
-          applicabilityGroups={product?.applicabilityGroups || []}
-          vehicleCompatibility={product?.vehicleCompatibility}
-        />
       ),
     },
   ];
@@ -403,7 +380,7 @@ const ProductDetail = () => {
 
       <section className="mt-5 lg:flex lg:gap-8">
         <ImagesView 
-          images={product.carousel?.length > 0 ? product.carousel : product.images} 
+          images={product.carousel?.length > 0 ? product.carousel : (product.thumb ? [product.thumb] : [])} 
           videoUrl={product.videoUrl}
         />
         <div className="flex flex-col lg:flex-1 lg:py-2 space-y-4 mt-4 lg:mt-0">

@@ -202,6 +202,7 @@ const Applies: FC<AppliesProps> = ({
               type="default"
               size="large"
               loading={loadingGroups}
+              className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white border-0 hover:from-purple-700 hover:to-indigo-800"
             >
               Cargar más vehículos
               {groupPagination && ` (${totalLoaded} de ${totalVehicles})`}

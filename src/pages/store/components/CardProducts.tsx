@@ -4,10 +4,10 @@ import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { notification } from "antd";
 import { useCartStore } from "@/store/cart.store";
-import { ShoppingCart, Car, ChevronDown, ChevronUp, Users } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import { useVehicleCompatibility } from "@/hooks/useVehicleCompatibility";
+import { ShoppingCart, Car, Eye } from "lucide-react";
+import { useState } from "react";
 import "./CardProducts.styles.css";
+import ProductCompatibleVehiclesModal from "@/components/ProductCompatibleVehiclesModal";
 
 interface Vehicle {
   _id: string;
@@ -68,7 +68,6 @@ interface Product {
   stock: number;
   code: number;
   shipping: string[];
-  images: string[];
   thumb: string | null;
   carousel: string[];
   active: boolean;
@@ -90,52 +89,11 @@ interface Props {
 const CardProducts = ({ inline = false, product }: Props) => {
   const navigate = useNavigate();
   const { addItem } = useCartStore();
-  const [isHovering, setIsHovering] = useState(false);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Usar la nueva estrategia de compatibilidad
   const totalVehicles = product.vehicleCompatibility?.totalVehicles || 0;
   const hasCompatibleVehicles = totalVehicles > 0;
-  const hasMoreVehicles = product.vehicleCompatibility?.hasMoreVehicles || false;
-
-  // Solo cargar vehículos cuando se expande la card
-  const { vehicles } = useVehicleCompatibility({
-    productId: product.id,
-    enabled: isExpanded && hasCompatibleVehicles,
-    limit: 50 // Cargar más vehículos para la vista de card
-  });
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      if (isExpanded && hasCompatibleVehicles) {
-        setScrollPosition(0);
-        scrollRef.current.scrollTop = 0;
-      }
-    }
-  }, [isExpanded, hasCompatibleVehicles]);
-
-  useEffect(() => {
-    if (isHovering && hasCompatibleVehicles && scrollRef.current) {
-      const highlight = () => {
-        const tags = scrollRef.current?.querySelectorAll(".vehicle-tag");
-        if (tags && tags.length > 0) {
-          const index = Math.floor((scrollPosition / 100) % tags.length);
-          tags.forEach((tag, i) => {
-            tag.classList.toggle("highlight-tag", i === index);
-          });
-        }
-      };
-
-      highlight();
-      const interval = setInterval(() => {
-        setScrollPosition((prev) => prev + 1);
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [isHovering, scrollPosition, hasCompatibleVehicles]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -152,7 +110,7 @@ const CardProducts = ({ inline = false, product }: Props) => {
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.thumb || product.images[0] || "/placeholder.svg",
+      image: product.thumb || (product.carousel && product.carousel[0]) || "/placeholder.svg",
       stock: product.stock,
     });
 
@@ -166,10 +124,10 @@ const CardProducts = ({ inline = false, product }: Props) => {
     ? Math.round(product.price * (1 - product.discount.percentage / 100))
     : product.price;
 
-  const toggleExpand = (e: React.MouseEvent) => {
+  const openVehiclesModal = (e: React.MouseEvent) => {
     if (hasCompatibleVehicles) {
       e.stopPropagation();
-      setIsExpanded((prev) => !prev);
+      setIsModalOpen(true);
     }
   };
 
@@ -209,17 +167,20 @@ const CardProducts = ({ inline = false, product }: Props) => {
           </div>
         )}
 
-        {/* Image Section - Altura fija */}
+        {/* Image Section - Dimensiones optimizadas para miniatura */}
         <div
-          className="relative h-[200px] w-full cursor-pointer overflow-hidden bg-gray-100"
+          className="relative w-full aspect-square cursor-pointer overflow-hidden bg-white"
           onClick={mainContentClick}
         >
           {inline ? (
-            <img
-              src={product.thumb || product.images[0] || "/placeholder.svg"}
-              alt={product.name}
-              className="product-card-image"
-            />
+            <div className="product-image-container">
+              <img
+                src={product.thumb || (product.carousel && product.carousel[0]) || "/placeholder.svg"}
+                alt={product.name}
+                className="product-card-image"
+                loading="lazy"
+              />
+            </div>
           ) : (
             <Swiper
               navigation
@@ -233,11 +194,14 @@ const CardProducts = ({ inline = false, product }: Props) => {
             >
               {imagesToDisplay().map((image, idx) => (
                 <SwiperSlide key={`${idx}-image-${product.id}`}>
-                  <img
-                    src={image || "/placeholder.svg"}
-                    alt={`${product.name} - imagen ${idx + 1}`}
-                    className="product-card-image"
-                  />
+                  <div className="product-image-container">
+                    <img
+                      src={image || "/placeholder.svg"}
+                      alt={`${product.name} - imagen ${idx + 1}`}
+                      className="product-card-image"
+                      loading="lazy"
+                    />
+                  </div>
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -264,9 +228,9 @@ const CardProducts = ({ inline = false, product }: Props) => {
             </h3>
 
             <div
-              onClick={toggleExpand}
+              onClick={openVehiclesModal}
               className={`flex items-center justify-between text-gray-600 text-sm mb-2 ${
-                hasCompatibleVehicles ? "cursor-pointer" : ""
+                hasCompatibleVehicles ? "cursor-pointer hover:bg-gray-50" : ""
               }`}
               style={{ height: "32px" }}
             >
@@ -276,73 +240,21 @@ const CardProducts = ({ inline = false, product }: Props) => {
                     <Car className="w-4 h-4" />
                     <span className="text-xs">
                       {totalVehicles} vehículos compatibles
-                      {hasMoreVehicles && " (+)"}
                     </span>
                   </div>
                   <button
                     type="button"
                     className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                    onClick={toggleExpand}
-                    aria-expanded={isExpanded}
-                    aria-controls={`applications-${product.id}`}
+                    onClick={openVehiclesModal}
+                    title="Ver vehículos compatibles"
                   >
-                    {isExpanded ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
+                    <Eye className="w-4 h-4" />
                   </button>
                 </>
               ) : (
                 <div className="flex items-center gap-2">
                   <Car className="w-4 h-4 text-gray-300" />
                   <span className="text-gray-400">Sin aplicaciones</span>
-                </div>
-              )}
-            </div>
-
-            {/* Aplicaciones optimizadas con carga lazy */}
-            <div
-              id={`applications-${product.id}`}
-              ref={scrollRef}
-              className={`transition-all duration-300 ease-in-out ${
-                isExpanded && hasCompatibleVehicles
-                  ? "max-h-[120px] overflow-y-auto custom-scrollbar"
-                  : "max-h-0 overflow-hidden"
-              }`}
-              onMouseEnter={
-                hasCompatibleVehicles ? () => setIsHovering(true) : undefined
-              }
-              onMouseLeave={
-                hasCompatibleVehicles
-                  ? () => {
-                      setIsHovering(false);
-                      setScrollPosition(0);
-                    }
-                  : undefined
-              }
-            >
-              {hasCompatibleVehicles && isExpanded && (
-                <div className="flex flex-wrap gap-1 pt-1 pb-2">
-                  {/* Mostrar siempre los vehículos individuales cargados */}
-                  {vehicles.map((vehicle) => (
-                    <span
-                      key={vehicle._id}
-                      className="vehicle-tag inline-block px-2 py-1 text-xs text-white bg-[#302582] rounded-md whitespace-nowrap mb-1 transition-all duration-300"
-                    >
-                      {vehicle?.displayName || 
-                        `${vehicle?.model?.family?.name || ''} ${vehicle?.fuel_id?.name || ''} ${vehicle?.model?.year || ''}`.trim() ||
-                        'Vehículo Compatible'
-                      }
-                    </span>
-                  ))}
-                  
-                  {/* Mostrar indicador si hay más vehículos disponibles */}
-                  {vehicles.length < totalVehicles && (
-                    <span className="inline-block px-2 py-1 text-xs text-gray-600 bg-gray-100 rounded-md whitespace-nowrap mb-1">
-                      + {totalVehicles - vehicles.length} más...
-                    </span>
-                  )}
                 </div>
               )}
             </div>
@@ -402,6 +314,15 @@ const CardProducts = ({ inline = false, product }: Props) => {
           </button>
         </div>
       </div>
+
+      {/* Modal de vehículos compatibles */}
+      <ProductCompatibleVehiclesModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        productId={product.id}
+        productName={product.name}
+        totalVehicles={totalVehicles}
+      />
     </div>
   );
 };

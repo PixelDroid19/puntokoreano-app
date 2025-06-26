@@ -172,12 +172,7 @@ const ReviewsProduct = () => {
           >
             Críticas
           </button>
-          <button
-            className={filterButtonClasses("withPhotos")}
-            onClick={() => handleFilterChange("withPhotos")}
-          >
-            Con fotos
-          </button>
+        
         </div>
         <Select
           defaultValue="recent"

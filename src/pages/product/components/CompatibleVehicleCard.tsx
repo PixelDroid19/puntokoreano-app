@@ -63,78 +63,125 @@ const CompatibleVehicleCard: FC<CompatibleVehicleCardProps> = ({ vehicle }) => {
     return 'Vehículo Compatible';
   };
   
+  // Función para truncar texto con tooltip
+  const truncateText = (text: string, maxLength: number = 20) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+  
   return (
-    <div className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm h-full flex flex-col hover:shadow-md transition-shadow duration-200">
-      <div className="space-y-3 flex-grow">
-        <div className="w-full h-32 bg-gray-100 rounded flex items-center justify-center mb-3">
-          <Car className="w-12 h-12 text-gray-400" />
+    <div className="vehicle-card p-2 w-full sm:w-[300px] md:w-[320px] lg:w-[280px] xl:w-[300px]">
+      <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group relative min-w-0">
+        
+        {/* Color Bar - Igual que CardProducts */}
+        <div className="flex h-1">
+          <div className="flex-1 bg-[#E8832F]" />
+          <div className="flex-1 bg-[#302582]" />
+          <div className="flex-1 bg-[#9C089F]" />
         </div>
-    
-        {hasCompleteInfo ? (
-          // Mostrar información completa cuando está disponible
-          <>
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500 font-medium">
-                {vehicle.model?.family?.brand?.name}
-              </p>
-              <h3 className="font-semibold text-lg leading-tight text-gray-800">
-                {getDisplayName()}
-              </h3>
-              <p className="text-gray-600 font-medium">
-                Modelo: {vehicle.model?.name}
-              </p>
-              {vehicle.model?.year && (
-                <p className="text-gray-600 font-medium">
-                  Año: {vehicle.model.year}
-                </p>
-              )}
-            </div>
-          </>
-        ) : (
-          // Mostrar información básica cuando no tenemos datos completos
-          <>
-            <div className="space-y-1">
-              <h3 className="font-semibold text-lg leading-tight text-gray-800">
-                {getDisplayName()}
-              </h3>
-              <p className="text-sm text-gray-500">
-                ID: {vehicle._id}
-              </p>
-            </div>
-          </>
-        )}
 
-        {/* Información técnica siempre disponible */}
-        <div className="space-y-2 pt-2 border-t border-gray-100">
-          {vehicle.transmission_id && (
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600">
-                <span className="font-medium">Transmisión:</span> {vehicle.transmission_id.name}
-              </span>
-            </div>
-          )}
+        {/* Content Area - Mismo padding y estructura que CardProducts */}
+        <div className="p-4 flex flex-col flex-grow min-w-0">
           
-          {vehicle.fuel_id && (
-            <div className="flex items-center gap-2">
-              <Fuel className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600">
-                <span className="font-medium">Combustible:</span> {vehicle.fuel_id.name}
-              </span>
-            </div>
+          {hasCompleteInfo ? (
+            // Mostrar información completa cuando está disponible
+            <>
+              <div className="space-y-2 min-w-0 mb-4">
+                <p 
+                  className="text-sm text-gray-500 font-medium text-truncate-ellipsis"
+                  title={vehicle.model?.family?.brand?.name}
+                >
+                  {vehicle.model?.family?.brand?.name}
+                </p>
+                <h3 
+                  className="font-bold text-lg line-clamp-2 min-h-[30px] text-gray-800"
+                  title={getDisplayName()}
+                >
+                  {getDisplayName()}
+                </h3>
+                <p 
+                  className="text-gray-600 text-sm font-medium text-truncate-ellipsis"
+                  title={`Modelo: ${vehicle.model?.name}`}
+                >
+                  Modelo: {vehicle.model?.name}
+                </p>
+                {vehicle.model?.year && (
+                  <p className="text-gray-600 text-sm font-medium">
+                    Año: {vehicle.model.year}
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            // Mostrar información básica cuando no tenemos datos completos
+            <>
+              <div className="space-y-2 min-w-0 mb-4">
+                <h3 
+                  className="font-bold text-lg line-clamp-2 min-h-[30px] text-gray-800"
+                  title={getDisplayName()}
+                >
+                  {getDisplayName()}
+                </h3>
+                <p 
+                  className="text-sm text-gray-500 text-truncate-ellipsis"
+                  title={`ID: ${vehicle._id}`}
+                >
+                  ID: {truncateText(vehicle._id, 20)}
+                </p>
+              </div>
+            </>
           )}
-          
-          {vehicle.color && (
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-4 h-4 rounded-full border border-gray-300"
-                style={{ backgroundColor: vehicle.color.toLowerCase() }}
-              />
-              <span className="text-sm text-gray-600">
-                <span className="font-medium">Color:</span> {vehicle.color}
-              </span>
-            </div>
-          )}
+
+          {/* Información técnica - Grid de 2 columnas como CardProducts */}
+          <div className="grid grid-cols-1 gap-3 mt-auto pt-4 border-t border-gray-100 min-w-0">
+            {vehicle.transmission_id && (
+              <div className="flex items-center gap-2 min-w-0">
+                <Settings className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm text-gray-500">Transmisión</span>
+                  <p 
+                    className="text-sm font-medium text-gray-800 text-truncate-ellipsis"
+                    title={vehicle.transmission_id.name}
+                  >
+                    {vehicle.transmission_id.name}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {vehicle.fuel_id && (
+              <div className="flex items-center gap-2 min-w-0">
+                <Fuel className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm text-gray-500">Combustible</span>
+                  <p 
+                    className="text-sm font-medium text-gray-800 text-truncate-ellipsis"
+                    title={vehicle.fuel_id.name}
+                  >
+                    {vehicle.fuel_id.name}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {vehicle.color && (
+              <div className="flex items-center gap-2 min-w-0">
+                <div 
+                  className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
+                  style={{ backgroundColor: vehicle.color.toLowerCase() }}
+                />
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm text-gray-500">Color</span>
+                  <p 
+                    className="text-sm font-medium text-gray-800 text-truncate-ellipsis"
+                    title={vehicle.color}
+                  >
+                    {vehicle.color}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
