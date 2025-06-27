@@ -27,7 +27,6 @@ interface Review {
   };
   product: string;
   rating: number;
-  title: string;
   content: string;
   images?: string[];
   createdAt: string;
@@ -66,7 +65,7 @@ const ReviewUser: React.FC<ReviewUserProps> = ({ review }) => {
     try {
       await voteReview({
         reviewId: review._id,
-        vote: voteType ? "positive" : "negative",
+        vote: voteType ? "up" : "down",
       });
       notification.success({
         message: "Voto registrado",
@@ -145,7 +144,6 @@ const ReviewUser: React.FC<ReviewUserProps> = ({ review }) => {
       </div>
 
       {/* Contenido de la reseña */}
-      <h4 className="font-semibold mb-1">{review.title}</h4>
       <p className="text-gray-700 mb-3">{review.content}</p>
 
       {/* Imágenes de la reseña */}

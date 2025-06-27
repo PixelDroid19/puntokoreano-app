@@ -6,7 +6,6 @@ interface ReviewProps {
   review: {
     _id: string;
     user: { _id: string; name: string } | null;
-    title: string;
     content: string;
     rating: number;
     createdAt: string;
@@ -21,7 +20,7 @@ interface ReviewProps {
 const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
   const { voteReview, reportReview } = useProductReviews(review._id);
 
-  const handleVote = async (vote: "positive" | "negative") => {
+  const handleVote = async (vote: "up" | "down") => {
     try {
       await voteReview({ reviewId: review._id, vote });
     } catch (error) {
@@ -56,14 +55,13 @@ const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
       </div>
 
       <div className="ml-[80px]">
-        <h5 className="font-semibold mb-2">{review.title}</h5>
         <p className="text-base mb-4">{review.content}</p>
 
         <div className="flex items-center justify-between">
           <Space size="large">
             <Tooltip title="Útil">
               <button
-                onClick={() => handleVote("positive")}
+                onClick={() => handleVote("up")}
                 className="flex items-center gap-2 text-gray-500 hover:text-[#E2060F]"
               >
                 <ThumbsUp className="w-4 h-4" />
@@ -72,7 +70,7 @@ const ReviewUser: React.FC<ReviewProps> = ({ review }) => {
             </Tooltip>
             <Tooltip title="No útil">
               <button
-                onClick={() => handleVote("negative")}
+                onClick={() => handleVote("down")}
                 className="flex items-center gap-2 text-gray-500 hover:text-[#E2060F]"
               >
                 <ThumbsDown className="w-4 h-4" />

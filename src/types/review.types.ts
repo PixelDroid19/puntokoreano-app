@@ -9,7 +9,6 @@ export interface Review {
       avatar?: string;
   };
   rating: number;
-  title: string;
   content: string;
   status: 'pending' | 'approved' | 'rejected';
   purchase_verified: boolean;
@@ -35,7 +34,6 @@ export interface ReviewStats {
 
 export interface ReviewData {
   rating: number;
-  title: string;
   content: string;
 }
 
@@ -64,7 +62,6 @@ export interface ReviewEligibilityResponse {
 
 export interface ReviewFormData {
   rating: number;
-  title: string;
   content: string;
   images?: File[];
   orderId?: number | string

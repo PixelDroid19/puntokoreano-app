@@ -30,32 +30,6 @@ const WriteReview = ({ productId, onSuccess, onCancel }: Props) => {
 
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
-  // Debug logging para identificar problemas
-  useEffect(() => {
-    console.log("WriteReview Debug Info:", {
-      productId,
-      isAuthenticated,
-      user: user ? { id: user.id, name: user.name } : null,
-      canReview,
-      hasOrdered,
-      hasReviewed,
-      orderInfo,
-      reviewRestrictionReason,
-      isCheckingPermission,
-      checkPermissionError: checkPermissionError?.message,
-    });
-  }, [
-    productId,
-    isAuthenticated,
-    user,
-    canReview,
-    hasOrdered,
-    hasReviewed,
-    orderInfo,
-    reviewRestrictionReason,
-    isCheckingPermission,
-    checkPermissionError,
-  ]);
 
   const handleSubmit = async (values: any) => {
     if (!isAuthenticated || !canReview) {
@@ -69,7 +43,6 @@ const WriteReview = ({ productId, onSuccess, onCancel }: Props) => {
     try {
       const reviewData: ReviewFormData = {
         rating: values.rating,
-        title: values.title,
         content: values.content,
         images: fileList.map((file) => file.originFileObj as File),
         orderId: orderInfo?.orderId,
@@ -191,13 +164,7 @@ const WriteReview = ({ productId, onSuccess, onCancel }: Props) => {
           <Rate />
         </Form.Item>
 
-        <Form.Item
-          name="title"
-          label="Título"
-          rules={[{ required: true, message: "Por favor ingresa un título" }]}
-        >
-          <Input placeholder="Título de tu calificación" />
-        </Form.Item>
+
 
         <Form.Item
           name="content"
