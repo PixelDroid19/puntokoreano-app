@@ -132,12 +132,10 @@ const Review: React.FC<Props> = ({ setStatus, setCurrent }) => {
 
   const getShippingMethodName = (method: string) => {
     switch (method) {
-      case "standard":
-        return "Envío estándar";
-      case "express":
-        return "Envío exprés";
       case "pickup":
-        return "Recogida en tienda";
+        return "Recoger en tienda";
+      case "cod":
+        return "Contra entrega";
       default:
         return method;
     }

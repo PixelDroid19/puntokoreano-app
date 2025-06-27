@@ -67,8 +67,8 @@ const Shipping: React.FC<ShippingProps> = ({ setStatus, setCurrent }) => {
         setShippingConfig({
           departments: ["Bogotá D.C.", "Antioquia", "Valle del Cauca", "Cundinamarca"],
           methods: [
-            { value: "standard", label: "Envío estándar", description: "3-5 días hábiles", baseCost: 15000, deliveryTime: {min: 3, max: 5} },
-            { value: "express", label: "Envío exprés", description: "1-2 días hábiles", baseCost: 25000, deliveryTime: {min: 1, max: 2} },
+            { value: "pickup", label: "Recoger en tienda", description: "Sin costo adicional", baseCost: 0, deliveryTime: {min: 0, max: 1} },
+            { value: "cod", label: "Contra entrega", description: "Pago al recibir", baseCost: 8000, deliveryTime: {min: 2, max: 4} },
           ],
           freeShipping: { threshold: 300000, eligibleLocations: [], eligibleMethods: [] }
         });
