@@ -1,44 +1,9 @@
 import { FC } from "react";
 import { Typography, Divider } from "antd";
 import { Box, Hammer, Car } from "lucide-react";
-import Applies from "./Applies.component";
+import VehiclesCompatibilityTable from "./VehiclesCompatibilityTable.component";
 
 const { Title, Text } = Typography;
-
-interface CompatibleVehicle {
-  _id: string;
-  model: {
-    _id: string;
-    name: string;
-    year: number;
-    family: {
-      _id: string;
-      name: string;
-      brand: {
-        _id: string;
-        name: string;
-      };
-    };
-  };
-  transmission_id?: {
-    _id: string;
-    name: string;
-  };
-  fuel_id?: {
-    _id: string;
-    name: string;
-  };
-  color?: string;
-  active: boolean;
-}
-
-interface ApplicabilityGroup {
-  _id: string;
-  name: string;
-  description?: string;
-  category: string;
-  estimatedVehicleCount: number;
-}
 
 interface VehicleCompatibility {
   directVehicles: number;
@@ -58,10 +23,7 @@ interface DescriptionProductProps {
   long_description: string;
   group?: string;
   subgroup?: string;
-  compatibleVehicles?: CompatibleVehicle[];
   productId?: string;
-  compatibleVehicleIds?: string[];
-  applicabilityGroups?: ApplicabilityGroup[];
   vehicleCompatibility?: VehicleCompatibility;
 }
 
@@ -71,8 +33,6 @@ const DescriptionProduct: FC<DescriptionProductProps> = ({
   group,
   subgroup,
   productId,
-  compatibleVehicleIds,
-  applicabilityGroups,
   vehicleCompatibility,
 }) => {
   const totalVehicles = vehicleCompatibility?.totalVehicles || 0;
@@ -118,11 +78,9 @@ const DescriptionProduct: FC<DescriptionProductProps> = ({
                 </span>
               </Title>
               <Divider className="!mt-2 !mb-4" />
-              <Applies 
+              <VehiclesCompatibilityTable 
                 productId={productId}
-                compatibleVehicles={compatibleVehicleIds || []} 
-                applicabilityGroups={applicabilityGroups || []}
-                vehicleCompatibility={vehicleCompatibility}
+                totalVehicles={totalVehicles}
               />
             </div>
           )}

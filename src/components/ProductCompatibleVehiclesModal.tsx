@@ -101,7 +101,6 @@ const ProductCompatibleVehiclesModal: React.FC<ProductCompatibleVehiclesModalPro
       const transmission = vehicle.transmission_id?.name?.toLowerCase() || '';
       const fuel = vehicle.fuel_id?.name?.toLowerCase() || '';
       const year = vehicle.model?.year?.toString() || '';
-      const engine = vehicle.model?.engine_type?.toLowerCase() || '';
       const displayName = vehicle.displayName?.toLowerCase() || '';
       
       return (
@@ -110,7 +109,6 @@ const ProductCompatibleVehiclesModal: React.FC<ProductCompatibleVehiclesModalPro
         transmission.includes(searchLower) ||
         fuel.includes(searchLower) ||
         year.includes(searchLower) ||
-        engine.includes(searchLower) ||
         displayName.includes(searchLower)
       );
     });
@@ -199,15 +197,6 @@ const ProductCompatibleVehiclesModal: React.FC<ProductCompatibleVehiclesModalPro
         <Tag color="orange">{text || "N/A"}</Tag>
       ),
     },
-    {
-      title: "Motor",
-      dataIndex: ["model", "engine_type"],
-      key: "engine",
-      render: (text: string) => (
-        <Tag color="purple">{text || "N/A"}</Tag>
-      ),
-    },
-   
   ];
 
   const isSearchActive = debouncedSearchTerm.trim().length > 0;

@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useMemo } from 'react';
 import { Button, Spin, Empty } from 'antd';
 import { Car } from 'lucide-react';
 import CompatibleVehicleCard from './CompatibleVehicleCard';
@@ -109,11 +109,6 @@ const Applies: FC<AppliesProps> = ({
   applicabilityGroups,
   vehicleCompatibility 
 }) => {
-  const [allVehicles, setAllVehicles] = useState<CompatibleVehicle[]>([]);
-  const [isLoadingAll, setIsLoadingAll] = useState(false);
-  const [canLoadMore, setCanLoadMore] = useState(false);
-  const [totalLoaded, setTotalLoaded] = useState(0);
-
   const hasDirectVehicles = compatibleVehicles && compatibleVehicles.length > 0;
   const hasGroups = applicabilityGroups && applicabilityGroups.length > 0;
   const totalVehicles = vehicleCompatibility?.totalVehicles || 0;
@@ -144,8 +139,19 @@ const Applies: FC<AppliesProps> = ({
     limit: 20 // Cargar de a 20 vehículos de grupos
   });
 
-  // Combinar vehículos cuando se cargan
-  useEffect(() => {
+  // Crear arrays de IDs para dependencias estables
+  const directVehicleIds = useMemo(() => 
+    directVehicles.map(v => v._id).sort(), 
+    [directVehicles]
+  );
+  
+  const groupVehicleIds = useMemo(() => 
+    groupVehicles.map(v => v._id).sort(), 
+    [groupVehicles]
+  );
+
+  // Combinar vehículos usando useMemo para evitar bucles infinitos
+  const allVehicles = useMemo(() => {
     const uniqueVehicles = new Map<string, CompatibleVehicle>();
     
     // Agregar vehículos directos
@@ -158,15 +164,13 @@ const Applies: FC<AppliesProps> = ({
       uniqueVehicles.set(vehicle._id, vehicle);
     });
     
-    setAllVehicles(Array.from(uniqueVehicles.values()));
-    setTotalLoaded(uniqueVehicles.size);
-  }, [directVehicles, groupVehicles]);
+    return Array.from(uniqueVehicles.values());
+  }, [directVehicleIds.join(','), groupVehicleIds.join(','), directVehicles, groupVehicles]);
 
-  // Determinar estado de carga
-  useEffect(() => {
-    setIsLoadingAll(loadingDirect || loadingGroups);
-    setCanLoadMore(hasMoreGroups && !loadingGroups);
-  }, [loadingDirect, loadingGroups, hasMoreGroups]);
+  // Estados derivados calculados directamente
+  const isLoadingAll = loadingDirect || loadingGroups;
+  const canLoadMore = hasMoreGroups && !loadingGroups;
+  const totalLoaded = allVehicles.length;
 
   const handleLoadMore = () => {
     if (canLoadMore) {
