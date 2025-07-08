@@ -205,17 +205,7 @@ const VehiclesCompatibilityTable: React.FC<VehiclesCompatibilityTableProps> = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           prefix={<SearchOutlined />}
-          suffix={
-            searchTerm && (
-              <Button
-                type="text"
-                size="small"
-                icon={<ClearOutlined />}
-                onClick={handleClearSearch}
-                disabled={isLoading}
-              />
-            )
-          }
+        
           className="flex-1"
           disabled={isLoading}
           allowClear={false}
@@ -225,6 +215,7 @@ const VehiclesCompatibilityTable: React.FC<VehiclesCompatibilityTableProps> = ({
           onClick={() => refetch()}
           loading={isLoading}
           disabled={isLoading}
+          className="bg-red-600 text-white hover:bg-red-700"
         >
           Actualizar
         </Button>
@@ -234,8 +225,8 @@ const VehiclesCompatibilityTable: React.FC<VehiclesCompatibilityTableProps> = ({
       {isSearchActive && (
         <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
           <div className="flex items-center space-x-2">
-            <SearchOutlined className="text-blue-600" />
-            <span className="text-blue-800">
+            <SearchOutlined className="text-red-600" />
+            <span className="text-red-800">
               Búsqueda activa: <strong>"{debouncedSearchTerm}"</strong>
             </span>
             <Tag color="blue">
@@ -246,6 +237,7 @@ const VehiclesCompatibilityTable: React.FC<VehiclesCompatibilityTableProps> = ({
             size="small" 
             onClick={handleClearSearch}
             disabled={isLoading}
+            className="bg-red-600 text-white hover:bg-red-700"
           >
             Limpiar búsqueda
           </Button>
