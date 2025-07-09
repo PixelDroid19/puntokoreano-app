@@ -1,24 +1,225 @@
-<!doctype html>
-<html lang="es">
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
   <head>
+    <!-- Meta tags básicos -->
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon-32x32.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- Información básica del sitio -->
+    <title>Punto Koreano - Repuestos SsangYong Originales en Colombia</title>
+    <meta name="description" content="Especialistas en repuestos SsangYong originales en Colombia. Catálogo completo de autopartes, diagnóstico especializado y servicio técnico autorizado. Envíos a toda Colombia." />
+    <meta name="keywords" content="repuestos SsangYong, autopartes SsangYong, repuestos originales, SsangYong Colombia, autopartes Colombia, repuestos automotrices" />
+    <meta name="author" content="Punto Koreano S.A.S" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="theme-color" content="#2F2482" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://puntokoreano.com/" />
+    
+    <!-- Favicons optimizados -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/logo-512x512.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Punto Koreano" />
+    <meta property="og:title" content="Punto Koreano - Repuestos SsangYong Originales en Colombia" />
+    <meta property="og:description" content="Especialistas en repuestos SsangYong originales en Colombia. Catálogo completo de autopartes, diagnóstico especializado y servicio técnico autorizado." />
+    <meta property="og:image" content="https://puntokoreano.com/images/logo-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Punto Koreano - Logo" />
+    <meta property="og:url" content="https://puntokoreano.com/" />
+    <meta property="og:locale" content="es_CO" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Punto Koreano - Repuestos SsangYong Originales" />
+    <meta name="twitter:description" content="Especialistas en repuestos SsangYong originales en Colombia. Catálogo completo y servicio técnico autorizado." />
+    <meta name="twitter:image" content="https://puntokoreano.com/images/logo-512x512.png" />
+    <meta name="twitter:image:alt" content="Punto Koreano - Logo" />
+    
+    <!-- Datos estructurados JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Punto Koreano S.A.S",
+      "description": "Especialistas en repuestos SsangYong originales en Colombia",
+      "url": "https://puntokoreano.com",
+      "logo": "https://puntokoreano.com/images/logo-512x512.png",
+      "image": "https://puntokoreano.com/images/logo-512x512.png",
+      "telephone": "+57-1-234-5678",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Calle 60 # 51-90, Piso 12",
+        "addressLocality": "Bogotá",
+        "addressRegion": "Cundinamarca",
+        "postalCode": "110231",
+        "addressCountry": "CO"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 4.6482837,
+        "longitude": -74.0651381
+      },
+      "sameAs": [
+        "https://www.facebook.com/puntokoreano",
+        "https://www.instagram.com/puntokoreano",
+        "https://api.whatsapp.com/send?phone=573001234567"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Catálogo de Repuestos SsangYong",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Product",
+              "name": "Repuestos SsangYong Originales",
+              "category": "Autopartes"
+            }
+          }
+        ]
+      }
+    }
+    </script>
+    
+    <!-- Preload de recursos críticos -->
+    <link rel="preload" href="/images/fonts/Karate.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/images/fonts/Lastica.ttf" as="font" type="font/ttf" crossorigin />
+    
+    <!-- DNS Prefetch para recursos externos -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    
+    <!-- Estilos críticos -->
+    <style>
+      /* Critical CSS inline para mejorar LCP */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      html {
+        line-height: 1.15;
+        -webkit-text-size-adjust: 100%;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #fff;
+      }
+      
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Loading spinner crítico */
+      .loading-spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #2F2482;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 9999;
+      }
+      
+      @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      
+      /* Ocultar spinner cuando la app está cargada */
+      .app-loaded .loading-spinner {
+        display: none;
+      }
+    </style>
+    
+    <!-- Estilos externos con optimización -->
     <link
       rel="stylesheet"
-      type="text/css"
-      charset="UTF-8"
       href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
+      media="all"
+      onload="this.media='all'"
     />
     <link
       rel="stylesheet"
-      type="text/css"
       href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
+      media="all"
+      onload="this.media='all'"
     />
-    <title>Punto Koreano</title>
+    
+    <!-- Noscript fallback -->
+    <noscript>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css" />
+    </noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Skip link para accesibilidad -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded">
+      Saltar al contenido principal
+    </a>
+    
+    <!-- Loading spinner crítico -->
+    <div class="loading-spinner" aria-label="Cargando contenido" role="status">
+      <span class="sr-only">Cargando...</span>
+    </div>
+    
+    <!-- Contenedor principal de la aplicación -->
+    <div id="root" role="main"></div>
+    
+    <!-- Fallback para usuarios sin JavaScript -->
+    <noscript>
+      <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h1>Punto Koreano</h1>
+        <p>Esta aplicación requiere JavaScript para funcionar correctamente.</p>
+        <p>Por favor, habilita JavaScript en tu navegador para continuar.</p>
+        <p>Para obtener ayuda, contacta con nosotros:</p>
+        <p>📞 Teléfono: +57 1 234-5678</p>
+        <p>📧 Email: ventas@puntokoreano.com</p>
+      </div>
+    </noscript>
+    
+    <!-- Script principal de la aplicación -->
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Script para marcar la app como cargada -->
+    <script>
+      window.addEventListener('load', function() {
+        document.body.classList.add('app-loaded');
+      });
+      
+      // Manejar errores de carga
+      window.addEventListener('error', function(e) {
+        console.error('Error de carga:', e.error);
+      });
+      
+      // Service Worker para PWA (opcional)
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('SW registrado con éxito:', registration);
+            })
+            .catch(function(registrationError) {
+              console.log('SW falló en registro:', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
